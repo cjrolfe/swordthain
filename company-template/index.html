@@ -68,15 +68,16 @@
         <h2>Website snapshot</h2>
       </div>
 
-      <article class="card">
+      <article class="card" style="max-width:240px;">
         <img class="screenshot"
              src="{{SCREENSHOT_PATH}}"
              alt="{{COMPANY_NAME}} website screenshot"
-             loading="lazy" />
-        <div class="row" style="margin-top: 10px;">
-          <span class="tag">Auto-captured</span>
+             loading="lazy"
+             style="display:block; width:100%; max-height:120px; object-fit:cover; object-position:top; border-radius:8px; margin-bottom:10px;" />
+        <div class="row">
+          <span class="tag">Preview</span>
           {{#IF_WEBSITE}}
-          <a class="btn ghost" href="{{COMPANY_WEBSITE}}" target="_blank" rel="noreferrer">Open website</a>
+          <a class="btn ghost" href="{{COMPANY_WEBSITE}}" target="_blank" rel="noreferrer" style="padding:6px 10px;font-size:12px;">Visit</a>
           {{/IF_WEBSITE}}
         </div>
       </article>
