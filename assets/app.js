@@ -1,140 +1,152 @@
+// Shared state — accessible to both the list logic and the create modal
+let sites = [];
+let _searchEl = null;
+let _cardsEl = null;
+let _archivedCountEl = null;
+const _isArchivedView = (document.body?.dataset?.view || "active").toLowerCase() === "archived";
+
+function updateArchivedCount() {
+  if (!_archivedCountEl) return;
+  const count = sites.filter(s => !!s.archived).length;
+  _archivedCountEl.textContent = `Archived: ${count}`;
+  _archivedCountEl.style.display = count > 0 ? "" : "none";
+}
+
+function render(filterText) {
+  const cardsEl = _cardsEl;
+  if (!cardsEl) return;
+
+  const q = (filterText || "").toLowerCase();
+  const API_BASE = window.SWORDTHAIN_API || "";
+
+  const subset = sites.filter(s => _isArchivedView ? !!s.archived : !s.archived);
+  const filtered = subset.filter(s => {
+    const hay = `${s.name} ${s.description} ${s.tag} ${s.id}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    cardsEl.innerHTML = `<div class="card"><h3>No ${_isArchivedView ? "archived" : "active"} companies found</h3></div>`;
+    return;
+  }
+
+  cardsEl.innerHTML = filtered.map(s => {
+    const action = _isArchivedView ? "restore" : "archive";
+    const actionLabel = _isArchivedView ? "Restore" : "Archive";
+
+    const archiveBtn = API_BASE
+      ? `<button type="button" class="btn ghost btn-archive" data-action="${action}" data-company-id="${s.id}">${actionLabel}</button>`
+      : ``;
+
+    const deleteBtn = _isArchivedView && s.id !== "company-template" && API_BASE
+      ? `<button type="button" class="btn ghost btn-delete" data-company-id="${s.id}">Delete</button>`
+      : ``;
+
+    return `
+      <article class="card">
+        <div class="card-head">
+          <img class="logo" src="${s.logoUrl}" alt="${s.name} logo" />
+          <div>
+            <h3>${s.name}</h3>
+            <div style="opacity:.7;font-size:12px;">/${s.id}/</div>
+          </div>
+        </div>
+        <p>${s.description || ""}</p>
+        <div class="row row-actions">
+          <span class="tag">${s.tag || "Demo"}</span>
+          ${!_isArchivedView ? `<a class="btn" href="${s.path}index.html">Open</a>` : ""}
+          ${archiveBtn}
+          ${deleteBtn || ""}
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  // Archive / Restore buttons
+  cardsEl.querySelectorAll(".btn-archive").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const action = btn.dataset.action;
+      const companyId = btn.dataset.companyId;
+      btn.disabled = true;
+      btn.textContent = "...";
+      try {
+        const res = await fetch(`${API_BASE}/archive`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, companyId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+
+        const archived = action === "archive";
+        sites = sites.map(s => s.id === companyId ? { ...s, archived } : s);
+        render(_searchEl?.value || "");
+        updateArchivedCount();
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = action === "restore" ? "Restore" : "Archive";
+        alert(e.message || "Request failed");
+      }
+    });
+  });
+
+  // Delete buttons
+  cardsEl.querySelectorAll(".btn-delete").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const companyId = btn.dataset.companyId;
+      if (!confirm(`Permanently delete ${companyId}? This cannot be undone.`)) return;
+      btn.disabled = true;
+      btn.textContent = "...";
+      try {
+        const res = await fetch(`${API_BASE}/archive`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "delete", companyId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+
+        sites = sites.filter(s => s.id !== companyId);
+        render(_searchEl?.value || "");
+        updateArchivedCount();
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = "Delete";
+        alert(e.message || "Request failed");
+      }
+    });
+  });
+}
+
+
 // ===== Landing + Archived list logic =====
 (async function () {
-  const cardsEl = document.getElementById("cards");
+  _cardsEl = document.getElementById("cards");
+  _archivedCountEl = document.getElementById("archivedCount");
+  _searchEl = document.getElementById("search");
+
   const updatedEl = document.getElementById("updated");
-  const archivedCountEl = document.getElementById("archivedCount");
   const yearEl = document.getElementById("year");
-  const searchEl = document.getElementById("search");
-
-  const view = (document.body?.dataset?.view || "active").toLowerCase(); // active | archived
-  const isArchivedView = view === "archived";
-
-  const API_BASE = window.SWORDTHAIN_API || "";
 
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
-  let sites = [];
   try {
     const res = await fetch(`/assets/sites.json?v=${Date.now()}`);
     const data = await res.json();
     if (updatedEl) updatedEl.textContent = `Updated: ${data.updated || "—"}`;
     sites = Array.isArray(data.sites) ? data.sites : [];
-    const archivedCount = sites.filter(s => !!s.archived).length;
-    if (archivedCountEl) {
-      archivedCountEl.textContent = `Archived: ${archivedCount}`;
-      archivedCountEl.style.display = archivedCount > 0 ? "" : "none";
-    }
-
+    updateArchivedCount();
   } catch (e) {
-    if (cardsEl) cardsEl.innerHTML = `<div class="card"><h3>Couldn't load site list</h3></div>`;
+    if (_cardsEl) _cardsEl.innerHTML = `<div class="card"><h3>Couldn't load site list</h3></div>`;
     return;
   }
 
-  async function callArchiveApi(action, companyId) {
-    const res = await fetch(`${API_BASE}/archive`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, companyId }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-    return data;
-  }
-
-  function render(filterText = "") {
-    const q = (filterText || "").toLowerCase();
-
-    const subset = sites.filter(s => {
-      const isArchived = !!s.archived;
-      return isArchivedView ? isArchived : !isArchived;
-    });
-
-    const filtered = subset.filter(s => {
-      const hay = `${s.name} ${s.description} ${s.tag} ${s.id}`.toLowerCase();
-      return hay.includes(q);
-    });
-
-    if (!cardsEl) return;
-
-    if (filtered.length === 0) {
-      cardsEl.innerHTML = `<div class="card"><h3>No ${isArchivedView ? "archived" : "active"} companies found</h3></div>`;
-      return;
-    }
-
-    cardsEl.innerHTML = filtered.map(s => {
-      const action = isArchivedView ? "restore" : "archive";
-      const actionLabel = isArchivedView ? "Restore" : "Archive";
-
-      const archiveBtn = API_BASE
-        ? `<button type="button" class="btn ghost btn-archive" data-action="${action}" data-company-id="${s.id}">${actionLabel}</button>`
-        : ``;
-
-      const deleteBtn = isArchivedView && s.id !== "company-template" && API_BASE
-        ? `<button type="button" class="btn ghost btn-delete" data-company-id="${s.id}">Delete</button>`
-        : ``;
-
-      return `
-        <article class="card">
-          <div class="card-head">
-            <img class="logo" src="${s.logoUrl}" alt="${s.name} logo" />
-            <div>
-              <h3>${s.name}</h3>
-              <div style="opacity:.7;font-size:12px;">/${s.id}/</div>
-            </div>
-          </div>
-          <p>${s.description || ""}</p>
-          <div class="row row-actions">
-            <span class="tag">${s.tag || "Demo"}</span>
-            ${!isArchivedView ? `<a class="btn" href="${s.path}index.html">Open</a>` : ""}
-            ${archiveBtn}
-            ${deleteBtn || ""}
-          </div>
-        </article>
-      `;
-    }).join("");
-
-    // Attach delegated handlers
-    cardsEl.querySelectorAll(".btn-archive").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const action = btn.dataset.action;
-        const companyId = btn.dataset.companyId;
-        btn.disabled = true;
-        btn.textContent = "...";
-        try {
-          await callArchiveApi(action, companyId);
-          window.location.reload();
-        } catch (e) {
-          btn.disabled = false;
-          btn.textContent = action === "restore" ? "Restore" : "Archive";
-          alert(e.message || "Request failed");
-        }
-      });
-    });
-
-    cardsEl.querySelectorAll(".btn-delete").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const companyId = btn.dataset.companyId;
-        if (!confirm(`Permanently delete ${companyId}? This cannot be undone.`)) return;
-        btn.disabled = true;
-        btn.textContent = "...";
-        try {
-          await callArchiveApi("delete", companyId);
-          window.location.reload();
-        } catch (e) {
-          btn.disabled = false;
-          btn.textContent = "Delete";
-          alert(e.message || "Request failed");
-        }
-      });
-    });
-  }
-
-  searchEl?.addEventListener("input", () => render(searchEl.value));
-  render(searchEl?.value || "");
+  _searchEl?.addEventListener("input", () => render(_searchEl.value));
+  render(_searchEl?.value || "");
 })();
 
 
-// ===== Create new company modal logic (API creates site + AI summary) =====
+// ===== Create new company modal logic =====
 (function () {
   const openBtn = document.getElementById("openCreate");
   const modal = document.getElementById("createModal");
@@ -302,8 +314,24 @@
         throw new Error(result.error || `Request failed (${res.status})`);
       }
 
+      // Add new entry to local state and re-render immediately
+      const S3_BASE = "https://sfdcdemoimages.s3.eu-west-1.amazonaws.com";
+      sites.push({
+        id: result.companyId,
+        name: data.name,
+        path: `/${result.companyId}/`,
+        description: data.demoDescription || "",
+        tag: "Demo",
+        logoUrl: `${S3_BASE}/${result.companyId}/logo.png`,
+        archived: false,
+        projects: [],
+      });
+
       setOpen(false);
-      window.location.reload();
+      form.reset();
+      if (_searchEl) _searchEl.value = "";
+      render("");
+      updateArchivedCount();
     } catch (err) {
       createBtn.disabled = false;
       createBtn.textContent = origLabel;
