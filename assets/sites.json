@@ -8,7 +8,8 @@
       "description": "",
       "tag": "Demo",
       "logoUrl": "https://sfdcdemoimages.s3.eu-west-1.amazonaws.com/company-template/logo.png",
-      "archived": false
+      "archived": false,
+      "projects": []
     },
     {
       "id": "rossellimac",
@@ -17,7 +18,8 @@
       "description": "Echa un vistazo a los últimos productos de Apple. Varias opciones de financiación disponibles. Compra ahora.",
       "tag": "Demo",
       "logoUrl": "https://sfdcdemoimages.s3.eu-west-1.amazonaws.com/rossellimac/logo.png",
-      "archived": false
+      "archived": false,
+      "projects": []
     },
     {
       "id": "rossellimac-v2",
@@ -26,7 +28,8 @@
       "description": "Echa un vistazo a los últimos productos de Apple. Varias opciones de financiación disponibles. Compra ahora.",
       "tag": "Demo",
       "logoUrl": "https://sfdcdemoimages.s3.eu-west-1.amazonaws.com/rossellimac-v2/logo.png",
-      "archived": false
+      "archived": false,
+      "projects": []
     }
   ]
 }

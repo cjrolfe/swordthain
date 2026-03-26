@@ -42,6 +42,22 @@ def lambda_handler(event, context):
             "body": json.dumps({"error": message}),
         }
 
+    if ("/project/create" in path) and method == "POST":
+        try:
+            from create_project import handle_create_project
+            result = handle_create_project(body)
+            return ok(result)
+        except Exception as e:
+            return err(str(e), 500)
+
+    if ("/project/delete" in path) and method == "POST":
+        try:
+            from delete_project import handle_delete_project
+            result = handle_delete_project(body)
+            return ok(result)
+        except Exception as e:
+            return err(str(e), 500)
+
     if ("/create" in path or path == "create") and method == "POST":
         try:
             from create_company import handle_create

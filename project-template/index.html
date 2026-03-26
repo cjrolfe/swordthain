@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{PROJECT_NAME}} • {{COMPANY_NAME}} • Demo</title>
+  <meta name="description" content="{{PROJECT_NAME}} — project under {{COMPANY_NAME}} demo environment." />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-name">{{PROJECT_NAME}}</div>
+          <div class="brand-sub">{{COMPANY_NAME}} · Project</div>
+        </div>
+      </div>
+
+      <nav class="topbar-actions" aria-label="Project navigation">
+        <a class="btn ghost" href="/{{COMPANY_ID}}/index.html">Back to {{COMPANY_NAME}}</a>
+        <a class="btn ghost" href="/">Home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-row">
+        <div>
+          <h1 style="margin:0 0 8px;">{{PROJECT_NAME}}</h1>
+          {{#IF_DESCRIPTION}}
+          <p>{{PROJECT_DESCRIPTION}}</p>
+          {{/IF_DESCRIPTION}}
+
+          <div class="hero-meta">
+            <span class="pill">Company: {{COMPANY_NAME}}</span>
+            <span class="pill">Type: Project</span>
+            <span class="pill">Created: <span id="lu">—</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="grid">
+        <article class="card">
+          <h3>Demo links</h3>
+          <p>Add links to key pages or journeys for this project.</p>
+
+          <div class="row">
+            <span class="tag">Start</span>
+            <a class="btn" href="#todo">Open demo</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>Notes</h3>
+          <p>Credentials, constraints, known limitations, data refresh notes.</p>
+          <span class="tag">Internal</span>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById("lu").textContent = "{{CREATED_AT}}";
+  </script>
+
+</body>
+</html>

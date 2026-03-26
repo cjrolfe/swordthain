@@ -158,6 +158,7 @@ def render_from_template(template_html: str, company: CompanyRequest, slug: str,
 
     replacements = {
         "{{COMPANY_NAME}}": company.name,
+        "{{COMPANY_ID}}": slug,
         "{{COMPANY_WEBSITE}}": company.website,
         "{{COMPANY_SUMMARY}}": summary,
         "{{COMPANY_TONE}}": company.tone,
@@ -232,6 +233,7 @@ def handle_create(body: dict) -> dict:
     existing_entry.setdefault("tag", "Demo")
     existing_entry.setdefault("logoUrl", f"{S3_BASE}/{slug}/logo.png")
     existing_entry.setdefault("archived", False)
+    existing_entry.setdefault("projects", [])
 
     sites_data["updated"] = datetime.utcnow().strftime("%Y-%m-%d")
     sites_data["sites"] = sites
