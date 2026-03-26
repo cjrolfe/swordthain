@@ -1,67 +1,92 @@
-# Swordthain Demo Sites (AWS)
+# Swordthain Demo Sites
 
-This repo powers a **static directory of company demo sites** hosted on AWS (S3 + CloudFront). Automation is provided by API Gateway + Lambda.
+A directory of company demo sites hosted on AWS (S3 + CloudFront). Each company has its own page, and each company can have one or more projects. Everything is managed through a UI backed by API Gateway + Lambda.
 
-* The **landing page** (`/index.html`) reads `assets/sites.json` and shows each company as a card.
-* Each company lives in its **own folder** (e.g. `/bbc/`, `/rossellimac/`) with an `index.html`.
-* New companies can be created via the **"Create new company"** modal on the landing page.
-  * Submitting the form calls an API endpoint. A Lambda function creates the company folder from `/company-template/`.
-  * Users can optionally provide a **custom demo description**. If left empty, the Lambda generates a short summary using OpenAI or Anthropic.
-  * Screenshots are skipped in Lambda; the site uses the website's `og:image` when available.
-* Companies can be **archived, restored, or deleted** via buttons that call the same API.
-
-## Hosting architecture
+## Architecture
 
 | Component | Technology |
 |-----------|------------|
-| Static site | S3 bucket |
+| Static site | S3 (`swordthain-demo-sites`) |
 | CDN | CloudFront |
-| Custom domain | Route 53 (swordthain.com) |
-| Automation | API Gateway + Lambda |
-| Logos | S3 (sfdcdemoimages, eu-west-1) |
+| DNS | Route 53 (swordthain.com) |
+| API | API Gateway + Lambda (`swordthain-automation`) |
+| Logos | S3 (`sfdcdemoimages`, eu-west-1) |
 
 ## How it works
 
-### Landing page + data
+### Frontend
 
-* `index.html` – main directory UI and "Create new company" modal
-* `archived.html` – lists archived companies
-* `assets/app.js` – fetches `assets/sites.json`, renders cards, and calls the API for create/archive/restore/delete
-* `assets/sites.json` – source of truth for companies and metadata
+| File | Purpose |
+|------|---------|
+| `index.html` | Landing page — company directory and "Create new company" modal |
+| `archived.html` | Archived companies (restore / delete) |
+| `assets/app.js` | Fetches `sites.json`, renders cards, handles all API calls with in-memory updates |
+| `assets/sites.json` | Source of truth for all companies, their metadata, and their projects |
+| `company-template/index.html` | Template used by Lambda when creating a new company |
+| `project-template/index.html` | Template used by Lambda when creating a new project |
 
-### API + Lambda automation
+### API endpoints
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/create` | POST | Create new company from `company-template/`, generate AI summary, update `sites.json` |
-| `/archive` | POST | Archive, restore, or delete a company (`action` + `companyId`) |
+| `/create` | POST | Create a company from `company-template/`, generate AI summary, update `sites.json` |
+| `/archive` | POST | Archive, restore, or permanently delete a company |
+| `/project/create` | POST | Create a project under a company from `project-template/`, update `sites.json` |
+| `/project/delete` | POST | Permanently delete a project |
 
-The Lambda functions read and write content in the S3 bucket and invalidate CloudFront cache after updates.
+After each operation, Lambda updates `assets/sites.json` in S3 and invalidates the CloudFront cache. The frontend updates its card grid immediately in memory — no page reload required.
+
+### Data structure (`sites.json`)
+
+```json
+{
+  "updated": "2026-03-26",
+  "sites": [
+    {
+      "id": "company-slug",
+      "name": "Company Name",
+      "path": "/company-slug/",
+      "description": "AI-generated or custom description",
+      "tag": "Demo",
+      "logoUrl": "https://sfdcdemoimages.s3.eu-west-1.amazonaws.com/company-slug/logo.png",
+      "archived": false,
+      "projects": [
+        {
+          "id": "project-slug",
+          "name": "Project Name",
+          "description": "Project description",
+          "createdAt": "2026-03-26"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Usage
 
-### Create a new company
+### Create a company
 
-1. Open the landing page.
-2. Click **Create new company**.
-3. Fill in:
-   * **Company name** (required)
-   * **Company website** (optional) – used for AI summary and og:image
-   * **Demo description** (optional) – custom description; if empty, AI-generated
-   * **Tone** (optional) – affects AI style when no custom description is provided
-4. Click **Create**. The API creates the company folder and updates `sites.json`.
+1. Click **Create new company** on the landing page.
+2. Fill in company name (required), website, description, and tone.
+3. Click **Create**. Lambda creates `/{company-id}/index.html` in S3, generates an AI summary if no description was provided, and adds the company to `sites.json`.
 
-### Archive / restore a company
+### Archive / restore / delete a company
 
-On the landing page or archived page, click **Archive** or **Restore**. The API updates `sites.json` immediately.
+- **Archive** — click Archive on the landing page. The company is hidden from the landing page but remains in S3.
+- **Restore** — click Restore on the archived page.
+- **Delete** — click Delete on the archived page and confirm. Permanently removes the company folder from S3. Cannot be undone.
 
-### Delete an archived company
+### Add / delete a project
 
-On the archived page, click **Delete** on a company. Confirm the prompt. The API removes the company from `sites.json` and deletes its folder. This is permanent.
+Open a company page. The **Projects** section lists existing projects and has an **Add project** button.
 
-## AI provider setup (AWS Secrets Manager)
+- **Add project** — enter a name and optional description. Lambda creates `/{company-id}/{project-id}/index.html` and updates `sites.json`.
+- **Delete project** — click Delete on a project card and confirm. Permanently removes the project from S3. Cannot be undone.
 
-Create a secret `swordthain/ai-keys` in Secrets Manager (eu-west-1) with JSON:
+## AI provider setup
+
+Create a secret `swordthain/ai-keys` in AWS Secrets Manager (eu-west-1):
 
 ```json
 {
@@ -70,14 +95,17 @@ Create a secret `swordthain/ai-keys` in Secrets Manager (eu-west-1) with JSON:
 }
 ```
 
-Use the keys you need; omit the other.
+Set Lambda environment variables:
 
-Set Lambda environment variable `AI_PROVIDER` to `openai` or `anthropic`. If unset, OpenAI is used when `OPENAI_API_KEY` exists.
+| Variable | Values | Default |
+|----------|--------|---------|
+| `AI_PROVIDER` | `openai`, `anthropic`, `none` | `openai` if key present |
+| `OPENAI_MODEL` | e.g. `gpt-4.1-mini` | `gpt-4.1-mini` |
+| `ANTHROPIC_MODEL` | e.g. `claude-3-5-haiku-20241022` | `claude-3-5-haiku-20241022` |
+| `AI_TEMPERATURE` | float | `0.4` |
+| `AI_MAX_TOKENS` | int | `150` |
 
-**Supported models:**
-
-* **OpenAI:** `gpt-4.1-mini` (default), `gpt-4o-mini`, `gpt-4o`
-* **Anthropic:** `claude-3-5-haiku-20241022` (default), `claude-3-5-sonnet-20241022`, `claude-opus-4-6`
+If AI is unavailable the Lambda falls back to the website's meta description, or a generic placeholder. Creation never fails due to AI issues.
 
 ## Deployment
 
@@ -100,84 +128,49 @@ cd lambda
 python3 -m pip install -r requirements.txt -t .
 zip -r ../lambda.zip . -x "*.pyc" -x "__pycache__/*" -x "README.md"
 cd ..
-aws lambda update-function-code --function-name swordthain-automation --zip-file fileb://lambda.zip
+aws lambda update-function-code --function-name swordthain-automation --zip-file fileb://lambda.zip --region us-east-1
 ```
 
-### Invalidate CloudFront (optional)
+### Invalidate CloudFront
 
 ```bash
-aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
+aws cloudfront create-invalidation --distribution-id E1AUXZ6C0Z7J9P --paths "/*"
 ```
 
-## API URL configuration
+Lambda automatically invalidates the relevant CloudFront paths after each write if `CLOUDFRONT_DISTRIBUTION_ID` is set in its environment.
 
-The frontend uses `window.SWORDTHAIN_API` for the API base URL. It is set in `index.html` and `archived.html`:
-
-```html
-<script>window.SWORDTHAIN_API = "https://YOUR_API_ID.execute-api.eu-west-1.amazonaws.com/prod";</script>
-```
-
-Get the URL from API Gateway → your API → Stages → Invoke URL. Ensure it includes the stage (e.g. `/prod`).
-
-## Local development
-
-### Run scripts locally (filesystem)
-
-The `scripts/` folder still has the original Python logic for local development:
-
-```bash
-python -m pip install -r requirements.txt
-python -m playwright install --with-deps chromium  # for screenshots
-python scripts/generate_sites.py
-```
-
-To test create/archive with env vars:
-
-```bash
-ISSUE_BODY="**Company name:** Test Co\n**Website:** https://example.com\n**Tone:** Professional" python scripts/create_company.py
-ISSUE_TITLE="Archive company: Test Co" ISSUE_BODY="**Company id:** test-co" python scripts/archive_company.py
-```
-
-### Preview the site
+## Local preview
 
 ```bash
 python -m http.server 8000
+# Open http://localhost:8000/
 ```
 
-Open `http://localhost:8000/`. Note: create/archive/delete buttons call the live API; there is no local API server.
+Create/archive/delete buttons call the live API. There is no local API server.
 
 ## File structure
 
-```text
-.
-├─ index.html                 # Landing page (directory + create modal)
-├─ archived.html              # Archived companies view
-├─ CNAME                      # Custom domain (swordthain.com)
-├─ assets/
-│  ├─ app.js                  # UI logic + API calls
-│  ├─ styles.css              # Global styling
-│  ├─ sites.json              # Company registry
-│  └─ screenshots/            # Screenshots (legacy; Lambda uses og:image)
-├─ company-template/
-│  └─ index.html              # Template for new companies
-├─ <company-id>/
-│  └─ index.html              # Generated company page
-├─ lambda/                    # Lambda package (API backend)
-│  ├─ lambda_function.py      # Handler (routes /create, /archive)
-│  ├─ create_company.py      # Create logic (S3-adapted)
-│  ├─ archive_company.py     # Archive/restore/delete (S3-adapted)
-│  ├─ generate_sites.py       # Rebuild sites.json (S3-adapted)
-│  ├─ s3_utils.py            # S3 + CloudFront helpers
-│  ├─ ai_providers/          # OpenAI + Anthropic
-│  └─ requirements.txt
-├─ scripts/                   # Original scripts (local/dev use)
-│  ├─ ai_providers/
-│  ├─ create_company.py
-│  ├─ archive_company.py
-│  └─ generate_sites.py
-└─ .github/workflows/         # Legacy (GitHub Actions, no longer used)
 ```
-
-## Legacy: GitHub Pages + Actions
-
-This project was originally hosted on GitHub Pages with GitHub Actions. The `.github/workflows/` folder and `scripts/` remain for reference and local use. The live site now runs entirely on AWS.
+.
+├── index.html                  # Landing page
+├── archived.html               # Archived companies view
+├── favicon.svg                 # Sword icon
+├── assets/
+│   ├── app.js                  # UI logic and API calls
+│   ├── styles.css              # Global styles
+│   └── sites.json              # Company + project registry
+├── company-template/
+│   └── index.html              # Template for new company pages
+├── project-template/
+│   └── index.html              # Template for new project pages
+└── lambda/                     # Lambda source (pip deps excluded from git)
+    ├── lambda_function.py      # Request router
+    ├── create_company.py       # Company creation handler
+    ├── archive_company.py      # Archive / restore / delete handler
+    ├── create_project.py       # Project creation handler
+    ├── delete_project.py       # Project deletion handler
+    ├── generate_sites.py       # Rebuild sites.json from S3 (recovery tool)
+    ├── s3_utils.py             # S3 + CloudFront helpers
+    ├── ai_providers/           # OpenAI and Anthropic provider modules
+    └── requirements.txt
+```
