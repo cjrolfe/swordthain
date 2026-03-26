@@ -19,7 +19,7 @@ function render(filterText) {
   const q = (filterText || "").toLowerCase();
   const API_BASE = window.SWORDTHAIN_API || "";
 
-  const subset = sites.filter(s => _isArchivedView ? !!s.archived : !s.archived);
+  const subset = sites.filter(s => s.id !== "company-template" && (_isArchivedView ? !!s.archived : !s.archived));
   const filtered = subset.filter(s => {
     const hay = `${s.name} ${s.description} ${s.tag} ${s.id}`.toLowerCase();
     return hay.includes(q);
