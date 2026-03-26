@@ -27,17 +27,15 @@ __pycache__
 lambda.zip
 
 # Lambda pip-installed deps (build with: pip install -r requirements.txt -t .)
-# Playwright is 100MB+ and not used in Lambda (screenshots skipped)
-lambda/playwright/
-lambda/playwright-*.dist-info/
-lambda/requests/
-lambda/requests-*.dist-info/
-lambda/beautifulsoup4/
-lambda/beautifulsoup4-*.dist-info/
-lambda/soupsieve/
-lambda/soupsieve-*.dist-info/
+lambda/bin/
+lambda/bs4/
 lambda/certifi/
-lambda/urllib3/
 lambda/charset_normalizer/
 lambda/idna/
-lambda/*.dist-info/*.so
+lambda/playwright/
+lambda/requests/
+lambda/soupsieve/
+lambda/urllib3/
+lambda/*.dist-info/
+lambda/*.so
+lambda/typing_extensions*
