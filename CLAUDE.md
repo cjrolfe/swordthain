@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an AWS-hosted directory of company demo sites. Each company has its own folder with an `index.html` page. The landing page displays company cards read from `assets/sites.json`. All CRUD operations (create, archive, restore, delete) are **API-driven** and automated via Lambda functions.
+This is an AWS-hosted directory of company demo sites. Each company has its own folder with an `index.html` page, and each company can have one or more **projects**, each with their own `index.html` page. The landing page displays company cards read from `assets/sites.json`. All CRUD operations (create, archive, restore, delete) are **API-driven** and automated via Lambda functions. The `company-template` entry is hidden from the landing page UI but must remain in `sites.json` and S3 — it is the template Lambda uses to create new companies.
 
 ## Architecture
 
@@ -14,21 +14,29 @@ This is an AWS-hosted directory of company demo sites. Each company has its own 
 - `index.html` - Main landing page with company directory and "Create new company" modal
 - `archived.html` - Shows archived companies (with restore/delete options)
 - `favicon.svg` - Custom sword icon (SVG format for scalability)
-- `assets/app.js` - Renders cards from `sites.json`, handles search, and calls API endpoints
-- `assets/sites.json` - **Source of truth** for all companies and their metadata
+- `assets/app.js` - Renders cards from `sites.json`, handles search, and calls API endpoints. After each operation the in-memory `sites` array is mutated and the grid re-renders immediately — no `window.location.reload()`.
+- `assets/sites.json` - **Source of truth** for all companies, their metadata, and their projects
 
 ### Backend (Lambda + API Gateway)
-Two primary Lambda endpoints power the automation:
+Four Lambda endpoints:
 1. **POST /create** - Creates a new company folder from `company-template/`, fetches website content, generates an AI summary via configured provider (OpenAI or Anthropic), uses website's og:image for preview, and updates `sites.json`
 2. **POST /archive** - Handles archive, restore, and delete actions based on `action` parameter
+3. **POST /project/create** - Creates a new project under a company from `project-template/`, writes `{companyId}/{projectId}/index.html` to S3, and updates the company's `projects` array in `sites.json`
+4. **POST /project/delete** - Removes a project entry from `sites.json` and deletes its S3 prefix
+
+**Route ordering in `lambda_function.py` is critical:** `/project/create` and `/project/delete` must be checked **before** `/create` and `/archive`, because `"/create" in "/project/create"` is `True`.
 
 Lambda function files (in `lambda/` folder):
-- `lambda_function.py` - Routes /create and /archive to handlers
+- `lambda_function.py` - Routes requests to handlers (order matters — see above)
 - `create_company.py` - Creates company folders in S3, generates AI summaries
 - `archive_company.py` - Toggles archived flag or permanently deletes companies
-- `generate_sites.py` - Scans S3 folders and rebuilds `sites.json`
+- `create_project.py` - Creates project pages under a company
+- `delete_project.py` - Deletes project pages and removes from `sites.json`
+- `generate_sites.py` - Scans S3 folders and rebuilds `sites.json` (recovery tool)
 - `s3_utils.py` - S3 + CloudFront utilities (read/write/delete/invalidate)
 - `ai_providers/` - Modular AI provider system (OpenAI, Anthropic)
+
+**Note:** Lambda pip dependencies are installed at build time (`pip install -r requirements.txt -t .`) and excluded from git via `.gitignore`. Only source `.py` files are committed.
 
 **Note:** Screenshots are skipped in Lambda (uses og:image fallback from websites).
 
@@ -41,20 +49,25 @@ Located in `lambda/ai_providers/`:
 
 ## Key Conventions
 
-### Company Identifiers
-- Company IDs are **slugified**: lowercase with hyphens (e.g., "Acme Ltd" → "acme-ltd")
+### Company and Project Identifiers
+- IDs are **slugified**: lowercase with hyphens (e.g., "Acme Ltd" → "acme-ltd")
 - Each company lives in `/<company-id>/index.html`
-- Folder names become the company ID
+- Each project lives in `/<company-id>/<project-id>/index.html`
 
 ### Template System
-The `company-template/index.html` uses a simple mustache-like syntax:
+Both `company-template/index.html` and `project-template/index.html` use a simple mustache-like syntax:
 - `{{VARIABLE}}` - Replaced with actual values
-- `{{#IF_CONDITION}}...{{/IF_CONDITION}}` - Conditional blocks (e.g., `{{#IF_WEBSITE}}`)
+- `{{#IF_CONDITION}}...{{/IF_CONDITION}}` - Conditional blocks
+
+The regex in `create_company.py`'s `render_from_template` must use **double-brace** patterns (e.g., `\{\{#IF_WEBSITE\}\}`) to correctly match `{{#IF_WEBSITE}}`. Using single-brace patterns leaves stray `{` and `}` characters on the rendered page.
 
 Variables replaced during company creation:
-- `{{COMPANY_NAME}}`, `{{COMPANY_WEBSITE}}`, `{{COMPANY_SUMMARY}}`, `{{COMPANY_TONE}}`
+- `{{COMPANY_NAME}}`, `{{COMPANY_ID}}`, `{{COMPANY_WEBSITE}}`, `{{COMPANY_SUMMARY}}`, `{{COMPANY_TONE}}`
 - `{{LOGO_URL}}`, `{{S3_BUCKET_HINT}}`, `{{S3_LOGO_HINT}}`
 - `{{SCREENSHOT_PATH}}` (Lambda uses og:image instead)
+
+Variables replaced during project creation:
+- `{{PROJECT_NAME}}`, `{{PROJECT_DESCRIPTION}}`, `{{COMPANY_ID}}`, `{{COMPANY_NAME}}`, `{{CREATED_AT}}`
 
 ### S3 Assets
 - **Website bucket:** `swordthain-demo-sites` (configurable via `S3_BUCKET` env var)
@@ -71,13 +84,29 @@ Each entry in `sites.json` contains:
   "description": "AI-generated or fallback description",
   "tag": "Demo",
   "logoUrl": "https://sfdcdemoimages.s3.eu-west-1.amazonaws.com/company-slug/logo.png",
-  "archived": false
+  "archived": false,
+  "projects": [
+    {
+      "id": "project-slug",
+      "name": "Project Name",
+      "description": "Project description",
+      "createdAt": "2026-03-26"
+    }
+  ]
 }
 ```
 
 ### Protected Folders
-- `company-template` **must never be archived or deleted** (it's used to create new companies)
+- `company-template` **must never be archived or deleted** — it is used by Lambda to create new companies. It is hidden from the landing page UI by a filter in `app.js` but must remain in `sites.json`.
 - Excluded from `generate_sites.py`: `assets`, `lambda`
+
+### Frontend In-Memory Updates
+`app.js` exposes `sites` (array), `render()`, and `updateArchivedCount()` at module scope so both the list IIFE and the create-modal IIFE can mutate state without a page reload. After a successful API call the local array is updated and `render()` is called directly — this avoids showing stale data during the CloudFront invalidation propagation window.
+
+### CloudFront Path Requirements
+- CloudFront's `DefaultRootObject` (index.html) only works for the root path `/`, not subdirectories
+- All links to company and project pages must include `index.html` explicitly (e.g., `/company-name/index.html`, `/company-name/project-name/index.html`)
+- `app.js` appends `index.html` to company paths; project pages in `company-template/index.html` also use explicit `index.html` links
 
 ## AWS Deployment
 
@@ -101,8 +130,6 @@ cd ..
 aws lambda update-function-code --function-name swordthain-automation --zip-file fileb://lambda.zip --region us-east-1
 ```
 
-**Note:** Lambda dependencies (requests, beautifulsoup4, etc.) are installed at build time and excluded from git tracking. Only source code is committed.
-
 ### Invalidate CloudFront Cache
 ```bash
 aws cloudfront create-invalidation --distribution-id E1AUXZ6C0Z7J9P --paths "/*"
@@ -111,22 +138,21 @@ aws cloudfront create-invalidation --distribution-id E1AUXZ6C0Z7J9P --paths "/*"
 **Note:** Lambda automatically invalidates CloudFront after updates if `CLOUDFRONT_DISTRIBUTION_ID` env var is set.
 
 ### API Gateway Configuration
-The frontend needs the API base URL. Set in `index.html` and `archived.html`:
+The frontend needs the API base URL. Set in `index.html`, `archived.html`, and rendered company pages:
 ```html
 <script>window.SWORDTHAIN_API = "https://x7g9r0sdmc.execute-api.us-east-1.amazonaws.com/prod";</script>
 ```
 
-Get the URL from: API Gateway → Stages → Invoke URL (must include stage, e.g., `/prod`)
-
 **CORS Configuration:**
-- Lambda function returns CORS headers: `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Headers: Content-Type`, `Access-Control-Allow-Methods: POST, OPTIONS`
-- API Gateway has OPTIONS methods configured for `/create` and `/archive` endpoints for preflight requests
-- Both POST methods use `AWS_PROXY` integration type to pass full request context to Lambda
+- Lambda returns CORS headers: `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Headers: Content-Type`, `Access-Control-Allow-Methods: POST, OPTIONS`
+- API Gateway has OPTIONS + POST methods configured for: `/create`, `/archive`, `/project/create`, `/project/delete`
+- All POST methods use `AWS_PROXY` integration type
+- When adding new endpoints, grant Lambda invoke permission and redeploy the API stage
 
 ## AI Provider Integration
 
 ### Configuration (AWS Secrets Manager)
-Create secret `swordthain/ai-keys` in Secrets Manager (eu-west-1) with JSON:
+Create secret `swordthain/ai-keys` in Secrets Manager (eu-west-1):
 ```json
 {
   "OPENAI_API_KEY": "sk-...",
@@ -141,32 +167,8 @@ Set Lambda environment variables:
 - `AI_TEMPERATURE` - Optional (default: `0.4`)
 - `AI_MAX_TOKENS` - Optional (default: `150`)
 
-### Supported Providers
-1. **OpenAI** - Uses `/v1/responses` endpoint
-   - Default model: `gpt-4.1-mini`
-   - Other models: `gpt-4o-mini`, `gpt-4o`
-2. **Anthropic** - Uses `/v1/messages` endpoint
-   - Default model: `claude-3-5-haiku-20241022` (fast, cost-effective)
-   - Other models: `claude-3-5-sonnet-20241022`, `claude-opus-4-6`
-
-### Provider Selection Logic
-1. If `AI_PROVIDER=none` → skip AI (use fallback)
-2. If `AI_PROVIDER=anthropic` → use Anthropic (requires `ANTHROPIC_API_KEY`)
-3. If `AI_PROVIDER=openai` → use OpenAI (requires `OPENAI_API_KEY`)
-4. If `AI_PROVIDER` not set and `OPENAI_API_KEY` exists → use OpenAI (legacy mode)
-5. Otherwise → use fallback (no AI)
-
 ### Fallback Behavior
-If AI provider is unavailable (no key, rate limit, or error):
-- Falls back to website's meta description
-- Or uses: `"[Company Name] — demo environment based on publicly available information."`
-- The script **never fails** due to AI issues
-
-### API Details
-- **Retry logic:** 5 attempts with exponential backoff + jitter for 429/5xx errors
-- **Input limited** to first 8000 chars of page text to reduce cost
-- **Temperature:** 0.4 (configurable via `AI_TEMPERATURE`)
-- **Max tokens:** 150 (configurable via `AI_MAX_TOKENS`)
+If AI is unavailable: falls back to website meta description, then a generic placeholder. Creation never fails due to AI issues.
 
 ### Adding New Providers
 Create `lambda/ai_providers/new_provider.py` extending `AIProvider` base class, implement 6 abstract methods, and add to factory.
@@ -174,39 +176,31 @@ Create `lambda/ai_providers/new_provider.py` extending `AIProvider` base class, 
 ## API-Driven Workflow
 
 ### Creating a Company
-1. User clicks "Create new company" button on landing page
-2. Modal opens, user fills in:
-   - **Company name** (required)
-   - **Website** (optional) - used for AI summary and og:image
-   - **Demo description** (optional) - if provided, used instead of AI generation
-   - **Tone** (optional) - affects AI style when no custom description provided
-3. JavaScript calls `POST ${API_BASE}/create` with JSON body
-4. Lambda handler:
-   - Validates request
-   - Reads `company-template/index.html` from S3
-   - Fetches website text (title, meta, content, og:image)
-   - Calls AI provider if custom description not provided
-   - Renders template with all variables
-   - Writes `/<company-id>/index.html` to S3
-   - Updates `assets/sites.json` with new company entry
-   - Invalidates CloudFront cache
-   - Returns success response
+1. User fills in the "Create new company" modal and submits
+2. `POST /create` → Lambda reads `company-template/index.html` from S3, fetches website og:image + text, generates AI summary, renders template, writes `/{slug}/index.html`, updates `sites.json`, invalidates CloudFront
+3. Frontend adds the new entry to the local `sites` array and re-renders immediately
 
-### Archiving/Restoring
-1. User clicks "Archive" (on landing) or "Restore" (on archived page)
-2. JavaScript calls `POST ${API_BASE}/archive` with `{"action": "archive|restore", "companyId": "company-slug"}`
-3. Lambda toggles the `archived` flag in `sites.json`
-4. Company folder remains intact; only visibility on landing page changes
+### Archiving / Restoring
+1. `POST /archive` with `{"action": "archive|restore", "companyId": "..."}`
+2. Lambda toggles `archived` flag in `sites.json`; company folder untouched
+3. Frontend mutates the local `sites` entry and re-renders
 
 ### Deleting (Permanent)
-1. Only available from archived page (not landing page)
-2. User clicks "Delete" button and confirms
-3. JavaScript calls `POST ${API_BASE}/archive` with `{"action": "delete", "companyId": "company-slug"}`
-4. Lambda:
-   - Removes company from `sites.json`
-   - Deletes all objects under `/<company-id>/` prefix in S3
-   - Invalidates CloudFront cache
-5. **This is permanent and cannot be undone**
+1. Only available from archived page
+2. `POST /archive` with `{"action": "delete", "companyId": "..."}`
+3. Lambda removes entry from `sites.json` and deletes all objects under `/{companyId}/` in S3 (including any project pages)
+4. Frontend removes the entry from local `sites` and re-renders
+
+### Creating a Project
+1. User fills in the "Add project" modal on a company page and submits
+2. `POST /project/create` with `{"companyId", "name", "description"}`
+3. Lambda reads `project-template/index.html` from S3, renders it, writes `/{companyId}/{projectId}/index.html`, appends to `sites.json` projects array, invalidates CloudFront
+4. Company page JS re-fetches `sites.json` with cache-busting query string and re-renders project cards
+
+### Deleting a Project
+1. `POST /project/delete` with `{"companyId", "projectId"}`
+2. Lambda removes project from `sites.json` and deletes `/{companyId}/{projectId}/` prefix in S3
+3. Company page JS re-renders project cards
 
 ## Local Development
 
@@ -216,42 +210,24 @@ python -m http.server 8000
 # Open http://localhost:8000/
 ```
 
-**Note:** Create/archive/delete buttons call the live API. There is no local API server. To test without API, remove or stub `window.SWORDTHAIN_API` in HTML files.
+**Note:** All buttons call the live API. There is no local API server.
 
 ## Important Notes
 
-### CloudFront Path Requirements
-- CloudFront's `DefaultRootObject` (index.html) only works for the root path `/`, not subdirectories
-- Company links must include `index.html` explicitly: `/company-name/index.html` instead of `/company-name/`
-- Frontend (`app.js`) appends `index.html` to all company paths to avoid 403 errors
-
 ### Folder Detection
 - `generate_sites.py` only detects folders with an `index.html` inside
-- Folders without `index.html` are ignored
 - Folders in `EXCLUDE` set (`.github`, `assets`, `scripts`) are always skipped
 
 ### S3 Operations
 - All S3 operations use `s3_utils.py` module
 - Bucket name configurable via `S3_BUCKET` env var (default: `swordthain-demo-sites`)
 - CloudFront invalidation automatic if `CLOUDFRONT_DISTRIBUTION_ID` is set
-- Lambda needs IAM permissions: `s3:GetObject`, `s3:PutObject`, `s3:ListBucket`, `s3:DeleteObject`, `cloudfront:CreateInvalidation`, `secretsmanager:GetSecretValue`
+- Lambda IAM permissions needed: `s3:GetObject`, `s3:PutObject`, `s3:ListBucket`, `s3:DeleteObject`, `cloudfront:CreateInvalidation`, `secretsmanager:GetSecretValue`
 
-## Modifying Company Pages
+### Updating Templates
+- Edit `company-template/index.html` or `project-template/index.html` locally and deploy via `aws s3 sync`
+- Changes only affect **newly created** companies/projects — existing pages are not automatically updated
+- The `company-template/index.html` in S3 is what Lambda reads at runtime; the local copy is the source of truth
 
-### To Update a Company Page
-1. Edit `/<company-id>/index.html` directly in S3 (or locally and sync)
-2. Push changes via `aws s3 sync` or AWS Console
-3. Invalidate CloudFront (or wait for cache expiration)
-
-**Note:** Manual edits to `sites.json` are overwritten when Lambda runs. Use API or edit both company folder and `sites.json` together.
-
-### To Update the Template
-1. Edit `company-template/index.html` locally
-2. Deploy to S3 via `aws s3 sync`
-3. Changes only affect **newly created** companies
-4. Existing companies are not automatically updated
-
-### To Bulk Rebuild sites.json
-Run `python lambda/generate_sites.py` locally (adapted for S3) or trigger via Lambda. This preserves:
-- `name`, `description`, `tag`, `logoUrl`, `archived` - from existing `sites.json` entries
-- Only adds new companies or removes deleted ones
+### Bulk Rebuild sites.json
+Run `lambda/generate_sites.py` (adapted for S3) if `sites.json` gets out of sync. It preserves existing metadata (`name`, `description`, `tag`, `logoUrl`, `archived`) and only adds/removes companies based on S3 folder contents. Note: it does not currently preserve the `projects` array.
