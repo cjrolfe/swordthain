@@ -149,8 +149,8 @@ def render_from_template(template_html: str, company: CompanyRequest, slug: str,
 
     def repl(m):
         return m.group(1) if has_screenshot else ""  # for SCREENSHOT
-    html = re.sub(r"\{\#IF_SCREENSHOT\}(.*?)\{\/IF_SCREENSHOT\}", lambda m: m.group(1) if has_screenshot else "", template_html, flags=re.DOTALL)
-    html = re.sub(r"\{\#IF_WEBSITE\}(.*?)\{\/IF_WEBSITE\}", lambda m: m.group(1) if has_website else "", html, flags=re.DOTALL)
+    html = re.sub(r"\{\{#IF_SCREENSHOT\}\}(.*?)\{\{/IF_SCREENSHOT\}\}", lambda m: m.group(1) if has_screenshot else "", template_html, flags=re.DOTALL)
+    html = re.sub(r"\{\{#IF_WEBSITE\}\}(.*?)\{\{/IF_WEBSITE\}\}", lambda m: m.group(1) if has_website else "", html, flags=re.DOTALL)
 
     logo_url = f"{S3_BASE}/{slug}/logo.png"
     s3_bucket_hint = f"s3://sfdcdemoimages/{slug}/"
