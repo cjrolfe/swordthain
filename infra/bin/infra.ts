@@ -2,6 +2,7 @@
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { AuthStack } from "../lib/auth-stack";
+import { CiStack } from "../lib/ci-stack";
 import { MediaAppStack } from "../lib/media-app-stack";
 
 const app = new cdk.App();
@@ -23,4 +24,14 @@ new AuthStack(app, "SwordthainAuthStack", {
 new MediaAppStack(app, "SwordthainMediaAppStack", {
   env,
   allowedOrigins: ["https://swordthain.com", "https://www.swordthain.com"],
+});
+
+new CiStack(app, "SwordthainCiStack", {
+  env,
+  githubOrg: "cjrolfe",
+  githubRepo: "swordthain",
+  allowedBranches: ["main"],
+  playgroundBucketName: "swordthain-demo-sites",
+  playgroundLambdaFunctionName: "swordthain-automation",
+  playgroundDistributionId: "E1AUXZ6C0Z7J9P",
 });

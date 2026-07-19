@@ -4,6 +4,14 @@ Shared AWS infrastructure for swordthain.com, in TypeScript via AWS CDK. Deploye
 
 ## Stacks
 
+### `SwordthainCiStack`
+GitHub Actions OIDC trust (`token.actions.githubusercontent.com`) plus two purpose-scoped deploy roles — no long-lived AWS keys stored in GitHub. Both roles' trust policy is restricted to `repo:cjrolfe/swordthain:ref:refs/heads/main`, so only a genuine push to `main` (never a PR, never a fork) can assume them.
+
+- **`swordthain-playground-ci`** — scoped to exactly the playground's existing manual deploy: S3 read/write on `swordthain-demo-sites`, `lambda:UpdateFunctionCode` on `swordthain-automation`, `cloudfront:CreateInvalidation` on distribution `E1AUXZ6C0Z7J9P`. Nothing broader.
+- **`swordthain-infra-ci`** — only `sts:AssumeRole`/`sts:TagSession` on the three CDK bootstrap roles (`deploy-role`, `file-publishing-role`, `lookup-role`). Those bootstrap roles already carry the permissions CDK needs (see "Prerequisites" above) — this role is a narrow bridge into them, not a second copy of `AdministratorAccess`.
+
+See `.github/workflows/` at the repo root: `deploy-playground.yml` and `deploy-infra.yml` trigger on push to `main` scoped to their own path (`apps/playground/**` / `infra/**`), so a change to one app's code can't trigger or affect the other's deploy. `validate-infra.yml` and `validate-playground.yml` run on PRs with no AWS credentials at all (type-check + `cdk synth`, Python compile-check).
+
 ### `SwordthainMediaAppStack`
 `apps/media-app`'s own resources — starts with just the media storage bucket; DynamoDB tables, API Gateway, Lambda, and MediaConvert land here in later phases.
 

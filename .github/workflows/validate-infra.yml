@@ -1,0 +1,28 @@
+name: Validate Infra
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: infra
+        run: npm ci
+
+      - name: Type-check
+        working-directory: infra
+        run: npx tsc --noEmit
+
+      - name: Synth (no AWS credentials required)
+        working-directory: infra
+        run: npx cdk synth --all
