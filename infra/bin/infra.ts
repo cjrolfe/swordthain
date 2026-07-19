@@ -2,6 +2,7 @@
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { AuthStack } from "../lib/auth-stack";
+import { MediaAppStack } from "../lib/media-app-stack";
 
 const app = new cdk.App();
 
@@ -17,4 +18,9 @@ new AuthStack(app, "SwordthainAuthStack", {
   env,
   domainName: "swordthain.com",
   hostedZoneId: "Z09793352H82VF3C9TII2",
+});
+
+new MediaAppStack(app, "SwordthainMediaAppStack", {
+  env,
+  allowedOrigins: ["https://swordthain.com", "https://www.swordthain.com"],
 });

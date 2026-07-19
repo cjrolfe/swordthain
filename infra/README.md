@@ -4,6 +4,15 @@ Shared AWS infrastructure for swordthain.com, in TypeScript via AWS CDK. Deploye
 
 ## Stacks
 
+### `SwordthainMediaAppStack`
+`apps/media-app`'s own resources — starts with just the media storage bucket; DynamoDB tables, API Gateway, Lambda, and MediaConvert land here in later phases.
+
+- **`MediaBucket`** (`swordthain-media-<account-id>`) — fully private (`BLOCK_ALL` public access, `BucketOwnerEnforced`), SSE-S3 encrypted, versioned, TLS-enforced via bucket policy.
+- **Intelligent-Tiering from day one**: a lifecycle rule transitions every object to the `INTELLIGENT_TIERING` storage class immediately (day 0). This only activates the built-in Frequent/Infrequent/Archive-Instant-Access tiers, which have zero retrieval delay — the optional Archive Access / Deep Archive Access tiers are deliberately *not* opted into (that needs a separate bucket-level Intelligent-Tiering configuration), since both carry a multi-hour restore delay the spec rules out for casual browsing. True Glacier (Flexible Retrieval / Deep Archive) is applied per-folder by the app on demand — not a blanket bucket rule.
+- **CORS** allows `PUT`/`POST`/`GET` from `swordthain.com` / `www.swordthain.com` for presigned multipart uploads.
+- Incomplete multipart uploads are aborted after 7 days.
+- `RemovalPolicy.RETAIN` — this holds real media, never destroyed by a stack teardown.
+
 ### `SwordthainAuthStack`
 The Cognito User Pool shared by both apps: friends sign in as `Member`, the owner as `Owner` (Cognito group, checked explicitly in app code — see the spec's section 9 on the playground's access control).
 
