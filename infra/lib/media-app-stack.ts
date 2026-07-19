@@ -67,15 +67,16 @@ const ffmpegLocalBundling: ILocalBundling = {
 };
 
 /**
- * apps/media-app's own resources: media storage bucket, MediaItems table,
- * presigned upload + thumbnail-generation Lambdas, and the HTTP API that
- * fronts them (Cognito-authenticated). Folder CRUD/browsing and per-folder
- * sharing land in a later phase — folderId here is just an opaque string
- * until FolderShares exists to validate access against.
+ * apps/media-app's own resources: media storage bucket, MediaItems/Folders
+ * tables, presigned upload + thumbnail-generation + folder-browsing
+ * Lambdas, and the HTTP API that fronts them (Cognito-authenticated).
+ * Per-folder sharing (FolderShares) lands in a later phase — until then,
+ * folder endpoints are Owner-only rather than scoped per-Member.
  */
 export class MediaAppStack extends Stack {
   public readonly mediaBucket: s3.Bucket;
   public readonly mediaItemsTable: dynamodb.Table;
+  public readonly foldersTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: MediaAppStackProps) {
     super(scope, id, props);
@@ -140,6 +141,18 @@ export class MediaAppStack extends Stack {
       sortKey: { name: "uploadedAt", type: dynamodb.AttributeType.STRING },
     });
 
+    this.foldersTable = new dynamodb.Table(this, "FoldersTable", {
+      tableName: "swordthain-folders",
+      partitionKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+    this.foldersTable.addGlobalSecondaryIndex({
+      indexName: "byParent",
+      partitionKey: { name: "parentFolderId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "createdAt", type: dynamodb.AttributeType.STRING },
+    });
+
     const lambdaDir = path.join(__dirname, "..", "lambda", "media");
 
     // --- Presigned upload URL endpoint ---
@@ -201,6 +214,25 @@ export class MediaAppStack extends Stack {
       { prefix: "originals/" }
     );
 
+    // --- Folder browsing (create, list children, get, list media in folder) ---
+    const foldersFn = new NodejsFunction(this, "FoldersFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "folders.ts"),
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      environment: {
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
+        MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    this.foldersTable.grantReadWriteData(foldersFn);
+    this.mediaItemsTable.grantReadData(foldersFn);
+    this.mediaBucket.grantRead(foldersFn);
+
     // --- HTTP API (Cognito-authenticated) ---
     const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", props.userPool, {
       userPoolClients: [props.userPoolClient],
@@ -222,8 +254,29 @@ export class MediaAppStack extends Stack {
       authorizer,
     });
 
+    const foldersIntegration = new HttpLambdaIntegration("FoldersIntegration", foldersFn);
+    httpApi.addRoutes({
+      path: "/folders",
+      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.GET],
+      integration: foldersIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/folders/{folderId}",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: foldersIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/folders/{folderId}/media",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: foldersIntegration,
+      authorizer,
+    });
+
     new CfnOutput(this, "MediaBucketName", { value: this.mediaBucket.bucketName });
     new CfnOutput(this, "MediaItemsTableName", { value: this.mediaItemsTable.tableName });
+    new CfnOutput(this, "FoldersTableName", { value: this.foldersTable.tableName });
     new CfnOutput(this, "MediaApiUrl", { value: httpApi.apiEndpoint });
   }
 }

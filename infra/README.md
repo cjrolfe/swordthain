@@ -13,7 +13,7 @@ GitHub Actions OIDC trust (`token.actions.githubusercontent.com`) plus two purpo
 See `.github/workflows/` at the repo root: `deploy-playground.yml` and `deploy-infra.yml` trigger on push to `main` scoped to their own path (`apps/playground/**` / `infra/**`), so a change to one app's code can't trigger or affect the other's deploy. `validate-infra.yml` and `validate-playground.yml` run on PRs with no AWS credentials at all (type-check + `cdk synth`, Python compile-check).
 
 ### `SwordthainMediaAppStack`
-`apps/media-app`'s own resources. Folder CRUD/browsing and per-folder sharing land in a later phase — `folderId` is currently just an opaque string in `MediaItems`, not yet validated against a `Folders`/`FolderShares` table.
+`apps/media-app`'s own resources. Per-folder sharing (`FolderShares`) lands in a later phase — until then, all `/folders` routes require the `Owner` Cognito group (checked via the `cognito:groups` JWT claim), since there's no per-Member scoping to enforce yet and opening browsing to any authenticated user would let friends see every folder, not just ones shared with them.
 
 - **`MediaBucket`** (`swordthain-media-<account-id>`) — fully private (`BLOCK_ALL` public access, `BucketOwnerEnforced`), SSE-S3 encrypted, versioned, TLS-enforced via bucket policy.
 - **Intelligent-Tiering from day one**: a lifecycle rule transitions every object to the `INTELLIGENT_TIERING` storage class immediately (day 0). This only activates the built-in Frequent/Infrequent/Archive-Instant-Access tiers, which have zero retrieval delay — the optional Archive Access / Deep Archive Access tiers are deliberately *not* opted into (that needs a separate bucket-level Intelligent-Tiering configuration), since both carry a multi-hour restore delay the spec rules out for casual browsing. True Glacier (Flexible Retrieval / Deep Archive) is applied per-folder by the app on demand — not a blanket bucket rule.
@@ -25,6 +25,13 @@ See `.github/workflows/` at the repo root: `deploy-playground.yml` and `deploy-i
   - **`SharpLayer`** — built at `cdk synth`/`deploy` time via `npm install --os=linux --cpu=x64 --libc=glibc sharp@0.33.5` (no Docker required; all three flags are required together, confirmed by testing — `--os`/`--cpu` alone silently skip the platform-specific `@img/sharp-*` optional dependency).
   - **`FfmpegLayer`** — a static linux/amd64 ffmpeg build fetched from johnvansickle.com at build time (see the layer's placeholder README for the provenance trade-off this implies).
   - Both layers and the full upload→thumbnail pipeline (photo and video) were verified end-to-end against the real deployed stack, not just unit-tested.
+- **`FoldersTable`** (`swordthain-folders`) — `folderId` PK, GSI `byParent` (`parentFolderId` + `createdAt`). Top-level folders use the sentinel `parentFolderId: "ROOT"` rather than omitting the field, since a DynamoDB GSI skips items missing its indexed attribute — this keeps root and nested folders queryable through the same GSI.
+- **Folder browsing** (`FoldersFn`, all Owner-only):
+  - `POST /folders` — `{title, parentFolderId?, date?, guestUploadEnabled?}` → creates a folder (validates `parentFolderId` exists if given, otherwise defaults to root).
+  - `GET /folders?parentId=...` — lists direct children (defaults to root-level folders if `parentId` omitted).
+  - `GET /folders/{folderId}` — a single folder's details.
+  - `GET /folders/{folderId}/media` — media items in that folder (via `MediaItems`' `byFolder` GSI), each with a 15-minute signed `thumbnailUrl`.
+  - Verified end-to-end against the real deployed stack: create a root folder, create a nested subfolder, list both levels, upload a photo into the subfolder, confirm it appears in the folder's media listing with a working signed thumbnail URL, and confirm a non-Owner (`Member`) group claim gets a 403.
 - `RemovalPolicy.RETAIN` — this holds real media, never destroyed by a stack teardown.
 
 ### `SwordthainAuthStack`
