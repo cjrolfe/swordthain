@@ -23,7 +23,10 @@ const authStack = new AuthStack(app, "SwordthainAuthStack", {
 
 new MediaAppStack(app, "SwordthainMediaAppStack", {
   env,
-  allowedOrigins: ["https://swordthain.com", "https://www.swordthain.com"],
+  // localhost:5173 (Vite's default dev port) is included for local admin
+  // UI development against the real deployed API — tighten this once the
+  // admin UI has a real hosted origin.
+  allowedOrigins: ["https://swordthain.com", "https://www.swordthain.com", "http://localhost:5173"],
   userPool: authStack.userPool,
   userPoolClient: authStack.userPoolClient,
   sesIdentityArn: authStack.sesIdentity.emailIdentityArn,

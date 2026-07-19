@@ -4,7 +4,14 @@ import type {
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
@@ -43,6 +50,12 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
       return getFolder(event, owner, userId);
     case "GET /folders/{folderId}/media":
       return listFolderMedia(event, owner, userId);
+    case "PATCH /folders/{folderId}":
+      if (!owner) return jsonResponse(403, { error: "Owner access required" });
+      return updateFolder(event);
+    case "DELETE /folders/{folderId}":
+      if (!owner) return jsonResponse(403, { error: "Owner access required" });
+      return deleteFolder(event);
     default:
       return jsonResponse(404, { error: "Not found" });
   }
@@ -168,4 +181,95 @@ async function listFolderMedia(
   );
 
   return jsonResponse(200, { media });
+}
+
+async function updateFolder(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer
+): Promise<APIGatewayProxyStructuredResultV2> {
+  const folderId = event.pathParameters?.folderId;
+  if (!folderId) return jsonResponse(400, { error: "folderId is required" });
+
+  let payload: { title?: string; date?: string; guestUploadEnabled?: boolean; coverThumbnail?: string };
+  try {
+    payload = event.body ? JSON.parse(event.body) : {};
+  } catch {
+    return jsonResponse(400, { error: "Invalid JSON body" });
+  }
+
+  const updates: Record<string, unknown> = {};
+  for (const key of ["title", "date", "guestUploadEnabled", "coverThumbnail"] as const) {
+    if (payload[key] !== undefined) updates[key] = payload[key];
+  }
+  if (Object.keys(updates).length === 0) {
+    return jsonResponse(400, { error: "No updatable fields provided (title, date, guestUploadEnabled, coverThumbnail)" });
+  }
+
+  const existing = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId } }));
+  if (!existing.Item) return jsonResponse(404, { error: "Folder not found" });
+
+  const result = await ddb.send(
+    new UpdateCommand({
+      TableName: FOLDERS_TABLE_NAME,
+      Key: { folderId },
+      UpdateExpression: "SET " + Object.keys(updates).map((k, i) => `#${k} = :v${i}`).join(", "),
+      ExpressionAttributeNames: Object.fromEntries(Object.keys(updates).map((k) => [`#${k}`, k])),
+      ExpressionAttributeValues: Object.fromEntries(Object.keys(updates).map((k, i) => [`:v${i}`, updates[k]])),
+      ReturnValues: "ALL_NEW",
+    })
+  );
+
+  return jsonResponse(200, result.Attributes);
+}
+
+async function deleteFolder(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer
+): Promise<APIGatewayProxyStructuredResultV2> {
+  const folderId = event.pathParameters?.folderId;
+  if (!folderId) return jsonResponse(400, { error: "folderId is required" });
+
+  const existing = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId } }));
+  if (!existing.Item) return jsonResponse(404, { error: "Folder not found" });
+
+  const [children, media] = await Promise.all([
+    ddb.send(
+      new QueryCommand({
+        TableName: FOLDERS_TABLE_NAME,
+        IndexName: "byParent",
+        KeyConditionExpression: "parentFolderId = :p",
+        ExpressionAttributeValues: { ":p": folderId },
+        Limit: 1,
+      })
+    ),
+    ddb.send(
+      new QueryCommand({
+        TableName: MEDIA_TABLE_NAME,
+        IndexName: "byFolder",
+        KeyConditionExpression: "folderId = :f",
+        ExpressionAttributeValues: { ":f": folderId },
+        Limit: 1,
+      })
+    ),
+  ]);
+  if ((children.Items?.length ?? 0) > 0) {
+    return jsonResponse(409, { error: "Folder has sub-folders — move or delete them first" });
+  }
+  if ((media.Items?.length ?? 0) > 0) {
+    return jsonResponse(409, { error: "Folder has media — delete it first" });
+  }
+
+  const shares = await ddb.send(
+    new QueryCommand({
+      TableName: FOLDER_SHARES_TABLE_NAME,
+      KeyConditionExpression: "folderId = :f",
+      ExpressionAttributeValues: { ":f": folderId },
+    })
+  );
+  await Promise.all(
+    (shares.Items ?? []).map((share) =>
+      ddb.send(new DeleteCommand({ TableName: FOLDER_SHARES_TABLE_NAME, Key: { folderId, userId: share.userId } }))
+    )
+  );
+
+  await ddb.send(new DeleteCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId } }));
+  return jsonResponse(200, { folderId, deleted: true });
 }

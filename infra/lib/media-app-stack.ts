@@ -323,7 +323,12 @@ export class MediaAppStack extends Stack {
       apiName: "swordthain-media-api",
       corsPreflight: {
         allowOrigins: props.allowedOrigins,
-        allowMethods: [apigwv2.CorsHttpMethod.POST, apigwv2.CorsHttpMethod.GET],
+        allowMethods: [
+          apigwv2.CorsHttpMethod.POST,
+          apigwv2.CorsHttpMethod.GET,
+          apigwv2.CorsHttpMethod.PATCH,
+          apigwv2.CorsHttpMethod.DELETE,
+        ],
         allowHeaders: ["content-type", "authorization"],
       },
     });
@@ -344,7 +349,7 @@ export class MediaAppStack extends Stack {
     });
     httpApi.addRoutes({
       path: "/folders/{folderId}",
-      methods: [apigwv2.HttpMethod.GET],
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PATCH, apigwv2.HttpMethod.DELETE],
       integration: foldersIntegration,
       authorizer,
     });
