@@ -8,18 +8,17 @@ import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@a
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
+import { isOwner } from "./authz";
+import { ROOT, resolveAccess } from "./access";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
 
 const FOLDERS_TABLE_NAME = process.env.FOLDERS_TABLE_NAME!;
+const FOLDER_SHARES_TABLE_NAME = process.env.FOLDER_SHARES_TABLE_NAME!;
 const MEDIA_TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
 const MEDIA_BUCKET_NAME = process.env.MEDIA_BUCKET_NAME!;
 
-// Sentinel parentFolderId for top-level folders — keeps every folder
-// queryable through the same byParent GSI (DynamoDB GSIs skip items
-// missing the indexed attribute, so root folders can't just omit it).
-const ROOT = "ROOT";
 const THUMBNAIL_URL_EXPIRY_SECONDS = 900;
 
 const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
@@ -28,42 +27,22 @@ const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructu
   body: JSON.stringify(body),
 });
 
-/**
- * Folder visibility isn't scoped by FolderShares yet (that's Phase 3) — until
- * that table exists to enforce per-friend access, only the Owner can create
- * or browse folders at all. Opening this up to any authenticated Member
- * before then would let friends see every folder, not just ones shared
- * with them.
- */
-function isOwner(claims: APIGatewayProxyEventV2WithJWTAuthorizer["requestContext"]["authorizer"]["jwt"]["claims"]): boolean {
-  const groups = claims["cognito:groups"];
-  if (Array.isArray(groups)) return groups.includes("Owner");
-  if (typeof groups === "string") {
-    try {
-      const parsed = JSON.parse(groups);
-      if (Array.isArray(parsed)) return parsed.includes("Owner");
-    } catch {
-      // Not JSON — fall through to a plain comma-split check below.
-    }
-    return groups.split(",").map((g) => g.trim()).includes("Owner");
-  }
-  return false;
-}
-
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
-  if (!isOwner(event.requestContext.authorizer.jwt.claims)) {
-    return jsonResponse(403, { error: "Owner access required" });
-  }
+  const owner = isOwner(event.requestContext.authorizer.jwt.claims);
+  const userId = event.requestContext.authorizer.jwt.claims.sub as string;
 
   switch (event.routeKey) {
     case "POST /folders":
+      // Folder creation stays Owner-only — friends never create albums,
+      // per the spec's admin-only folder management.
+      if (!owner) return jsonResponse(403, { error: "Owner access required" });
       return createFolder(event);
     case "GET /folders":
-      return listFolders(event);
+      return listFolders(event, owner, userId);
     case "GET /folders/{folderId}":
-      return getFolder(event);
+      return getFolder(event, owner, userId);
     case "GET /folders/{folderId}/media":
-      return listFolderMedia(event);
+      return listFolderMedia(event, owner, userId);
     default:
       return jsonResponse(404, { error: "Not found" });
   }
@@ -106,7 +85,9 @@ async function createFolder(
 }
 
 async function listFolders(
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  owner: boolean,
+  userId: string
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const parentFolderId = event.queryStringParameters?.parentId ?? ROOT;
   const result = await ddb.send(
@@ -117,14 +98,36 @@ async function listFolders(
       ExpressionAttributeValues: { ":p": parentFolderId },
     })
   );
-  return jsonResponse(200, { folders: result.Items ?? [] });
+  const children = result.Items ?? [];
+
+  if (owner) {
+    return jsonResponse(200, { folders: children });
+  }
+
+  // A friend only sees children they (or an ancestor, including this
+  // parent) have been explicitly granted access to — sharing the parent
+  // implies access to everything beneath it.
+  const visible = await Promise.all(
+    children.map(async (folder) => ({
+      folder,
+      access: await resolveAccess(ddb, FOLDERS_TABLE_NAME, FOLDER_SHARES_TABLE_NAME, folder.folderId, userId),
+    }))
+  );
+  return jsonResponse(200, { folders: visible.filter((v) => v.access !== null).map((v) => v.folder) });
 }
 
 async function getFolder(
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  owner: boolean,
+  userId: string
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const folderId = event.pathParameters?.folderId;
   if (!folderId) return jsonResponse(400, { error: "folderId is required" });
+
+  if (!owner) {
+    const access = await resolveAccess(ddb, FOLDERS_TABLE_NAME, FOLDER_SHARES_TABLE_NAME, folderId, userId);
+    if (!access) return jsonResponse(404, { error: "Folder not found" });
+  }
 
   const result = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId } }));
   if (!result.Item) return jsonResponse(404, { error: "Folder not found" });
@@ -132,10 +135,17 @@ async function getFolder(
 }
 
 async function listFolderMedia(
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  owner: boolean,
+  userId: string
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const folderId = event.pathParameters?.folderId;
   if (!folderId) return jsonResponse(400, { error: "folderId is required" });
+
+  if (!owner) {
+    const access = await resolveAccess(ddb, FOLDERS_TABLE_NAME, FOLDER_SHARES_TABLE_NAME, folderId, userId);
+    if (!access) return jsonResponse(404, { error: "Folder not found" });
+  }
 
   const result = await ddb.send(
     new QueryCommand({

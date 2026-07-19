@@ -25,6 +25,8 @@ export interface AuthStackProps extends StackProps {
 export class AuthStack extends Stack {
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
+  public readonly sesIdentity: ses.EmailIdentity;
+  public readonly sesFromAddress: string;
 
   constructor(scope: Construct, id: string, props: AuthStackProps) {
     super(scope, id, props);
@@ -44,12 +46,12 @@ export class AuthStack extends Stack {
 
     // Verifies swordthain.com as an SES sending identity via DKIM CNAME
     // records added automatically to the existing hosted zone.
-    const sesIdentity = new ses.EmailIdentity(this, "SesIdentity", {
+    this.sesIdentity = new ses.EmailIdentity(this, "SesIdentity", {
       identity: ses.Identity.publicHostedZone(hostedZone),
       mailFromDomain: `mail.${props.domainName}`,
     });
 
-    const sesFromAddress = `Swordthain <noreply@${props.domainName}>`;
+    this.sesFromAddress = `Swordthain <noreply@${props.domainName}>`;
 
     const lambdaDir = path.join(__dirname, "..", "lambda", "auth");
     const nodeJsFunctionProps = {
@@ -68,14 +70,14 @@ export class AuthStack extends Stack {
       entry: path.join(lambdaDir, "create-auth-challenge.ts"),
       environment: {
         OTP_TABLE_NAME: otpTable.tableName,
-        SES_FROM_ADDRESS: sesFromAddress,
+        SES_FROM_ADDRESS: this.sesFromAddress,
       },
     });
     otpTable.grantWriteData(createAuthChallengeFn);
     createAuthChallengeFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["ses:SendEmail"],
-        resources: [sesIdentity.emailIdentityArn],
+        resources: [this.sesIdentity.emailIdentityArn],
       })
     );
 

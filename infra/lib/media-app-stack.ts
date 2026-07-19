@@ -13,6 +13,7 @@ import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -27,6 +28,11 @@ export interface MediaAppStackProps extends StackProps {
   /** Shared Cognito pool from SwordthainAuthStack — gates the media API. */
   userPool: cognito.IUserPool;
   userPoolClient: cognito.IUserPoolClient;
+  /** Shared SES sending identity from SwordthainAuthStack — reused for invite emails. */
+  sesIdentityArn: string;
+  sesFromAddress: string;
+  /** Root site URL included in invite emails, e.g. "https://swordthain.com". */
+  siteUrl: string;
 }
 
 const SHARP_VERSION = "0.33.5";
@@ -67,16 +73,16 @@ const ffmpegLocalBundling: ILocalBundling = {
 };
 
 /**
- * apps/media-app's own resources: media storage bucket, MediaItems/Folders
- * tables, presigned upload + thumbnail-generation + folder-browsing
- * Lambdas, and the HTTP API that fronts them (Cognito-authenticated).
- * Per-folder sharing (FolderShares) lands in a later phase — until then,
- * folder endpoints are Owner-only rather than scoped per-Member.
+ * apps/media-app's own resources: media storage bucket, DynamoDB tables
+ * (MediaItems, Folders, FolderShares), presigned upload, thumbnail
+ * generation, folder browsing, per-folder sharing, and friend invites —
+ * fronted by a single Cognito-authenticated HTTP API.
  */
 export class MediaAppStack extends Stack {
   public readonly mediaBucket: s3.Bucket;
   public readonly mediaItemsTable: dynamodb.Table;
   public readonly foldersTable: dynamodb.Table;
+  public readonly folderSharesTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: MediaAppStackProps) {
     super(scope, id, props);
@@ -153,6 +159,19 @@ export class MediaAppStack extends Stack {
       sortKey: { name: "createdAt", type: dynamodb.AttributeType.STRING },
     });
 
+    this.folderSharesTable = new dynamodb.Table(this, "FolderSharesTable", {
+      tableName: "swordthain-folder-shares",
+      partitionKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+    this.folderSharesTable.addGlobalSecondaryIndex({
+      indexName: "byUser",
+      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
+    });
+
     const lambdaDir = path.join(__dirname, "..", "lambda", "media");
 
     // --- Presigned upload URL endpoint ---
@@ -163,6 +182,8 @@ export class MediaAppStack extends Stack {
       memorySize: 256,
       environment: {
         MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
       },
       bundling: {
         // Don't rely on the runtime's bundled AWS SDK for s3-request-presigner —
@@ -171,6 +192,8 @@ export class MediaAppStack extends Stack {
       },
     });
     this.mediaBucket.grantPut(uploadUrlFn);
+    this.foldersTable.grantReadData(uploadUrlFn);
+    this.folderSharesTable.grantReadData(uploadUrlFn);
 
     // --- Thumbnail generation (S3-triggered) ---
     const sharpLayer = new lambda.LayerVersion(this, "SharpLayer", {
@@ -222,6 +245,7 @@ export class MediaAppStack extends Stack {
       memorySize: 256,
       environment: {
         FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
         MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
         MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
       },
@@ -230,8 +254,65 @@ export class MediaAppStack extends Stack {
       },
     });
     this.foldersTable.grantReadWriteData(foldersFn);
+    this.folderSharesTable.grantReadData(foldersFn);
     this.mediaItemsTable.grantReadData(foldersFn);
     this.mediaBucket.grantRead(foldersFn);
+
+    // --- Folder sharing: grant/revoke access, permissions matrix ---
+    const sharesFn = new NodejsFunction(this, "SharesFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "shares.ts"),
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      environment: {
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
+        USER_POOL_ID: props.userPool.userPoolId,
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    this.foldersTable.grantReadData(sharesFn);
+    this.folderSharesTable.grantReadWriteData(sharesFn);
+    sharesFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:AdminGetUser", "cognito-idp:ListUsersInGroup"],
+        resources: [props.userPool.userPoolArn],
+      })
+    );
+
+    // --- Friend invites (Cognito account + SES email) ---
+    const invitesFn = new NodejsFunction(this, "InvitesFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "invites.ts"),
+      timeout: Duration.seconds(15),
+      memorySize: 256,
+      environment: {
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
+        USER_POOL_ID: props.userPool.userPoolId,
+        SES_FROM_ADDRESS: props.sesFromAddress,
+        SITE_URL: props.siteUrl,
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    this.foldersTable.grantReadData(invitesFn);
+    this.folderSharesTable.grantWriteData(invitesFn);
+    invitesFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:AdminCreateUser", "cognito-idp:AdminAddUserToGroup"],
+        resources: [props.userPool.userPoolArn],
+      })
+    );
+    invitesFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ses:SendEmail"],
+        resources: [props.sesIdentityArn],
+      })
+    );
 
     // --- HTTP API (Cognito-authenticated) ---
     const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", props.userPool, {
@@ -274,9 +355,31 @@ export class MediaAppStack extends Stack {
       authorizer,
     });
 
+    const sharesIntegration = new HttpLambdaIntegration("SharesIntegration", sharesFn);
+    httpApi.addRoutes({
+      path: "/folders/{folderId}/shares",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: sharesIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/admin/permissions-matrix",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: sharesIntegration,
+      authorizer,
+    });
+
+    httpApi.addRoutes({
+      path: "/admin/invites",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: new HttpLambdaIntegration("InvitesIntegration", invitesFn),
+      authorizer,
+    });
+
     new CfnOutput(this, "MediaBucketName", { value: this.mediaBucket.bucketName });
     new CfnOutput(this, "MediaItemsTableName", { value: this.mediaItemsTable.tableName });
     new CfnOutput(this, "FoldersTableName", { value: this.foldersTable.tableName });
+    new CfnOutput(this, "FolderSharesTableName", { value: this.folderSharesTable.tableName });
     new CfnOutput(this, "MediaApiUrl", { value: httpApi.apiEndpoint });
   }
 }

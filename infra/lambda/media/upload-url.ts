@@ -1,10 +1,17 @@
-import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import type { APIGatewayProxyHandlerV2WithJWTAuthorizer, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
+import { isOwner } from "./authz";
+import { resolveAccess } from "./access";
 
+const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
 
+const FOLDERS_TABLE_NAME = process.env.FOLDERS_TABLE_NAME!;
+const FOLDER_SHARES_TABLE_NAME = process.env.FOLDER_SHARES_TABLE_NAME!;
 const MEDIA_BUCKET_NAME = process.env.MEDIA_BUCKET_NAME!;
 // Single presigned PUT (S3's hard limit is 5GB per PUT). Long enough that a
 // large video doesn't outlive the signature mid-transfer on a slow link.
@@ -20,13 +27,13 @@ const SUPPORTED_CONTENT_TYPES = new Set([
   "video/quicktime",
 ]);
 
-const jsonResponse = (statusCode: number, body: unknown) => ({
+const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
   statusCode,
   headers: { "content-type": "application/json" },
   body: JSON.stringify(body),
 });
 
-export const handler: APIGatewayProxyHandlerV2 = async (event) => {
+export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   let payload: { folderId?: string; fileName?: string; contentType?: string };
   try {
     payload = event.body ? JSON.parse(event.body) : {};
@@ -40,6 +47,23 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   }
   if (!SUPPORTED_CONTENT_TYPES.has(contentType)) {
     return jsonResponse(400, { error: `Unsupported contentType: ${contentType}` });
+  }
+
+  const owner = isOwner(event.requestContext.authorizer.jwt.claims);
+  const userId = event.requestContext.authorizer.jwt.claims.sub as string;
+
+  if (owner) {
+    const folder = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId } }));
+    if (!folder.Item) return jsonResponse(400, { error: `folderId ${folderId} does not exist` });
+  } else {
+    // Friends can only upload to a folder they (or an ancestor) have been
+    // explicitly given "upload" permission on — view/download access alone
+    // doesn't allow contributing media. Guest-upload-per-album toggling is
+    // a later phase; this is the underlying enforcement it'll build on.
+    const access = await resolveAccess(ddb, FOLDERS_TABLE_NAME, FOLDER_SHARES_TABLE_NAME, folderId, userId);
+    if (!access || access.permission !== "upload") {
+      return jsonResponse(403, { error: "Upload permission required for this folder" });
+    }
   }
 
   const mediaId = randomUUID();

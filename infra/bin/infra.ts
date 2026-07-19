@@ -26,6 +26,9 @@ new MediaAppStack(app, "SwordthainMediaAppStack", {
   allowedOrigins: ["https://swordthain.com", "https://www.swordthain.com"],
   userPool: authStack.userPool,
   userPoolClient: authStack.userPoolClient,
+  sesIdentityArn: authStack.sesIdentity.emailIdentityArn,
+  sesFromAddress: authStack.sesFromAddress,
+  siteUrl: "https://swordthain.com",
 });
 
 new CiStack(app, "SwordthainCiStack", {
