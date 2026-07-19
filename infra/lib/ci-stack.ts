@@ -29,8 +29,14 @@ export class CiStack extends Stack {
       clientIds: ["sts.amazonaws.com"],
     });
 
+    // GitHub now includes immutable owner/repo IDs in the OIDC subject
+    // claim (e.g. "repo:org@12345/repo@67890:ref:refs/heads/main") rather
+    // than the classic name-only form — confirmed via CloudTrail on an
+    // actual failed AssumeRoleWithWebIdentity call. Wildcard the ID
+    // segments since the org/repo name match already scopes this tightly
+    // enough for a single-owner account.
     const subjects = props.allowedBranches.map(
-      (branch) => `repo:${props.githubOrg}/${props.githubRepo}:ref:refs/heads/${branch}`
+      (branch) => `repo:${props.githubOrg}@*/${props.githubRepo}@*:ref:refs/heads/${branch}`
     );
 
     const oidcPrincipal = new iam.OpenIdConnectPrincipal(provider, {
