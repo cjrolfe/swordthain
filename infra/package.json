@@ -17,13 +17,16 @@
     "@types/node": "^22.0.0",
     "aws-cdk": "^2.170.0",
     "esbuild": "^0.24.0",
+    "sharp": "^0.33.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.0"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.687.0",
+    "@aws-sdk/client-s3": "^3.687.0",
     "@aws-sdk/client-sesv2": "^3.687.0",
     "@aws-sdk/lib-dynamodb": "^3.687.0",
+    "@aws-sdk/s3-request-presigner": "^3.687.0",
     "aws-cdk-lib": "^2.170.0",
     "constructs": "^10.4.2",
     "source-map-support": "^0.5.21"

@@ -15,7 +15,7 @@ const env = {
 // Shared infra: Cognito user pool used by both apps/media-app and the
 // Owner-gated apps/playground. Deployed independently of either app's
 // own stack, which will reference its outputs.
-new AuthStack(app, "SwordthainAuthStack", {
+const authStack = new AuthStack(app, "SwordthainAuthStack", {
   env,
   domainName: "swordthain.com",
   hostedZoneId: "Z09793352H82VF3C9TII2",
@@ -24,6 +24,8 @@ new AuthStack(app, "SwordthainAuthStack", {
 new MediaAppStack(app, "SwordthainMediaAppStack", {
   env,
   allowedOrigins: ["https://swordthain.com", "https://www.swordthain.com"],
+  userPool: authStack.userPool,
+  userPoolClient: authStack.userPoolClient,
 });
 
 new CiStack(app, "SwordthainCiStack", {

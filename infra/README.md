@@ -13,12 +13,18 @@ GitHub Actions OIDC trust (`token.actions.githubusercontent.com`) plus two purpo
 See `.github/workflows/` at the repo root: `deploy-playground.yml` and `deploy-infra.yml` trigger on push to `main` scoped to their own path (`apps/playground/**` / `infra/**`), so a change to one app's code can't trigger or affect the other's deploy. `validate-infra.yml` and `validate-playground.yml` run on PRs with no AWS credentials at all (type-check + `cdk synth`, Python compile-check).
 
 ### `SwordthainMediaAppStack`
-`apps/media-app`'s own resources — starts with just the media storage bucket; DynamoDB tables, API Gateway, Lambda, and MediaConvert land here in later phases.
+`apps/media-app`'s own resources. Folder CRUD/browsing and per-folder sharing land in a later phase — `folderId` is currently just an opaque string in `MediaItems`, not yet validated against a `Folders`/`FolderShares` table.
 
 - **`MediaBucket`** (`swordthain-media-<account-id>`) — fully private (`BLOCK_ALL` public access, `BucketOwnerEnforced`), SSE-S3 encrypted, versioned, TLS-enforced via bucket policy.
 - **Intelligent-Tiering from day one**: a lifecycle rule transitions every object to the `INTELLIGENT_TIERING` storage class immediately (day 0). This only activates the built-in Frequent/Infrequent/Archive-Instant-Access tiers, which have zero retrieval delay — the optional Archive Access / Deep Archive Access tiers are deliberately *not* opted into (that needs a separate bucket-level Intelligent-Tiering configuration), since both carry a multi-hour restore delay the spec rules out for casual browsing. True Glacier (Flexible Retrieval / Deep Archive) is applied per-folder by the app on demand — not a blanket bucket rule.
 - **CORS** allows `PUT`/`POST`/`GET` from `swordthain.com` / `www.swordthain.com` for presigned multipart uploads.
 - Incomplete multipart uploads are aborted after 7 days.
+- **`MediaItemsTable`** (`swordthain-media-items`) — `mediaId` PK, GSI `byFolder` (`folderId` + `uploadedAt`) for chronological per-folder listing. `RemovalPolicy.RETAIN`.
+- **`POST /media/upload-url`** (`UploadUrlFn`, fronted by `MediaHttpApi`, Cognito JWT-authorized via `HttpUserPoolAuthorizer`) — takes `{folderId, fileName, contentType}`, returns a presigned S3 PUT URL good for 1 hour. Object key: `originals/{folderId}/{mediaId}/{fileName}`. Single-PUT only (S3's 5GB hard limit) — true resumable multipart upload for very large files is a fast-follow, not built yet. Supported content types: JPEG, PNG, HEIC/HEIF, MP4, MOV.
+- **Thumbnail generation** (`ThumbnailFn`, S3-triggered on `originals/*` `ObjectCreated`) — writes `thumbnails/{folderId}/{mediaId}.jpg` and the finalized `MediaItems` record (this is what actually creates the DB row — `UploadUrlFn` itself touches no DB, so an unused presigned URL just never produces a record). JPEG/PNG go through Sharp; HEIC/HEIF stills and video poster frames (1s in) go through ffmpeg, since Sharp's prebuilt Lambda binary excludes HEIF decode (libheif licensing).
+  - **`SharpLayer`** — built at `cdk synth`/`deploy` time via `npm install --os=linux --cpu=x64 --libc=glibc sharp@0.33.5` (no Docker required; all three flags are required together, confirmed by testing — `--os`/`--cpu` alone silently skip the platform-specific `@img/sharp-*` optional dependency).
+  - **`FfmpegLayer`** — a static linux/amd64 ffmpeg build fetched from johnvansickle.com at build time (see the layer's placeholder README for the provenance trade-off this implies).
+  - Both layers and the full upload→thumbnail pipeline (photo and video) were verified end-to-end against the real deployed stack, not just unit-tested.
 - `RemovalPolicy.RETAIN` — this holds real media, never destroyed by a stack teardown.
 
 ### `SwordthainAuthStack`

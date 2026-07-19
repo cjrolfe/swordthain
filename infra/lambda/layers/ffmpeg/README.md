@@ -1,0 +1,3 @@
+This directory is a placeholder — CDK's local asset bundling (see `FfmpegLayer` in `lib/media-app-stack.ts`) generates the actual layer contents at synth/deploy time by downloading a static Linux amd64 ffmpeg build from https://johnvansickle.com/ffmpeg/ (a long-established, widely-used source for exactly this purpose) into a `bin/ffmpeg` layout — Lambda adds a layer's `bin/` directory to `PATH` automatically. No Docker required. Nothing in this directory is committed except this note.
+
+This bakes a third-party network fetch into the CDK deploy process. If build reproducibility/provenance becomes a concern later, replace with a self-hosted, checksummed ffmpeg binary instead.
