@@ -27,15 +27,15 @@ __pycache__
 lambda.zip
 
 # Lambda pip-installed deps (build with: pip install -r requirements.txt -t .)
-lambda/bin/
-lambda/bs4/
-lambda/certifi/
-lambda/charset_normalizer/
-lambda/idna/
-lambda/playwright/
-lambda/requests/
-lambda/soupsieve/
-lambda/urllib3/
-lambda/*.dist-info/
-lambda/*.so
-lambda/typing_extensions*
+apps/playground/lambda/bin/
+apps/playground/lambda/bs4/
+apps/playground/lambda/certifi/
+apps/playground/lambda/charset_normalizer/
+apps/playground/lambda/idna/
+apps/playground/lambda/playwright/
+apps/playground/lambda/requests/
+apps/playground/lambda/soupsieve/
+apps/playground/lambda/urllib3/
+apps/playground/lambda/*.dist-info/
+apps/playground/lambda/*.so
+apps/playground/lambda/typing_extensions*
