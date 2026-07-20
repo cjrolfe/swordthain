@@ -1,12 +1,4 @@
-import {
-  Duration,
-  RemovalPolicy,
-  Stack,
-  StackProps,
-  CfnOutput,
-  DockerImage,
-  ILocalBundling,
-} from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Stack, StackProps, CfnOutput, ILocalBundling } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -51,22 +43,39 @@ const sharpLocalBundling: ILocalBundling = {
   },
 };
 
-/** Downloads a static linux/amd64 ffmpeg build into a Lambda-layer-shaped bin/ dir — no Docker needed. */
+const FFMPEG_INSTALLER_VERSION = "1.1.0";
+
+/**
+ * Fetches a static linux/x64 ffmpeg binary via npm's cross-platform install
+ * flags, same mechanism and same reliability profile as sharpLocalBundling
+ * above — no Docker needed. Originally this pulled a static build directly
+ * from johnvansickle.com at deploy time; that worked but was a genuine
+ * external-website dependency in the build pipeline, and it materialized
+ * as a real (if transient) CI failure once GitHub Actions' runners
+ * couldn't reach it. Switched to @ffmpeg-installer/ffmpeg, which is
+ * sourced entirely from the npm registry via real per-platform
+ * optionalDependencies (@ffmpeg-installer/linux-x64, etc.) — the same
+ * pattern sharp uses, which has never had a reliability issue here. The
+ * trade-off: this ffmpeg build is from 2021 (4.1.x) rather than current —
+ * more than sufficient for the poster-frame/HEIC-still extraction this
+ * project actually does, which doesn't touch bleeding-edge codec features.
+ */
 const ffmpegLocalBundling: ILocalBundling = {
   tryBundle(outputDir: string): boolean {
+    const installDir = path.join(outputDir, "install");
+    fs.mkdirSync(installDir, { recursive: true });
+    execSync("npm init -y", { cwd: installDir, stdio: "inherit" });
+    execSync(
+      `npm install --os=linux --cpu=x64 --libc=glibc @ffmpeg-installer/ffmpeg@${FFMPEG_INSTALLER_VERSION}`,
+      { cwd: installDir, stdio: "inherit" }
+    );
+
     const binDir = path.join(outputDir, "bin");
     fs.mkdirSync(binDir, { recursive: true });
-    const workDir = fs.mkdtempSync("/tmp/ffmpeg-build-");
-    execSync(
-      `curl -fsSL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o ffmpeg.tar.xz && ` +
-        `tar -xJf ffmpeg.tar.xz`,
-      { cwd: workDir, stdio: "inherit" }
+    fs.copyFileSync(
+      path.join(installDir, "node_modules", "@ffmpeg-installer", "linux-x64", "ffmpeg"),
+      path.join(binDir, "ffmpeg")
     );
-    const extracted = fs.readdirSync(workDir).find((name) => name.startsWith("ffmpeg-") && name.endsWith("-amd64-static"));
-    if (!extracted) {
-      throw new Error("ffmpeg static build extraction failed — unexpected archive contents");
-    }
-    fs.copyFileSync(path.join(workDir, extracted, "ffmpeg"), path.join(binDir, "ffmpeg"));
     fs.chmodSync(path.join(binDir, "ffmpeg"), 0o755);
     return true;
   },
@@ -231,11 +240,11 @@ export class MediaAppStack extends Stack {
 
     const ffmpegLayer = new lambda.LayerVersion(this, "FfmpegLayer", {
       code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda", "layers", "ffmpeg"), {
-        bundling: { image: DockerImage.fromRegistry("public.ecr.aws/docker/library/busybox"), local: ffmpegLocalBundling },
+        bundling: { image: lambda.Runtime.NODEJS_20_X.bundlingImage, local: ffmpegLocalBundling },
       }),
       compatibleRuntimes: [lambda.Runtime.NODEJS_20_X],
       compatibleArchitectures: [lambda.Architecture.X86_64],
-      description: "Static ffmpeg (linux/amd64) from johnvansickle.com",
+      description: `@ffmpeg-installer/ffmpeg@${FFMPEG_INSTALLER_VERSION} prebuilt for linux/x64 (npm-sourced)`,
     });
 
     const thumbnailFn = new NodejsFunction(this, "ThumbnailFn", {
