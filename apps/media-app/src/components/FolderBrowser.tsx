@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { api, Folder, MediaItem, ApiError } from "../api";
+import { Lightbox } from "./Lightbox";
 
 const ROOT = "ROOT";
 
@@ -12,6 +13,7 @@ export function FolderBrowser() {
   const [renameValue, setRenameValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
 
   const currentFolder = path[path.length - 1] ?? null;
   const currentParentId = currentFolder?.folderId ?? ROOT;
@@ -72,6 +74,18 @@ export function FolderBrowser() {
       load();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to delete folder");
+    }
+  }
+
+  async function handleDownload(item: MediaItem) {
+    try {
+      const { url } = await api.downloadUrl(item.mediaId);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = item.fileName;
+      a.click();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to download");
     }
   }
 
@@ -144,18 +158,25 @@ export function FolderBrowser() {
           <div className="media-grid">
             {media.map((item) => (
               <figure key={item.mediaId}>
-                {item.thumbnailUrl ? (
-                  <img src={item.thumbnailUrl} alt={item.fileName} loading="lazy" />
-                ) : (
-                  <div className="thumb-placeholder">{item.type === "video" ? "🎬" : "🖼️"}</div>
-                )}
+                <button className="thumb-button" onClick={() => setLightboxItem(item)}>
+                  {item.thumbnailUrl ? (
+                    <img src={item.thumbnailUrl} alt={item.fileName} loading="lazy" />
+                  ) : (
+                    <div className="thumb-placeholder">{item.type === "video" ? "🎬" : "🖼️"}</div>
+                  )}
+                </button>
                 <figcaption>{item.fileName}</figcaption>
+                <button className="link" onClick={() => handleDownload(item)}>
+                  Download
+                </button>
               </figure>
             ))}
             {media.length === 0 && !loading && <p className="empty">No media uploaded here yet.</p>}
           </div>
         </>
       )}
+
+      {lightboxItem && <Lightbox item={lightboxItem} onClose={() => setLightboxItem(null)} />}
     </div>
   );
 }

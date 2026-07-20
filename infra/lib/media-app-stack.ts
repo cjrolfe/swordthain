@@ -83,6 +83,7 @@ export class MediaAppStack extends Stack {
   public readonly mediaItemsTable: dynamodb.Table;
   public readonly foldersTable: dynamodb.Table;
   public readonly folderSharesTable: dynamodb.Table;
+  public readonly activityLogTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: MediaAppStackProps) {
     super(scope, id, props);
@@ -170,6 +171,29 @@ export class MediaAppStack extends Stack {
       indexName: "byUser",
       partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
+    });
+
+    // Write-only for now — POST-side of the spec's ActivityLog (view-url /
+    // download-url log every access). The owner-facing dashboard to query
+    // this ("per-album and per-item activity, filterable by friend") is a
+    // later phase; the byUser/byFolder GSIs are added now since they're
+    // the natural filters that dashboard will need, cheap to add upfront
+    // and awkward to retrofit onto existing data later.
+    this.activityLogTable = new dynamodb.Table(this, "ActivityLogTable", {
+      tableName: "swordthain-activity-log",
+      partitionKey: { name: "logId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+    this.activityLogTable.addGlobalSecondaryIndex({
+      indexName: "byUser",
+      partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "timestamp", type: dynamodb.AttributeType.STRING },
+    });
+    this.activityLogTable.addGlobalSecondaryIndex({
+      indexName: "byFolder",
+      partitionKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "timestamp", type: dynamodb.AttributeType.STRING },
     });
 
     const lambdaDir = path.join(__dirname, "..", "lambda", "media");
@@ -314,6 +338,32 @@ export class MediaAppStack extends Stack {
       })
     );
 
+    // --- Signed view/download URLs (progressive streaming — see infra/README.md
+    // for why this isn't true adaptive HLS yet: that needs CloudFront with
+    // signed cookies in front of the bucket, not just presigned S3 URLs,
+    // since a single presigned URL can't cover a manifest's segment files) ---
+    const mediaAccessFn = new NodejsFunction(this, "MediaAccessFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "media-access.ts"),
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      environment: {
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
+        MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
+        MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
+        ACTIVITY_LOG_TABLE_NAME: this.activityLogTable.tableName,
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    this.foldersTable.grantReadData(mediaAccessFn);
+    this.folderSharesTable.grantReadData(mediaAccessFn);
+    this.mediaItemsTable.grantReadData(mediaAccessFn);
+    this.mediaBucket.grantRead(mediaAccessFn);
+    this.activityLogTable.grantWriteData(mediaAccessFn);
+
     // --- HTTP API (Cognito-authenticated) ---
     const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", props.userPool, {
       userPoolClients: [props.userPoolClient],
@@ -381,10 +431,25 @@ export class MediaAppStack extends Stack {
       authorizer,
     });
 
+    const mediaAccessIntegration = new HttpLambdaIntegration("MediaAccessIntegration", mediaAccessFn);
+    httpApi.addRoutes({
+      path: "/media/{mediaId}/view-url",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: mediaAccessIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/media/{mediaId}/download-url",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: mediaAccessIntegration,
+      authorizer,
+    });
+
     new CfnOutput(this, "MediaBucketName", { value: this.mediaBucket.bucketName });
     new CfnOutput(this, "MediaItemsTableName", { value: this.mediaItemsTable.tableName });
     new CfnOutput(this, "FoldersTableName", { value: this.foldersTable.tableName });
     new CfnOutput(this, "FolderSharesTableName", { value: this.folderSharesTable.tableName });
+    new CfnOutput(this, "ActivityLogTableName", { value: this.activityLogTable.tableName });
     new CfnOutput(this, "MediaApiUrl", { value: httpApi.apiEndpoint });
   }
 }

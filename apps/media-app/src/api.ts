@@ -81,4 +81,8 @@ export const api = {
 
   invite: (body: { email: string; folderId?: string; permission?: Permission; message?: string }) =>
     request("POST", "/admin/invites", body),
+
+  viewUrl: (mediaId: string) => request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/view-url`),
+  downloadUrl: (mediaId: string) =>
+    request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/download-url`),
 };

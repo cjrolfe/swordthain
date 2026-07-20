@@ -2,7 +2,7 @@
 
 Private, invite-only photo/video sharing for a closed group of friends. Serves `swordthain.com`.
 
-Currently just the **admin UI** (React + Vite SPA) — folder management, the permissions matrix, and friend invites. The friend-facing viewing/streaming experience (Phase 5+) isn't built yet.
+Currently just the **admin UI** (React + Vite SPA) — folder management, the permissions matrix, friend invites, and a lightbox/player for viewing + downloading media. The full friend-facing browsing experience (its own app shell, not bolted onto the admin UI) isn't built yet.
 
 ## Stack
 
@@ -27,6 +27,7 @@ Sign in with an email that belongs to a Cognito user in the `Owner` group — th
 - **Folders** — browse (breadcrumb navigation, nested), create, rename, delete (blocked with a 409 if the folder still has sub-folders or media — has to be emptied first).
 - **Permissions** — the friends × folders grid from the spec. Each cell is a `none / view / download / upload` select; changing it calls the grant/revoke share endpoint directly.
 - **Friends** — invite form (email + optional immediate folder access + personal note) and the current friend list. SES is still in sandbox mode (see `infra/README.md`), so real invite emails won't deliver until production access is granted — verified this flow works via SES's mailbox simulator instead.
+- Within Folders, clicking a thumbnail opens a **lightbox** — an `<img>` for photos, a native `<video controls>` player for videos (progressive streaming via a presigned URL; see `infra/README.md` for why this isn't adaptive HLS yet). A separate **Download** action fetches a short-lived download URL and triggers a browser download. Both call the backend's `resolveAccess`-gated `view-url`/`download-url` endpoints and get logged to `ActivityLog`.
 
 ## A bug this caught
 

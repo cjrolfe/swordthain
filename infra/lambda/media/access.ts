@@ -47,3 +47,13 @@ export async function resolveAccess(
 
   return null;
 }
+
+// Higher tiers imply lower ones: granting "download" also allows viewing,
+// granting "upload" also allows viewing and downloading. These aren't
+// independent flags — each share is a single tier on this ladder.
+const PERMISSION_RANK: Record<string, number> = { view: 1, download: 2, upload: 3 };
+
+export function hasPermission(granted: string | undefined, required: keyof typeof PERMISSION_RANK): boolean {
+  if (!granted) return false;
+  return (PERMISSION_RANK[granted] ?? 0) >= PERMISSION_RANK[required];
+}
