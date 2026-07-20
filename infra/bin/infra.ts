@@ -88,8 +88,12 @@ const mediaAppHostingStack = new MediaAppHostingStack(app, "SwordthainMediaAppHo
   env: usEast1,
   siteBucketName: MEDIA_SITE_BUCKET_NAME,
   siteBucketRegion: "eu-west-1",
-  // Left unset until the DNS cutover — see MediaAppHostingStackProps and
-  // infra/README.md. Reachable at its own *.cloudfront.net domain until then.
+  // DNS cutover: aliases freed from playground's old distribution first
+  // (see infra/README.md), then claimed here. Reuses the existing ACM
+  // cert — it already covers both names, since it was issued for the old
+  // playground distribution originally.
+  siteDomainNames: ["swordthain.com", "www.swordthain.com"],
+  siteCertificateArn: "arn:aws:acm:us-east-1:584000479246:certificate/710894e4-c91f-4986-a21d-812e52eaceb5",
 });
 
 new PlaygroundStack(app, "SwordthainPlaygroundStack", {
