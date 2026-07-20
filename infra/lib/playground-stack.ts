@@ -1,8 +1,10 @@
 import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -19,6 +21,11 @@ export interface PlaygroundStackProps extends StackProps {
    * deliberately NOT imported into CDK management (see infra/README.md):
    * this stack must not risk playground's currently-working manual deploy. */
   playgroundBucketName: string;
+  /** apps/playground's existing REST API v1 (id only — same "reference,
+   * don't adopt" rule as the bucket above). */
+  playgroundApiId: string;
+  /** Shared Cognito pool from SwordthainAuthStack, backing the new authorizer. */
+  userPool: cognito.IUserPool;
 }
 
 /**
@@ -151,5 +158,25 @@ export class PlaygroundStack extends Stack {
     new CfnOutput(this, "LabsDistributionId", { value: this.distribution.distributionId });
     new CfnOutput(this, "LabsDistributionDomainName", { value: this.distribution.distributionDomainName });
     new CfnOutput(this, "LabsCertificateArn", { value: certificate.certificateArn });
+
+    // --- Auth retrofit for playground's REST API (defined here, attached manually) ---
+    // Only the authorizer resource itself is CDK-managed. Attaching it to
+    // the 4 existing methods and redeploying the `prod` stage is a
+    // one-time AWS CLI step (see infra/README.md) — CDK didn't create
+    // those methods (they predate this stack, on an API referenced by ID
+    // only, same as the bucket above) and can't cleanly take ownership of
+    // mutating them without risking an import/adopt of the whole API. Any
+    // *new* playground endpoint added later should reference this
+    // authorizer at creation time instead of going through the one-time
+    // script again.
+    const playgroundAuthorizer = new apigateway.CfnAuthorizer(this, "PlaygroundAuthorizer", {
+      restApiId: props.playgroundApiId,
+      name: "swordthain-playground-cognito-authorizer",
+      type: "COGNITO_USER_POOLS",
+      identitySource: "method.request.header.Authorization",
+      providerArns: [props.userPool.userPoolArn],
+    });
+
+    new CfnOutput(this, "PlaygroundAuthorizerId", { value: playgroundAuthorizer.ref });
   }
 }

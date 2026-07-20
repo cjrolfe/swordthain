@@ -41,6 +41,8 @@ new PlaygroundStack(app, "SwordthainPlaygroundStack", {
   hostedZoneId: "Z09793352H82VF3C9TII2",
   labsSubdomain: "labs.swordthain.com",
   playgroundBucketName: "swordthain-demo-sites",
+  playgroundApiId: "x7g9r0sdmc",
+  userPool: authStack.userPool,
 });
 
 new CiStack(app, "SwordthainCiStack", {

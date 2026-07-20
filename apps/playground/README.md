@@ -36,6 +36,8 @@ A directory of company demo sites hosted on AWS (S3 + CloudFront). Each company 
 
 After each operation, Lambda updates `assets/sites.json` in S3 and invalidates the CloudFront cache. The frontend updates its card grid immediately in memory — no page reload required.
 
+**All 4 endpoints require a Cognito `Owner`-group Bearer token** (see `infra/README.md`'s "Playground API auth retrofit" — this API had no auth at all before that). `assets/app.js` and `company-template/index.html` each read the `swordthain_session` cookie (set by `apps/media-app` on `.swordthain.com` after sign-in) and attach it automatically; there's no separate login UI here since `labs.swordthain.com`'s CloudFront Function already requires that same cookie just to serve any page.
+
 ### Data structure (`sites.json`)
 
 ```json

@@ -109,7 +109,23 @@ New hosting for `apps/playground` at `labs.swordthain.com`, per the spec's secti
 - **Route 53 A/ALIAS record** for `labs.swordthain.com` → `LabsDistribution`, added to the existing hosted zone (adding one record to an imported zone is safe and normal CDK usage — unlike the bucket, nothing about importing a *hosted zone* for new-record-only use risks existing records).
 - Verified end-to-end against the real deployed distribution (its own `*.cloudfront.net` domain — no DNS cutover yet): fetched logged-out (404), then with a real Owner ID token as the `swordthain_session` cookie (real playground content, 200).
 
-Playground's API auth retrofit (Cognito authorizer on the 4 existing REST API methods) is a separate, later step — see the "one-time migration" note planned for that phase.
+#### Playground API auth retrofit
+Playground's REST API (`x7g9r0sdmc`) had **no authentication at all** on its 4 POST methods before this — genuinely open to anyone who found the URL. This closes that gap.
+
+- **`PlaygroundAuthorizer`** — a `CfnAuthorizer` (type `COGNITO_USER_POOLS`, `identitySource: method.request.header.Authorization`) in `playground-stack.ts`, referencing the shared `AuthStack` user pool and the existing REST API by ID only (`restApiId: props.playgroundApiId`) — no `RestApi.fromRestApiId` L2 import, since a raw `CfnAuthorizer` only needs the ID string, keeping this consistent with "reference, don't adopt."
+- **Attaching it to the 4 existing methods (`/create`, `/archive`, `/project/create`, `/project/delete`) and redeploying the `prod` stage is a one-time AWS CLI step, not CDK-managed** — same reasoning as the bucket policy grant above: CDK didn't create these methods, so it can't cleanly own mutating them without a full API import that risks the live deploy. Run once:
+  ```bash
+  for id in u6vwa6 zf4m7u 3j9bv6 ttx58f; do
+    aws apigateway update-method --rest-api-id x7g9r0sdmc --resource-id "$id" --http-method POST \
+      --patch-operations op=replace,path=/authorizationType,value=COGNITO_USER_POOLS \
+                          op=replace,path=/authorizerId,value=<PlaygroundAuthorizerId output>
+  done
+  aws apigateway create-deployment --rest-api-id x7g9r0sdmc --stage-name prod
+  ```
+  Any *new* playground endpoint added later should specify `authorizerId`/`authorizationType` at method creation time instead of needing this script again.
+- **`apps/playground/assets/app.js`** and **`apps/playground/company-template/index.html`** each got a small `authHeaders()`/`authHeader()` helper (duplicated rather than shared — they're genuinely separate script contexts: `app.js` serves the landing/archived pages, the template's inline script is copied fresh into every generated `/{company-id}/index.html` and never loads `app.js`) that reads the `swordthain_session` cookie and attaches it as `Authorization: Bearer <token>` on every existing `fetch()` call. No new login UI: by the time this JS runs on `labs.swordthain.com`, the CloudFront Function stealth gate has already required the cookie's presence just to serve the page, so signing in happens once, at `swordthain.com`.
+  - **Only fixes future company pages, not already-generated ones** — `company-template/index.html` is copied by the Lambda at creation time into each company's own `/{company-id}/index.html`; editing the template doesn't retroactively patch pages already sitting in S3. Checked the live bucket before treating this as done: `sites.json` lists two company entries (`rossellimac`, `rossellimac-v2`), but neither has an actual generated page in S3 (confirmed via `aws s3api list-objects-v2` — only `company-template/`, `project-template/`, and the landing/archived pages exist), so there's nothing currently live to break. If real company pages exist by the time this is read, they'd need this same header fix applied directly (or regenerated) before their "Add project"/"Delete project" buttons work again.
+- Verified against the real live API (not a synthetic test): all 4 endpoints return 401 with no `Authorization` header, and a real Owner ID token (minted via a full CLI-driven Cognito custom-auth flow) reaches the actual Lambda business logic — confirmed by getting the *app's own* validation errors (`"Company name is required"`, `"action must be 'archive', 'restore', or 'delete'"`) back instead of an API Gateway auth rejection, without needing to trigger a real create/archive/delete side effect against production data.
 
 ## Prerequisites
 

@@ -160,6 +160,17 @@
     var API_BASE = window.SWORDTHAIN_API || "";
     var projectCardsEl = document.getElementById("projectCards");
 
+    // Reads the swordthain_session cookie set by apps/media-app on
+    // .swordthain.com (see apps/media-app/src/auth.ts) and returns it as a
+    // Bearer token header for the API's Cognito authorizer (see
+    // infra/lib/playground-stack.ts). Same helper as assets/app.js — this
+    // page is a separate script context (a generated company subpage), so
+    // it can't just import that one.
+    function authHeader() {
+      var match = document.cookie.match(/(?:^|;\s*)swordthain_session=([^;]+)/);
+      return match ? { Authorization: "Bearer " + decodeURIComponent(match[1]) } : {};
+    }
+
     function renderProjects(projects) {
       if (!projectCardsEl) return;
       if (!projects || projects.length === 0) {
@@ -189,7 +200,7 @@
           btn.textContent = "...";
           fetch(API_BASE + "/project/delete", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: Object.assign({ "Content-Type": "application/json" }, authHeader()),
             body: JSON.stringify({ companyId: COMPANY_ID, projectId: projectId }),
           })
           .then(function (res) { return res.json().then(function (d) { return { ok: res.ok, data: d }; }); })
@@ -289,7 +300,7 @@
 
         fetch(API_BASE + "/project/create", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: Object.assign({ "Content-Type": "application/json" }, authHeader()),
           body: JSON.stringify({
             companyId: COMPANY_ID,
             name: name,

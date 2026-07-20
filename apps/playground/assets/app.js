@@ -1,3 +1,15 @@
+// Reads the swordthain_session cookie set by apps/media-app on
+// .swordthain.com (see apps/media-app/src/auth.ts) and returns headers
+// carrying it as a Bearer token for the API's Cognito authorizer
+// (infra/lib/playground-stack.ts). By the time this JS runs, the
+// labs.swordthain.com CloudFront Function stealth gate has already
+// required the cookie to be present just to serve this page at all — this
+// is the real, signature-verified authorization check behind that.
+function authHeaders() {
+  const match = document.cookie.match(/(?:^|;\s*)swordthain_session=([^;]+)/);
+  return match ? { Authorization: `Bearer ${decodeURIComponent(match[1])}` } : {};
+}
+
 // Shared state — accessible to both the list logic and the create modal
 let sites = [];
 let _searchEl = null;
@@ -72,7 +84,7 @@ function render(filterText) {
       try {
         const res = await fetch(`${API_BASE}/archive`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({ action, companyId }),
         });
         const data = await res.json().catch(() => ({}));
@@ -100,7 +112,7 @@ function render(filterText) {
       try {
         const res = await fetch(`${API_BASE}/archive`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({ action: "delete", companyId }),
         });
         const data = await res.json().catch(() => ({}));
@@ -299,7 +311,7 @@ function render(filterText) {
     try {
       const res = await fetch(`${API_BASE}/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           name: data.name,
           website: data.url || "",
