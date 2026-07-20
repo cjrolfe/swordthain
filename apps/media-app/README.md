@@ -6,7 +6,7 @@ Currently just the **admin UI** (React + Vite SPA) — folder management, the pe
 
 ## Stack
 
-- React 18 + TypeScript, built with Vite. No router library — four views, plain `useState` navigation is simpler than adding a dependency for it.
+- React 18 + TypeScript, built with Vite. No router library — five views, plain `useState` navigation is simpler than adding a dependency for it.
 - Auth: Cognito's passwordless custom-auth flow, called directly from the browser via `@aws-sdk/client-cognito-identity-provider` (`InitiateAuth` / `RespondToAuthChallenge` / refresh). No password, no Amplify — same flow the backend's Lambda triggers implement (see `infra/lib/auth-stack.ts`).
 - Talks directly to the deployed HTTP API (`infra/lib/media-app-stack.ts`) — no server component of its own.
 
@@ -28,6 +28,7 @@ Sign in with an email that belongs to a Cognito user in the `Owner` group — th
 - **Permissions** — the friends × folders grid from the spec. Each cell is a `none / view / download / upload` select; changing it calls the grant/revoke share endpoint directly.
 - **Friends** — invite form (email + optional immediate folder access + personal note) and the current friend list. SES is still in sandbox mode (see `infra/README.md`), so real invite emails won't deliver until production access is granted — verified this flow works via SES's mailbox simulator instead.
 - Within Folders, clicking a thumbnail opens a **lightbox** — an `<img>` for photos, a native `<video controls>` player for videos (progressive streaming via a presigned URL; see `infra/README.md` for why this isn't adaptive HLS yet). A separate **Download** action fetches a short-lived download URL and triggers a browser download. Both call the backend's `resolveAccess`-gated `view-url`/`download-url` endpoints and get logged to `ActivityLog`.
+- **Activity** — filter by folder and/or friend (at least one required — matches the backend's two GSIs), see a table of who viewed/downloaded what and when, export the current view as CSV. Folder/friend options come from the same `permissionsMatrix()` call the Permissions and Friends tabs already use.
 
 ## A bug this caught
 

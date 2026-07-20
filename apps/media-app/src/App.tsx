@@ -4,8 +4,9 @@ import { Login } from "./components/Login";
 import { FolderBrowser } from "./components/FolderBrowser";
 import { PermissionsMatrix } from "./components/PermissionsMatrix";
 import { Friends } from "./components/Friends";
+import { Activity } from "./components/Activity";
 
-type Tab = "folders" | "permissions" | "friends";
+type Tab = "folders" | "permissions" | "friends" | "activity";
 
 export function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
@@ -38,11 +39,15 @@ export function App() {
         <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
           Friends
         </button>
+        <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
+          Activity
+        </button>
       </nav>
       <main>
         {tab === "folders" && <FolderBrowser />}
         {tab === "permissions" && <PermissionsMatrix />}
         {tab === "friends" && <Friends />}
+        {tab === "activity" && <Activity />}
       </main>
     </div>
   );

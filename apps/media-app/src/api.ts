@@ -85,4 +85,23 @@ export const api = {
   viewUrl: (mediaId: string) => request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/view-url`),
   downloadUrl: (mediaId: string) =>
     request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/download-url`),
+
+  activity: (filter: { folderId?: string; userId?: string }) => {
+    const params = new URLSearchParams();
+    if (filter.folderId) params.set("folderId", filter.folderId);
+    if (filter.userId) params.set("userId", filter.userId);
+    return request<{ activity: ActivityEntry[] }>("GET", `/admin/activity?${params.toString()}`);
+  },
 };
+
+export interface ActivityEntry {
+  logId: string;
+  userId: string;
+  email: string;
+  mediaId: string;
+  fileName: string;
+  folderId: string;
+  folderTitle: string;
+  action: "view" | "download";
+  timestamp: string;
+}

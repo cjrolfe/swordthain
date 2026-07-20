@@ -364,6 +364,32 @@ export class MediaAppStack extends Stack {
     this.mediaBucket.grantRead(mediaAccessFn);
     this.activityLogTable.grantWriteData(mediaAccessFn);
 
+    // --- Activity dashboard (read side of ActivityLog — MediaAccessFn is the write side) ---
+    const activityFn = new NodejsFunction(this, "ActivityFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "activity.ts"),
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      environment: {
+        ACTIVITY_LOG_TABLE_NAME: this.activityLogTable.tableName,
+        MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        USER_POOL_ID: props.userPool.userPoolId,
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    this.activityLogTable.grantReadData(activityFn);
+    this.mediaItemsTable.grantReadData(activityFn);
+    this.foldersTable.grantReadData(activityFn);
+    activityFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:ListUsers"],
+        resources: [props.userPool.userPoolArn],
+      })
+    );
+
     // --- HTTP API (Cognito-authenticated) ---
     const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", props.userPool, {
       userPoolClients: [props.userPoolClient],
@@ -428,6 +454,13 @@ export class MediaAppStack extends Stack {
       path: "/admin/invites",
       methods: [apigwv2.HttpMethod.POST],
       integration: new HttpLambdaIntegration("InvitesIntegration", invitesFn),
+      authorizer,
+    });
+
+    httpApi.addRoutes({
+      path: "/admin/activity",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration("ActivityIntegration", activityFn),
       authorizer,
     });
 
