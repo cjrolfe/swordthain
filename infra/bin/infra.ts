@@ -4,6 +4,7 @@ import * as cdk from "aws-cdk-lib";
 import { AuthStack } from "../lib/auth-stack";
 import { CiStack } from "../lib/ci-stack";
 import { MediaAppStack } from "../lib/media-app-stack";
+import { PlaygroundStack } from "../lib/playground-stack";
 
 const app = new cdk.App();
 
@@ -32,6 +33,14 @@ const mediaAppStack = new MediaAppStack(app, "SwordthainMediaAppStack", {
   sesIdentityArn: authStack.sesIdentity.emailIdentityArn,
   sesFromAddress: authStack.sesFromAddress,
   siteUrl: "https://swordthain.com",
+});
+
+new PlaygroundStack(app, "SwordthainPlaygroundStack", {
+  env,
+  domainName: "swordthain.com",
+  hostedZoneId: "Z09793352H82VF3C9TII2",
+  labsSubdomain: "labs.swordthain.com",
+  playgroundBucketName: "swordthain-demo-sites",
 });
 
 new CiStack(app, "SwordthainCiStack", {

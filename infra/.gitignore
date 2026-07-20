@@ -4,4 +4,5 @@ dist/
 *.d.ts
 *.js
 !jest.config.js
+!cloudfront-functions/*.js
 .cdk.staging/
