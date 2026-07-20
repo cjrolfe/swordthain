@@ -24,6 +24,10 @@ Sign in with any Cognito user's email. `Owner` accounts land in the admin UI; `M
 
 Signing in also writes a copy of the ID token to a `swordthain_session` cookie scoped to `.swordthain.com` (see `setSessionCookie` in `auth.ts`). This exists solely so `labs.swordthain.com` (playground, see `infra/lib/playground-stack.ts`) can tell at the edge whether *someone* is signed in before deciding whether to serve real content or a static 404 — it's a stealth/obscurity layer, not a security boundary, and isn't read by anything in this app itself. It's a no-op outside `*.swordthain.com` hostnames (e.g. local dev on `localhost`).
 
+## Production hosting & deploys
+
+Served from a private S3 bucket behind CloudFront (`SiteBucket`/`SiteDistribution` in `infra/lib/media-app-stack.ts`), with a CloudFront-scope WAF in front of it. A push to `main` touching `apps/media-app/**` runs `.github/workflows/deploy-media-app.yml`: `npm ci && npm run build`, sync `dist/` to the bucket, invalidate the distribution — via a GitHub Actions OIDC role (`swordthain-media-app-ci`, `infra/lib/ci-stack.ts`) scoped to just that bucket and distribution, no static AWS keys involved. `swordthain.com`/`www.swordthain.com` aren't aliased to this distribution yet (see `infra/README.md`'s "Static site hosting" section for why); until the DNS cutover, it's reachable only at its own `*.cloudfront.net` domain.
+
 ## Pages
 
 Owner sees all four tabs below. Member sees only Folders, with no tab nav at all (just the browser) and no "Add folder"/Rename/Delete controls within it.

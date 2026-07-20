@@ -1,0 +1,46 @@
+name: Deploy Media App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/media-app/**"
+      - ".github/workflows/deploy-media-app.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-media-app
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: apps/media-app
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/media-app
+        run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::584000479246:role/swordthain-media-app-ci
+          aws-region: us-east-1
+
+      - name: Sync to S3
+        working-directory: apps/media-app
+        run: aws s3 sync dist/ s3://swordthain-site-584000479246/ --delete
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id E3COH63K7O5XX5 --paths "/*"

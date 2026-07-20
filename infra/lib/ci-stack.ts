@@ -1,6 +1,7 @@
 import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from "aws-cdk-lib/aws-s3";
 
 export interface CiStackProps extends StackProps {
   githubOrg: string;
@@ -10,14 +11,17 @@ export interface CiStackProps extends StackProps {
   playgroundBucketName: string;
   playgroundLambdaFunctionName: string;
   playgroundDistributionId: string;
+  /** apps/media-app's static-site bucket and distribution, from SwordthainMediaAppStack. */
+  mediaAppSiteBucket: s3.IBucket;
+  mediaAppSiteDistributionId: string;
   /** CDK bootstrap qualifier (default "hnb659fds") — used to build the bootstrap role ARNs. */
   cdkQualifier?: string;
 }
 
 /**
- * GitHub Actions OIDC trust + two purpose-scoped deploy roles, so CI never
- * holds long-lived AWS keys. One role per app, matching "CI/CD for both
- * apps independently" — a playground-only change can't touch infra
+ * GitHub Actions OIDC trust + purpose-scoped deploy roles, so CI never
+ * holds long-lived AWS keys. One role per app, matching "CI/CD for each
+ * app independently" — a playground-only change can't touch infra
  * permissions and vice versa.
  */
 export class CiStack extends Stack {
@@ -85,6 +89,34 @@ export class CiStack extends Stack {
       })
     );
 
+    // --- apps/media-app: scoped to exactly what a static-site deploy needs ---
+    const mediaAppRole = new iam.Role(this, "MediaAppCiRole", {
+      roleName: "swordthain-media-app-ci",
+      assumedBy: oidcPrincipal,
+      description: "GitHub Actions deploy role for apps/media-app",
+    });
+
+    mediaAppRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["s3:ListBucket"],
+        resources: [props.mediaAppSiteBucket.bucketArn],
+      })
+    );
+    mediaAppRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+        resources: [`${props.mediaAppSiteBucket.bucketArn}/*`],
+      })
+    );
+    mediaAppRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["cloudfront:CreateInvalidation"],
+        resources: [
+          `arn:aws:cloudfront::${this.account}:distribution/${props.mediaAppSiteDistributionId}`,
+        ],
+      })
+    );
+
     // --- infra/ (CDK): only needs to assume the CDK bootstrap roles.     ---
     // Those roles (created by `cdk bootstrap`) already carry the
     // permissions CDK needs to actually create/update resources — this
@@ -108,6 +140,7 @@ export class CiStack extends Stack {
     );
 
     new CfnOutput(this, "PlaygroundCiRoleArn", { value: playgroundRole.roleArn });
+    new CfnOutput(this, "MediaAppCiRoleArn", { value: mediaAppRole.roleArn });
     new CfnOutput(this, "InfraCiRoleArn", { value: infraRole.roleArn });
   }
 }

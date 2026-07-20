@@ -21,7 +21,7 @@ const authStack = new AuthStack(app, "SwordthainAuthStack", {
   hostedZoneId: "Z09793352H82VF3C9TII2",
 });
 
-new MediaAppStack(app, "SwordthainMediaAppStack", {
+const mediaAppStack = new MediaAppStack(app, "SwordthainMediaAppStack", {
   env,
   // localhost:5173 (Vite's default dev port) is included for local admin
   // UI development against the real deployed API — tighten this once the
@@ -42,4 +42,6 @@ new CiStack(app, "SwordthainCiStack", {
   playgroundBucketName: "swordthain-demo-sites",
   playgroundLambdaFunctionName: "swordthain-automation",
   playgroundDistributionId: "E1AUXZ6C0Z7J9P",
+  mediaAppSiteBucket: mediaAppStack.siteBucket,
+  mediaAppSiteDistributionId: mediaAppStack.siteDistribution.distributionId,
 });
