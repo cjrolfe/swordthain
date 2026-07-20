@@ -6,6 +6,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { isOwner } from "./authz";
 import { resolveAccess } from "./access";
+import { jsonResponse } from "./http";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -26,12 +27,6 @@ const SUPPORTED_CONTENT_TYPES = new Set([
   "video/mp4",
   "video/quicktime",
 ]);
-
-const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
-  statusCode,
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(body),
-});
 
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   let payload: { folderId?: string; fileName?: string; contentType?: string };

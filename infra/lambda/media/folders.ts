@@ -17,6 +17,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { isOwner } from "./authz";
 import { ROOT, resolveAccess } from "./access";
+import { jsonResponse } from "./http";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -27,12 +28,6 @@ const MEDIA_TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
 const MEDIA_BUCKET_NAME = process.env.MEDIA_BUCKET_NAME!;
 
 const THUMBNAIL_URL_EXPIRY_SECONDS = 900;
-
-const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
-  statusCode,
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(body),
-});
 
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   const owner = isOwner(event.requestContext.authorizer.jwt.claims);

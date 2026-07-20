@@ -11,6 +11,7 @@ import {
   ListUsersInGroupCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { isOwner } from "./authz";
+import { jsonResponse } from "./http";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const cognito = new CognitoIdentityProviderClient({});
@@ -20,12 +21,6 @@ const FOLDER_SHARES_TABLE_NAME = process.env.FOLDER_SHARES_TABLE_NAME!;
 const USER_POOL_ID = process.env.USER_POOL_ID!;
 
 const VALID_PERMISSIONS = new Set(["view", "download", "upload"]);
-
-const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
-  statusCode,
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(body),
-});
 
 async function subForEmail(email: string): Promise<string | null> {
   try {

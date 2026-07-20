@@ -478,6 +478,31 @@ export class MediaAppStack extends Stack {
       authorizer,
     });
 
+    // --- Rate limiting on the API ---
+    // AWS WAFv2 cannot be associated with API Gateway HTTP APIs (v2) at
+    // all — only REST APIs (v1), ALB, AppSync, Cognito, App Runner,
+    // Amplify, or Verified Access (confirmed against AWS's own API
+    // reference: AssociateWebACL's ResourceArn format is explicitly
+    // `/restapis/...`, not `/apis/...`; attempting it here failed with
+    // "The ARN isn't valid" and rolled back cleanly). Getting WAF's bot
+    // managed-rule-groups in front of this API for real would mean either
+    // migrating off HTTP API to REST API, or putting CloudFront in front
+    // of it — both bigger moves than "safe pieces," and CloudFront is the
+    // more sensible of the two given the spec's own architecture already
+    // wants it; bundle that with the deferred playground/root-domain
+    // cutover rather than doing a narrower one-off migration now.
+    //
+    // What HTTP API does support natively: stage-level throttling. It's a
+    // global cap across the whole API (not per-IP the way a WAF
+    // rate-based rule would be), but it's a real, working mitigation
+    // against the backend being overwhelmed, available today with no
+    // architecture change.
+    const defaultStage = httpApi.defaultStage!.node.defaultChild as apigwv2.CfnStage;
+    defaultStage.defaultRouteSettings = {
+      throttlingRateLimit: 20, // sustained requests/sec across the whole API
+      throttlingBurstLimit: 40,
+    };
+
     new CfnOutput(this, "MediaBucketName", { value: this.mediaBucket.bucketName });
     new CfnOutput(this, "MediaItemsTableName", { value: this.mediaItemsTable.tableName });
     new CfnOutput(this, "FoldersTableName", { value: this.foldersTable.tableName });

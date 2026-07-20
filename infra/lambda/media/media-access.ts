@@ -6,6 +6,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { isOwner } from "./authz";
 import { hasPermission, resolveAccess } from "./access";
+import { jsonResponse } from "./http";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -18,12 +19,6 @@ const ACTIVITY_LOG_TABLE_NAME = process.env.ACTIVITY_LOG_TABLE_NAME!;
 
 // Short-lived — reissued on every view/download rather than cached client-side.
 const URL_EXPIRY_SECONDS = 300;
-
-const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
-  statusCode,
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(body),
-});
 
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   const mediaId = event.pathParameters?.mediaId;

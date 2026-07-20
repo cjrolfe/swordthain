@@ -9,6 +9,7 @@ import {
   UsernameExistsException,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { isOwner } from "./authz";
+import { jsonResponse } from "./http";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const cognito = new CognitoIdentityProviderClient({});
@@ -21,12 +22,6 @@ const SES_FROM_ADDRESS = process.env.SES_FROM_ADDRESS!;
 const SITE_URL = process.env.SITE_URL!;
 
 const VALID_PERMISSIONS = new Set(["view", "download", "upload"]);
-
-const jsonResponse = (statusCode: number, body: unknown): APIGatewayProxyStructuredResultV2 => ({
-  statusCode,
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(body),
-});
 
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   if (!isOwner(event.requestContext.authorizer.jwt.claims)) {
