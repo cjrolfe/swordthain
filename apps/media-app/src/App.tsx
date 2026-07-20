@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loadSession, clearSession, Session } from "./auth";
+import { loadSession, clearSession, isOwner, Session } from "./auth";
 import { Login } from "./components/Login";
 import { FolderBrowser } from "./components/FolderBrowser";
 import { PermissionsMatrix } from "./components/PermissionsMatrix";
@@ -16,6 +16,8 @@ export function App() {
     return <Login onLogin={setSession} />;
   }
 
+  const owner = isOwner(session);
+
   function handleSignOut() {
     clearSession();
     setSession(null);
@@ -24,30 +26,38 @@ export function App() {
   return (
     <div className="app">
       <header>
-        <h1>Swordthain Admin</h1>
+        <h1>{owner ? "Swordthain Admin" : "Swordthain"}</h1>
         <button className="link" onClick={handleSignOut}>
           Sign out
         </button>
       </header>
-      <nav className="tabs">
-        <button className={tab === "folders" ? "active" : ""} onClick={() => setTab("folders")}>
-          Folders
-        </button>
-        <button className={tab === "permissions" ? "active" : ""} onClick={() => setTab("permissions")}>
-          Permissions
-        </button>
-        <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
-          Friends
-        </button>
-        <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
-          Activity
-        </button>
-      </nav>
+      {owner && (
+        <nav className="tabs">
+          <button className={tab === "folders" ? "active" : ""} onClick={() => setTab("folders")}>
+            Folders
+          </button>
+          <button className={tab === "permissions" ? "active" : ""} onClick={() => setTab("permissions")}>
+            Permissions
+          </button>
+          <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
+            Friends
+          </button>
+          <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
+            Activity
+          </button>
+        </nav>
+      )}
       <main>
-        {tab === "folders" && <FolderBrowser />}
-        {tab === "permissions" && <PermissionsMatrix />}
-        {tab === "friends" && <Friends />}
-        {tab === "activity" && <Activity />}
+        {owner ? (
+          <>
+            {tab === "folders" && <FolderBrowser isOwner />}
+            {tab === "permissions" && <PermissionsMatrix />}
+            {tab === "friends" && <Friends />}
+            {tab === "activity" && <Activity />}
+          </>
+        ) : (
+          <FolderBrowser isOwner={false} />
+        )}
       </main>
     </div>
   );

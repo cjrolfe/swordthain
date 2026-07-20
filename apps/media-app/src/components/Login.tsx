@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { requestCode, submitCode, WrongCodeError, isOwner, Session } from "../auth";
+import { requestCode, submitCode, WrongCodeError, Session } from "../auth";
 
 export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
   const [step, setStep] = useState<"email" | "code">("email");
@@ -30,10 +30,6 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
     setBusy(true);
     try {
       const session = await submitCode(email.trim(), code.trim(), challengeSession);
-      if (!isOwner(session)) {
-        setError("This admin panel is for the site owner only.");
-        return;
-      }
       onLogin(session);
     } catch (err) {
       if (err instanceof WrongCodeError) {
@@ -49,7 +45,7 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
 
   return (
     <div className="login-card">
-      <h1>Swordthain Admin</h1>
+      <h1>Swordthain</h1>
       {step === "email" ? (
         <form onSubmit={handleRequestCode}>
           <label htmlFor="email">Email</label>

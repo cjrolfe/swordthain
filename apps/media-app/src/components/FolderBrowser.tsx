@@ -4,7 +4,7 @@ import { Lightbox } from "./Lightbox";
 
 const ROOT = "ROOT";
 
-export function FolderBrowser() {
+export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [path, setPath] = useState<Folder[]>([]); // breadcrumb trail; [] means at root
   const [folders, setFolders] = useState<Folder[]>([]);
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -108,19 +108,21 @@ export function FolderBrowser() {
       {error && <p className="error">{error}</p>}
       {loading && <p>Loading…</p>}
 
-      <form onSubmit={handleCreate} className="inline-form">
-        <input
-          placeholder="New folder title"
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-        />
-        <button type="submit">Add folder</button>
-      </form>
+      {isOwner && (
+        <form onSubmit={handleCreate} className="inline-form">
+          <input
+            placeholder="New folder title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+          />
+          <button type="submit">Add folder</button>
+        </form>
+      )}
 
       <ul className="folder-list">
         {folders.map((folder) => (
           <li key={folder.folderId}>
-            {renamingId === folder.folderId ? (
+            {isOwner && renamingId === folder.folderId ? (
               <>
                 <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus />
                 <button onClick={() => handleRename(folder.folderId)}>Save</button>
@@ -133,23 +135,29 @@ export function FolderBrowser() {
                 <button className="link folder-name" onClick={() => setPath([...path, folder])}>
                   📁 {folder.title}
                 </button>
-                <button
-                  className="link"
-                  onClick={() => {
-                    setRenamingId(folder.folderId);
-                    setRenameValue(folder.title);
-                  }}
-                >
-                  Rename
-                </button>
-                <button className="link danger" onClick={() => handleDelete(folder)}>
-                  Delete
-                </button>
+                {isOwner && (
+                  <>
+                    <button
+                      className="link"
+                      onClick={() => {
+                        setRenamingId(folder.folderId);
+                        setRenameValue(folder.title);
+                      }}
+                    >
+                      Rename
+                    </button>
+                    <button className="link danger" onClick={() => handleDelete(folder)}>
+                      Delete
+                    </button>
+                  </>
+                )}
               </>
             )}
           </li>
         ))}
-        {folders.length === 0 && !loading && <li className="empty">No sub-folders here yet.</li>}
+        {folders.length === 0 && !loading && (
+          <li className="empty">{isOwner ? "No sub-folders here yet." : "No folders shared with you here yet."}</li>
+        )}
       </ul>
 
       {currentFolder && (

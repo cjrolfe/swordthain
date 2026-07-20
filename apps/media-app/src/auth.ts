@@ -8,6 +8,9 @@ const client = new CognitoIdentityProviderClient({ region: import.meta.env.VITE_
 const CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
 
 const STORAGE_KEY = "swordthain_session";
+// Shared with apps/playground and the labs.swordthain.com CloudFront
+// Function's stealth gate — must stay in sync with that name.
+const SESSION_COOKIE_NAME = "swordthain_session";
 
 export interface Session {
   accessToken: string;
@@ -36,10 +39,33 @@ export function loadSession(): Session | null {
 
 function saveSession(session: Session): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  setSessionCookie(session);
 }
 
 export function clearSession(): void {
   localStorage.removeItem(STORAGE_KEY);
+  clearSessionCookie();
+}
+
+/**
+ * A copy of the ID token as a cookie on the parent domain, so
+ * labs.swordthain.com's edge-level stealth check (a CloudFront Function —
+ * see infra/lib/playground-stack.ts) can see it. Deliberately not
+ * HttpOnly: it's set from client-side JS after a browser-based login,
+ * which can't mark a cookie HttpOnly anyway, and this cookie was never
+ * the real security boundary — it just mirrors what's already sitting in
+ * localStorage. Real authorization stays with the Cognito-verified JWT
+ * on every actual API call.
+ */
+function setSessionCookie(session: Session): void {
+  if (!window.location.hostname.endsWith("swordthain.com")) return; // local dev — no cross-subdomain need
+  const maxAge = Math.max(0, Math.floor((session.expiresAt - Date.now()) / 1000));
+  document.cookie = `${SESSION_COOKIE_NAME}=${session.idToken}; domain=.swordthain.com; path=/; max-age=${maxAge}; secure; samesite=lax`;
+}
+
+function clearSessionCookie(): void {
+  if (!window.location.hostname.endsWith("swordthain.com")) return;
+  document.cookie = `${SESSION_COOKIE_NAME}=; domain=.swordthain.com; path=/; max-age=0; secure; samesite=lax`;
 }
 
 /** Step 1: request a 6-digit code be emailed. Returns the Cognito challenge session token. */
