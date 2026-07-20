@@ -1,8 +1,11 @@
 import { Duration, RemovalPolicy, Stack, StackProps, CfnOutput, ILocalBundling } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -10,6 +13,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -25,6 +29,18 @@ export interface MediaAppStackProps extends StackProps {
   sesFromAddress: string;
   /** Root site URL included in invite emails, e.g. "https://swordthain.com". */
   siteUrl: string;
+  /**
+   * Custom domain aliases for the static-site CloudFront distribution below,
+   * e.g. ["swordthain.com", "www.swordthain.com"]. Left unset until the DNS
+   * cutover (see infra/README.md): CloudFront refuses to let a second
+   * distribution claim an alias that's already live on another one, and
+   * today those two names are still aliased to playground's existing
+   * distribution. Until cutover, this distribution is verified at its own
+   * *.cloudfront.net domain instead.
+   */
+  siteDomainNames?: string[];
+  /** ACM cert (us-east-1) covering siteDomainNames — required together with it. */
+  siteCertificateArn?: string;
 }
 
 const SHARP_VERSION = "0.33.5";
@@ -93,6 +109,8 @@ export class MediaAppStack extends Stack {
   public readonly foldersTable: dynamodb.Table;
   public readonly folderSharesTable: dynamodb.Table;
   public readonly activityLogTable: dynamodb.Table;
+  public readonly siteBucket: s3.Bucket;
+  public readonly siteDistribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props: MediaAppStackProps) {
     super(scope, id, props);
@@ -399,6 +417,92 @@ export class MediaAppStack extends Stack {
       })
     );
 
+    // --- Static site hosting (the React SPA itself, not the API below) ---
+    // Created before the HTTP API so its CloudFront domain can be added to
+    // the API's CORS origins below — the SPA calls this same API from
+    // wherever it's served, including its own *.cloudfront.net domain
+    // during pre-cutover verification.
+    this.siteBucket = new s3.Bucket(this, "SiteBucket", {
+      bucketName: `swordthain-site-${this.account}`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    // CloudFront-scope WAF (free managed rule groups) — unlike the HTTP API
+    // below, a CloudFront distribution *can* have WAFv2 attached directly
+    // (see the throttling comment below for why the API itself can't).
+    const siteWebAcl = new wafv2.CfnWebACL(this, "SiteWebAcl", {
+      scope: "CLOUDFRONT",
+      defaultAction: { allow: {} },
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: "swordthain-site-waf",
+      },
+      rules: [
+        {
+          name: "AWS-AWSManagedRulesCommonRuleSet",
+          priority: 0,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: { vendorName: "AWS", name: "AWSManagedRulesCommonRuleSet" },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: "swordthain-site-common",
+          },
+        },
+        {
+          name: "AWS-AWSManagedRulesKnownBadInputsRuleSet",
+          priority: 1,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: { vendorName: "AWS", name: "AWSManagedRulesKnownBadInputsRuleSet" },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: "swordthain-site-badinputs",
+          },
+        },
+        {
+          name: "AWS-AWSManagedRulesAmazonIpReputationList",
+          priority: 2,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: { vendorName: "AWS", name: "AWSManagedRulesAmazonIpReputationList" },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: "swordthain-site-ipreputation",
+          },
+        },
+      ],
+    });
+
+    const siteCertificate =
+      props.siteCertificateArn && props.siteDomainNames?.length
+        ? acm.Certificate.fromCertificateArn(this, "SiteCertificate", props.siteCertificateArn)
+        : undefined;
+
+    this.siteDistribution = new cloudfront.Distribution(this, "SiteDistribution", {
+      comment: "apps/media-app static site (swordthain.com root domain)",
+      defaultRootObject: "index.html",
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(this.siteBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      webAclId: siteWebAcl.attrArn,
+      domainNames: siteCertificate ? props.siteDomainNames : undefined,
+      certificate: siteCertificate,
+    });
+
     // --- HTTP API (Cognito-authenticated) ---
     const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", props.userPool, {
       userPoolClients: [props.userPoolClient],
@@ -407,7 +511,10 @@ export class MediaAppStack extends Stack {
     const httpApi = new apigwv2.HttpApi(this, "MediaHttpApi", {
       apiName: "swordthain-media-api",
       corsPreflight: {
-        allowOrigins: props.allowedOrigins,
+        // Includes the site distribution's own *.cloudfront.net domain so
+        // the SPA can call this API when verified there pre-cutover, on
+        // top of the real domain(s) and local dev.
+        allowOrigins: [...props.allowedOrigins, `https://${this.siteDistribution.distributionDomainName}`],
         allowMethods: [
           apigwv2.CorsHttpMethod.POST,
           apigwv2.CorsHttpMethod.GET,
@@ -518,5 +625,8 @@ export class MediaAppStack extends Stack {
     new CfnOutput(this, "FolderSharesTableName", { value: this.folderSharesTable.tableName });
     new CfnOutput(this, "ActivityLogTableName", { value: this.activityLogTable.tableName });
     new CfnOutput(this, "MediaApiUrl", { value: httpApi.apiEndpoint });
+    new CfnOutput(this, "SiteBucketName", { value: this.siteBucket.bucketName });
+    new CfnOutput(this, "SiteDistributionId", { value: this.siteDistribution.distributionId });
+    new CfnOutput(this, "SiteDistributionDomainName", { value: this.siteDistribution.distributionDomainName });
   }
 }

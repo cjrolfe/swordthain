@@ -67,6 +67,17 @@ Every Owner-only endpoint (`POST /folders`, the shares/invites/permissions-matri
 - MFA: already satisfied by the existing Cognito config from Phase 1 (`Mfa.OPTIONAL` with TOTP) — OTP-per-login is itself a second factor beyond just holding an account; nothing new needed here.
 - Verified: response headers confirmed on a real Lambda invoke and (implicitly, via standard `AWS_PROXY` passthrough behavior already exercised throughout every prior phase) over the real HTTP path; throttle settings confirmed live via `aws apigatewayv2 get-stage`.
 
+#### Static site hosting (the SPA itself — domain cutover, part 1 of several)
+The frontend now has a real hosted origin, closing the gap flagged above ("nothing hosts static files for the media-app yet"). This is deliberately just the hosting — no domain aliasing yet, see below.
+
+- **`SiteBucket`** (`swordthain-site-<account-id>`) — private (`BLOCK_ALL`, `BucketOwnerEnforced`), served only via CloudFront + Origin Access Control, same pattern as `MediaBucket`.
+- **`SiteDistribution`** — a CloudFront distribution in front of `SiteBucket`, `index.html` as the default root object. No SPA-routing/custom-error-page config: `apps/media-app` has no client-side router, just one HTML page.
+- **`SiteWebAcl`** — a CloudFront-scope WAFv2 Web ACL (`AWSManagedRulesCommonRuleSet`, `AWSManagedRulesKnownBadInputsRuleSet`, `AWSManagedRulesAmazonIpReputationList` — all free managed rule groups) attached directly to the distribution. This is the real WAF the API hardening section above couldn't get (HTTP API v2 can't take WAFv2 at all); a CloudFront distribution can.
+- **No custom domain yet.** `swordthain.com`/`www.swordthain.com` are still aliased to playground's old distribution today — CloudFront refuses to let a second distribution claim an alias that's already live elsewhere in the account, so `SiteDistribution` is reachable only at its own `*.cloudfront.net` domain (`SiteDistributionDomainName` output) until the DNS cutover. `MediaAppStackProps.siteDomainNames`/`siteCertificateArn` exist for this (reusing playground's existing ACM cert, which already covers both names) but are left unset until then.
+- **`MediaHttpApi`'s CORS `allowOrigins`** includes `https://${SiteDistributionDomainName}` alongside the real domain(s) and `localhost:5173`, specifically so the SPA can call the API while being verified at its pre-cutover `*.cloudfront.net` address.
+- No CDK `BucketDeployment` — matching the pattern already established for playground, a build artifact sync belongs in CI (`apps/media-app`'s own deploy workflow, added next), not baked into the infra stack.
+- Verified in a real browser: built `apps/media-app`, manually synced `dist/` to `SiteBucket`, invalidated the distribution, and completed a full Owner OTP sign-in at `SiteDistributionDomainName` — folders loaded, dashboard rendered, no CORS errors in the console.
+
 ### `SwordthainAuthStack`
 The Cognito User Pool shared by both apps: friends sign in as `Member`, the owner as `Owner` (Cognito group, checked explicitly in app code — see the spec's section 9 on the playground's access control).
 
