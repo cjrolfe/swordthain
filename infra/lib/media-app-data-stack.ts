@@ -1,11 +1,8 @@
 import { Duration, RemovalPolicy, Stack, StackProps, CfnOutput, ILocalBundling } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
-import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
-import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -13,34 +10,28 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
-import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-export interface MediaAppStackProps extends StackProps {
-  /** Origins allowed to issue presigned multipart uploads directly to the bucket. */
+export interface MediaAppDataStackProps extends StackProps {
+  /** Origins allowed to issue presigned multipart uploads directly to the bucket, and to call the HTTP API. */
   allowedOrigins: string[];
-  /** Shared Cognito pool from SwordthainAuthStack — gates the media API. */
-  userPool: cognito.IUserPool;
-  userPoolClient: cognito.IUserPoolClient;
-  /** Shared SES sending identity from SwordthainAuthStack — reused for invite emails. */
+  /**
+   * The shared Cognito pool lives in SwordthainAuthStack (us-east-1), fixed
+   * there for reasons documented in infra/README.md — this stack is
+   * eu-west-1. Passed as plain IDs/ARNs rather than a construct reference
+   * to avoid CDK's cross-region reference machinery for values that are
+   * stable anyway (the pool has deletionProtection: true).
+   */
+  userPoolArn: string;
+  userPoolId: string;
+  userPoolClientId: string;
+  /** Shared SES sending identity from SwordthainAuthStack (us-east-1) — same reasoning as above. */
   sesIdentityArn: string;
   sesFromAddress: string;
   /** Root site URL included in invite emails, e.g. "https://swordthain.com". */
   siteUrl: string;
-  /**
-   * Custom domain aliases for the static-site CloudFront distribution below,
-   * e.g. ["swordthain.com", "www.swordthain.com"]. Left unset until the DNS
-   * cutover (see infra/README.md): CloudFront refuses to let a second
-   * distribution claim an alias that's already live on another one, and
-   * today those two names are still aliased to playground's existing
-   * distribution. Until cutover, this distribution is verified at its own
-   * *.cloudfront.net domain instead.
-   */
-  siteDomainNames?: string[];
-  /** ACM cert (us-east-1) covering siteDomainNames — required together with it. */
-  siteCertificateArn?: string;
 }
 
 const SHARP_VERSION = "0.33.5";
@@ -98,22 +89,35 @@ const ffmpegLocalBundling: ILocalBundling = {
 };
 
 /**
- * apps/media-app's own resources: media storage bucket, DynamoDB tables
- * (MediaItems, Folders, FolderShares), presigned upload, thumbnail
- * generation, folder browsing, per-folder sharing, and friend invites —
- * fronted by a single Cognito-authenticated HTTP API.
+ * apps/media-app's data plane: media storage bucket, DynamoDB tables
+ * (MediaItems, Folders, FolderShares, ActivityLog), presigned upload,
+ * thumbnail generation, folder browsing, per-folder sharing, friend
+ * invites, and the static site's own bucket — fronted by a single
+ * Cognito-authenticated HTTP API. Deployed in eu-west-1 (see
+ * infra/README.md's "Region split" section): this is the part that
+ * actually matters for UK download/streaming latency and EU data
+ * residency, since presigned S3 GET URLs go straight from browser to
+ * bucket, bypassing CloudFront entirely. The CloudFront distribution that
+ * serves the built SPA lives separately, in MediaAppHostingStack
+ * (us-east-1, forced by CloudFront/ACM/WAFv2-for-CloudFront).
  */
-export class MediaAppStack extends Stack {
+export class MediaAppDataStack extends Stack {
   public readonly mediaBucket: s3.Bucket;
   public readonly mediaItemsTable: dynamodb.Table;
   public readonly foldersTable: dynamodb.Table;
   public readonly folderSharesTable: dynamodb.Table;
   public readonly activityLogTable: dynamodb.Table;
   public readonly siteBucket: s3.Bucket;
-  public readonly siteDistribution: cloudfront.Distribution;
 
-  constructor(scope: Construct, id: string, props: MediaAppStackProps) {
+  constructor(scope: Construct, id: string, props: MediaAppDataStackProps) {
     super(scope, id, props);
+
+    const userPool = cognito.UserPool.fromUserPoolArn(this, "SharedUserPool", props.userPoolArn);
+    const userPoolClient = cognito.UserPoolClient.fromUserPoolClientId(
+      this,
+      "SharedUserPoolClient",
+      props.userPoolClientId
+    );
 
     this.mediaBucket = new s3.Bucket(this, "MediaBucket", {
       bucketName: `swordthain-media-${this.account}`,
@@ -318,7 +322,7 @@ export class MediaAppStack extends Stack {
       environment: {
         FOLDERS_TABLE_NAME: this.foldersTable.tableName,
         FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
-        USER_POOL_ID: props.userPool.userPoolId,
+        USER_POOL_ID: props.userPoolId,
       },
       bundling: {
         externalModules: [],
@@ -329,7 +333,7 @@ export class MediaAppStack extends Stack {
     sharesFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["cognito-idp:AdminGetUser", "cognito-idp:ListUsersInGroup"],
-        resources: [props.userPool.userPoolArn],
+        resources: [props.userPoolArn],
       })
     );
 
@@ -342,7 +346,7 @@ export class MediaAppStack extends Stack {
       environment: {
         FOLDERS_TABLE_NAME: this.foldersTable.tableName,
         FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
-        USER_POOL_ID: props.userPool.userPoolId,
+        USER_POOL_ID: props.userPoolId,
         SES_FROM_ADDRESS: props.sesFromAddress,
         SITE_URL: props.siteUrl,
       },
@@ -355,7 +359,7 @@ export class MediaAppStack extends Stack {
     invitesFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["cognito-idp:AdminCreateUser", "cognito-idp:AdminAddUserToGroup"],
-        resources: [props.userPool.userPoolArn],
+        resources: [props.userPoolArn],
       })
     );
     invitesFn.addToRolePolicy(
@@ -401,7 +405,7 @@ export class MediaAppStack extends Stack {
         ACTIVITY_LOG_TABLE_NAME: this.activityLogTable.tableName,
         MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
         FOLDERS_TABLE_NAME: this.foldersTable.tableName,
-        USER_POOL_ID: props.userPool.userPoolId,
+        USER_POOL_ID: props.userPoolId,
       },
       bundling: {
         externalModules: [],
@@ -413,15 +417,13 @@ export class MediaAppStack extends Stack {
     activityFn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["cognito-idp:ListUsers"],
-        resources: [props.userPool.userPoolArn],
+        resources: [props.userPoolArn],
       })
     );
 
-    // --- Static site hosting (the React SPA itself, not the API below) ---
-    // Created before the HTTP API so its CloudFront domain can be added to
-    // the API's CORS origins below — the SPA calls this same API from
-    // wherever it's served, including its own *.cloudfront.net domain
-    // during pre-cutover verification.
+    // --- Static site's own bucket (the built SPA — CloudFront distribution
+    // lives separately in MediaAppHostingStack, us-east-1; a bucket has no
+    // region requirement as a CloudFront origin, so it stays here) ---
     this.siteBucket = new s3.Bucket(this, "SiteBucket", {
       bucketName: `swordthain-site-${this.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -431,90 +433,21 @@ export class MediaAppStack extends Stack {
       removalPolicy: RemovalPolicy.RETAIN,
     });
 
-    // CloudFront-scope WAF (free managed rule groups) — unlike the HTTP API
-    // below, a CloudFront distribution *can* have WAFv2 attached directly
-    // (see the throttling comment below for why the API itself can't).
-    const siteWebAcl = new wafv2.CfnWebACL(this, "SiteWebAcl", {
-      scope: "CLOUDFRONT",
-      defaultAction: { allow: {} },
-      visibilityConfig: {
-        sampledRequestsEnabled: true,
-        cloudWatchMetricsEnabled: true,
-        metricName: "swordthain-site-waf",
-      },
-      rules: [
-        {
-          name: "AWS-AWSManagedRulesCommonRuleSet",
-          priority: 0,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: { vendorName: "AWS", name: "AWSManagedRulesCommonRuleSet" },
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: "swordthain-site-common",
-          },
-        },
-        {
-          name: "AWS-AWSManagedRulesKnownBadInputsRuleSet",
-          priority: 1,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: { vendorName: "AWS", name: "AWSManagedRulesKnownBadInputsRuleSet" },
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: "swordthain-site-badinputs",
-          },
-        },
-        {
-          name: "AWS-AWSManagedRulesAmazonIpReputationList",
-          priority: 2,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: { vendorName: "AWS", name: "AWSManagedRulesAmazonIpReputationList" },
-          },
-          visibilityConfig: {
-            sampledRequestsEnabled: true,
-            cloudWatchMetricsEnabled: true,
-            metricName: "swordthain-site-ipreputation",
-          },
-        },
-      ],
-    });
-
-    const siteCertificate =
-      props.siteCertificateArn && props.siteDomainNames?.length
-        ? acm.Certificate.fromCertificateArn(this, "SiteCertificate", props.siteCertificateArn)
-        : undefined;
-
-    this.siteDistribution = new cloudfront.Distribution(this, "SiteDistribution", {
-      comment: "apps/media-app static site (swordthain.com root domain)",
-      defaultRootObject: "index.html",
-      defaultBehavior: {
-        origin: origins.S3BucketOrigin.withOriginAccessControl(this.siteBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
-      },
-      webAclId: siteWebAcl.attrArn,
-      domainNames: siteCertificate ? props.siteDomainNames : undefined,
-      certificate: siteCertificate,
-    });
-
     // --- HTTP API (Cognito-authenticated) ---
-    const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", props.userPool, {
-      userPoolClients: [props.userPoolClient],
+    // userPoolRegion must be explicit: HttpUserPoolAuthorizer otherwise
+    // builds the JWT issuer URL from *this stack's* region (eu-west-1),
+    // not the imported pool's actual region — confirmed by a real
+    // CREATE_FAILED ("Invalid issuer: https://cognito-idp.eu-west-1...")
+    // even though the pool was imported via fromUserPoolArn.
+    const authorizer = new HttpUserPoolAuthorizer("MediaApiAuthorizer", userPool, {
+      userPoolClients: [userPoolClient],
+      userPoolRegion: "us-east-1",
     });
 
     const httpApi = new apigwv2.HttpApi(this, "MediaHttpApi", {
       apiName: "swordthain-media-api",
       corsPreflight: {
-        // Includes the site distribution's own *.cloudfront.net domain so
-        // the SPA can call this API when verified there pre-cutover, on
-        // top of the real domain(s) and local dev.
-        allowOrigins: [...props.allowedOrigins, `https://${this.siteDistribution.distributionDomainName}`],
+        allowOrigins: props.allowedOrigins,
         allowMethods: [
           apigwv2.CorsHttpMethod.POST,
           apigwv2.CorsHttpMethod.GET,
@@ -605,8 +538,10 @@ export class MediaAppStack extends Stack {
     // migrating off HTTP API to REST API, or putting CloudFront in front
     // of it — both bigger moves than "safe pieces," and CloudFront is the
     // more sensible of the two given the spec's own architecture already
-    // wants it; bundle that with the deferred playground/root-domain
-    // cutover rather than doing a narrower one-off migration now.
+    // wants it there. That CloudFront distribution exists now
+    // (MediaAppHostingStack) but fronts the static site, not this API —
+    // extending it to also proxy the API is a separate, larger change not
+    // taken on here.
     //
     // What HTTP API does support natively: stage-level throttling. It's a
     // global cap across the whole API (not per-IP the way a WAF
@@ -626,7 +561,5 @@ export class MediaAppStack extends Stack {
     new CfnOutput(this, "ActivityLogTableName", { value: this.activityLogTable.tableName });
     new CfnOutput(this, "MediaApiUrl", { value: httpApi.apiEndpoint });
     new CfnOutput(this, "SiteBucketName", { value: this.siteBucket.bucketName });
-    new CfnOutput(this, "SiteDistributionId", { value: this.siteDistribution.distributionId });
-    new CfnOutput(this, "SiteDistributionDomainName", { value: this.siteDistribution.distributionDomainName });
   }
 }

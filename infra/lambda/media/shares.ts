@@ -14,7 +14,10 @@ import { isOwner } from "./authz";
 import { jsonResponse } from "./http";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const cognito = new CognitoIdentityProviderClient({});
+// This Lambda runs in eu-west-1 (see infra/README.md's "Region split"),
+// but the shared Cognito pool stays in us-east-1 — the SDK client would
+// otherwise default to this Lambda's own runtime region.
+const cognito = new CognitoIdentityProviderClient({ region: "us-east-1" });
 
 const FOLDERS_TABLE_NAME = process.env.FOLDERS_TABLE_NAME!;
 const FOLDER_SHARES_TABLE_NAME = process.env.FOLDER_SHARES_TABLE_NAME!;

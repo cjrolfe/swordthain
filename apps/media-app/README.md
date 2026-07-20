@@ -8,7 +8,7 @@ React + Vite SPA with two views sharing one app shell, branched on the signed-in
 
 - React 18 + TypeScript, built with Vite. No router library — five views, plain `useState` navigation is simpler than adding a dependency for it.
 - Auth: Cognito's passwordless custom-auth flow, called directly from the browser via `@aws-sdk/client-cognito-identity-provider` (`InitiateAuth` / `RespondToAuthChallenge` / refresh). No password, no Amplify — same flow the backend's Lambda triggers implement (see `infra/lib/auth-stack.ts`).
-- Talks directly to the deployed HTTP API (`infra/lib/media-app-stack.ts`) — no server component of its own.
+- Talks directly to the deployed HTTP API (`infra/lib/media-app-data-stack.ts`) — no server component of its own. That API and everything behind it runs in **eu-west-1**, not us-east-1 — see `infra/README.md`'s "Region split" section.
 
 ## Local development
 
@@ -18,7 +18,9 @@ npm run dev
 # http://localhost:5173
 ```
 
-`.env` has the real, non-secret config (Cognito client ID, API URL, region) — these are meant to ship in the client bundle, so it's committed rather than gitignored. `localhost:5173` is already an allowed CORS origin on the API (see `MediaAppStack`'s `allowedOrigins`).
+`.env` has the real, non-secret config (Cognito client ID, API URL, region) — these are meant to ship in the client bundle, so it's committed rather than gitignored. `localhost:5173` is already an allowed CORS origin on the API (see `MediaAppDataStack`'s `allowedOrigins`). `VITE_AWS_REGION` is `us-east-1` (that's Cognito's region — unaffected by the region migration); `VITE_API_URL` points at the eu-west-1 HTTP API.
+
+**There's also a gitignored `.env.local`, which Vite loads with *higher* priority than `.env`.** If it exists and disagrees with `.env`, its values win silently — including in `npm run build`, not just `npm run dev`. This caused a real, confusing failure during the region migration: `.env` was updated to the new API URL, but a stale `.env.local` from earlier local dev still had the old one, so the production build kept calling the decommissioned API. Vite's output hash didn't change between builds (same env value in, same bundle out) and the browser only ever reported a generic "Failed to fetch" — worth checking `.env.local` is either absent or in sync with `.env` if a rebuild ever behaves unexpectedly.
 
 Sign in with any Cognito user's email. `Owner` accounts land in the admin UI; `Member` accounts land in the friend view. The client-side branch (`isOwner()` in `auth.ts`, decoding the ID token's `cognito:groups` claim) is a UI convenience only — every Owner-only endpoint enforces it server-side regardless, and every Member-visible endpoint is gated by `resolveAccess` walking the folder-share tree, so a Member can never see or act on a folder that isn't explicitly shared with them (or a descendant of one that is) no matter what the client renders.
 
@@ -26,7 +28,7 @@ Signing in also writes a copy of the ID token to a `swordthain_session` cookie s
 
 ## Production hosting & deploys
 
-Served from a private S3 bucket behind CloudFront (`SiteBucket`/`SiteDistribution` in `infra/lib/media-app-stack.ts`), with a CloudFront-scope WAF in front of it. A push to `main` touching `apps/media-app/**` runs `.github/workflows/deploy-media-app.yml`: `npm ci && npm run build`, sync `dist/` to the bucket, invalidate the distribution — via a GitHub Actions OIDC role (`swordthain-media-app-ci`, `infra/lib/ci-stack.ts`) scoped to just that bucket and distribution, no static AWS keys involved. `swordthain.com`/`www.swordthain.com` aren't aliased to this distribution yet (see `infra/README.md`'s "Static site hosting" section for why); until the DNS cutover, it's reachable only at its own `*.cloudfront.net` domain.
+Served from a private S3 bucket (`SiteBucket`, `infra/lib/media-app-data-stack.ts`, eu-west-1) behind CloudFront (`SiteDistribution` + a CloudFront-scope WAF, `infra/lib/media-app-hosting-stack.ts`, us-east-1 — CloudFront/ACM/WAFv2-for-CloudFront can only be managed from there, see `infra/README.md`'s "Region split" section). A push to `main` touching `apps/media-app/**` runs `.github/workflows/deploy-media-app.yml`: `npm ci && npm run build`, sync `dist/` to the bucket (`--region eu-west-1`, since the job's default region is us-east-1), invalidate the distribution — via a GitHub Actions OIDC role (`swordthain-media-app-ci`, `infra/lib/ci-stack.ts`) scoped to just that bucket and distribution, no static AWS keys involved. `swordthain.com`/`www.swordthain.com` aren't aliased to this distribution yet (see `infra/README.md`'s "Static site hosting" section for why); until the DNS cutover, it's reachable only at its own `*.cloudfront.net` domain.
 
 ## Pages
 

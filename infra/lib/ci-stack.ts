@@ -1,7 +1,6 @@
 import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as s3 from "aws-cdk-lib/aws-s3";
 
 export interface CiStackProps extends StackProps {
   githubOrg: string;
@@ -11,9 +10,24 @@ export interface CiStackProps extends StackProps {
   playgroundBucketName: string;
   playgroundLambdaFunctionName: string;
   playgroundDistributionId: string;
-  /** apps/media-app's static-site bucket and distribution, from SwordthainMediaAppStack. */
-  mediaAppSiteBucket: s3.IBucket;
+  /**
+   * apps/media-app's static-site bucket (SwordthainMediaAppDataStack,
+   * eu-west-1) and distribution (SwordthainMediaAppHostingStack,
+   * us-east-1). Bucket referenced by name only — the IAM policy below
+   * only ever needed it to build an ARN (`arn:aws:s3:::{name}`, which has
+   * no region field anyway), so this avoids a cross-region construct
+   * reference for a value that doesn't need one. Mirrors
+   * `playgroundBucketName` above.
+   */
+  mediaAppSiteBucketName: string;
   mediaAppSiteDistributionId: string;
+  /**
+   * Regions any stack in this app deploys to — the infra CI role needs to
+   * assume CDK bootstrap roles in each one. Both us-east-1 (CloudFront/ACM/
+   * WAFv2-for-CloudFront/Cognito/playground) and eu-west-1 (media-app's
+   * data plane) since the region split — see infra/README.md.
+   */
+  bootstrapRegions: string[];
   /** CDK bootstrap qualifier (default "hnb659fds") — used to build the bootstrap role ARNs. */
   cdkQualifier?: string;
 }
@@ -96,16 +110,17 @@ export class CiStack extends Stack {
       description: "GitHub Actions deploy role for apps/media-app",
     });
 
+    const mediaAppSiteBucketArn = `arn:aws:s3:::${props.mediaAppSiteBucketName}`;
     mediaAppRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ["s3:ListBucket"],
-        resources: [props.mediaAppSiteBucket.bucketArn],
+        resources: [mediaAppSiteBucketArn],
       })
     );
     mediaAppRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-        resources: [`${props.mediaAppSiteBucket.bucketArn}/*`],
+        resources: [`${mediaAppSiteBucketArn}/*`],
       })
     );
     mediaAppRole.addToPolicy(
@@ -123,8 +138,10 @@ export class CiStack extends Stack {
     // role is deliberately just a narrow bridge into them, not a second
     // copy of AdministratorAccess.
     const qualifier = props.cdkQualifier ?? "hnb659fds";
-    const bootstrapRoleArns = ["deploy-role", "file-publishing-role", "lookup-role"].map(
-      (role) => `arn:aws:iam::${this.account}:role/cdk-${qualifier}-${role}-${this.account}-${this.region}`
+    const bootstrapRoleArns = props.bootstrapRegions.flatMap((region) =>
+      ["deploy-role", "file-publishing-role", "lookup-role"].map(
+        (role) => `arn:aws:iam::${this.account}:role/cdk-${qualifier}-${role}-${this.account}-${region}`
+      )
     );
 
     const infraRole = new iam.Role(this, "InfraCiRole", {
