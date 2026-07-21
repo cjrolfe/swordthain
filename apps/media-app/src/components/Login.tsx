@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { requestCode, submitCode, WrongCodeError, Session } from "../auth";
+import { VcrIllustration } from "./VcrIllustration";
 
 export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
   const [step, setStep] = useState<"email" | "code">("email");
@@ -44,47 +45,53 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
   }
 
   return (
-    <div className="login-card">
-      <h1>Swordthain</h1>
-      {step === "email" ? (
-        <form onSubmit={handleRequestCode}>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoFocus
-          />
-          <button type="submit" disabled={busy}>
-            {busy ? "Sending…" : "Send code"}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleSubmitCode}>
-          <p>Enter the 6-digit code sent to {email}.</p>
-          <label htmlFor="code">Code</label>
-          <input
-            id="code"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            required
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            autoFocus
-          />
-          <button type="submit" disabled={busy}>
-            {busy ? "Verifying…" : "Verify"}
-          </button>
-          <button type="button" className="link" onClick={() => setStep("email")}>
-            Use a different email
-          </button>
-        </form>
-      )}
-      {error && <p className="error">{error}</p>}
+    <div className="login-page">
+      <div className="login-hero">
+        <VcrIllustration />
+      </div>
+      <div className="login-card">
+        <h1>Swordthain</h1>
+        <p className="login-tagline">Family movies, straight from the vault.</p>
+        {step === "email" ? (
+          <form onSubmit={handleRequestCode}>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" disabled={busy}>
+              {busy ? "Sending…" : "Send code"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmitCode}>
+            <p>Enter the 6-digit code sent to {email}.</p>
+            <label htmlFor="code">Code</label>
+            <input
+              id="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" disabled={busy}>
+              {busy ? "Verifying…" : "Verify"}
+            </button>
+            <button type="button" className="link" onClick={() => setStep("email")}>
+              Use a different email
+            </button>
+          </form>
+        )}
+        {error && <p className="error">{error}</p>}
+      </div>
     </div>
   );
 }
