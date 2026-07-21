@@ -96,7 +96,7 @@ const mediaAppHostingStack = new MediaAppHostingStack(app, "SwordthainMediaAppHo
   siteCertificateArn: "arn:aws:acm:us-east-1:584000479246:certificate/710894e4-c91f-4986-a21d-812e52eaceb5",
 });
 
-new PlaygroundStack(app, "SwordthainPlaygroundStack", {
+const playgroundStack = new PlaygroundStack(app, "SwordthainPlaygroundStack", {
   env: usEast1,
   domainName: "swordthain.com",
   hostedZoneId: "Z09793352H82VF3C9TII2",
@@ -113,7 +113,14 @@ new CiStack(app, "SwordthainCiStack", {
   allowedBranches: ["main"],
   playgroundBucketName: "swordthain-demo-sites",
   playgroundLambdaFunctionName: "swordthain-automation",
-  playgroundDistributionId: "E1AUXZ6C0Z7J9P",
+  // The pre-cutover playground distribution (E1AUXZ6C0Z7J9P) was
+  // decommissioned once swordthain.com moved to MediaAppHostingStack —
+  // LabsDistribution (labs.swordthain.com) is playground's real
+  // distribution now, and both CI's invalidation permission and
+  // deploy-playground.yml's invalidation call needed updating together,
+  // or the next playground deploy would invalidate a distribution that
+  // no longer exists.
+  playgroundDistributionId: playgroundStack.distribution.distributionId,
   mediaAppSiteBucketName: MEDIA_SITE_BUCKET_NAME,
   mediaAppSiteDistributionId: mediaAppHostingStack.siteDistribution.distributionId,
   bootstrapRegions: ["us-east-1", "eu-west-1"],
