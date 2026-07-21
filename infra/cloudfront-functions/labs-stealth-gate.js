@@ -23,8 +23,17 @@
 // `aws cloudfront test-function`: "RangeError: Instruction limit exceeded"
 // at ~50-60% utilization even with a precomputed lookup table instead of
 // indexOf). atob covers the same ~14% of budget instead.
+//
+// Padding back to a multiple of 4 is required: JWTs strip base64url padding
+// (RFC 7515), but atob() throws "Unexpected end of input" without it — and
+// only for payload lengths that land on certain remainders mod 4, which is
+// exactly why this passed testing initially (those tokens' payload lengths
+// happened not to trigger it) and then failed for real once cutover
+// verification produced a token with a different-length payload.
 function decodeBase64Url(str) {
-  return atob(str.replace(/-/g, "+").replace(/_/g, "/"));
+  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (str.length % 4) str += "=";
+  return atob(str);
 }
 
 function notFound() {
