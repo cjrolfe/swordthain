@@ -4,6 +4,21 @@ import { Lightbox } from "./Lightbox";
 
 const ROOT = "ROOT";
 
+const SUPPORTED_CONTENT_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/heic",
+  "image/heif",
+  "video/mp4",
+  "video/quicktime",
+]);
+
+interface UploadStatus {
+  name: string;
+  status: "uploading" | "done" | "error";
+  message?: string;
+}
+
 export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [path, setPath] = useState<Folder[]>([]); // breadcrumb trail; [] means at root
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -14,9 +29,11 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
+  const [uploads, setUploads] = useState<UploadStatus[]>([]);
 
   const currentFolder = path[path.length - 1] ?? null;
   const currentParentId = currentFolder?.folderId ?? ROOT;
+  const canUpload = isOwner || currentFolder?.myPermission === "upload";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,6 +104,43 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to download");
     }
+  }
+
+  async function handleUpload(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0 || !currentFolder) return;
+    const files = Array.from(fileList);
+    setUploads(files.map((f) => ({ name: f.name, status: "uploading" })));
+
+    await Promise.all(
+      files.map(async (file, i) => {
+        const setStatus = (status: UploadStatus["status"], message?: string) =>
+          setUploads((prev) => prev.map((u, idx) => (idx === i ? { ...u, status, message } : u)));
+        try {
+          if (!SUPPORTED_CONTENT_TYPES.has(file.type)) {
+            throw new Error(`Unsupported file type: ${file.type || "unknown"}`);
+          }
+          const { uploadUrl } = await api.getUploadUrl({
+            folderId: currentFolder.folderId,
+            fileName: file.name,
+            contentType: file.type,
+          });
+          const res = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "content-type": file.type },
+            body: file,
+          });
+          if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+          setStatus("done");
+        } catch (err) {
+          setStatus("error", err instanceof Error ? err.message : "Upload failed");
+        }
+      })
+    );
+
+    load();
+    // Thumbnail generation happens async off an S3 event, so a fresh upload
+    // often isn't in listFolderMedia yet on the first refresh above.
+    setTimeout(load, 2000);
   }
 
   return (
@@ -163,6 +217,29 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       {currentFolder && (
         <>
           <h3>Media in "{currentFolder.title}"</h3>
+          {canUpload && (
+            <div className="inline-form">
+              <input
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/heic,image/heif,video/mp4,video/quicktime"
+                onChange={(e) => {
+                  handleUpload(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          )}
+          {uploads.length > 0 && (
+            <ul className="folder-list">
+              {uploads.map((u, i) => (
+                <li key={i}>
+                  {u.name} — {u.status}
+                  {u.status === "error" && u.message && <span className="error"> ({u.message})</span>}
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="media-grid">
             {media.map((item) => (
               <figure key={item.mediaId}>

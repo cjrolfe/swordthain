@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { loadSession, clearSession, isOwner, Session } from "./auth";
 import { Login } from "./components/Login";
 import { FolderBrowser } from "./components/FolderBrowser";
@@ -11,12 +11,15 @@ type Tab = "folders" | "permissions" | "friends" | "activity";
 export function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
   const [tab, setTab] = useState<Tab>("folders");
+  const owner = session ? isOwner(session) : false;
+
+  useEffect(() => {
+    if (session) document.title = owner ? "Swordthain Admin" : "Swordthain Film Archive";
+  }, [session, owner]);
 
   if (!session) {
     return <Login onLogin={setSession} />;
   }
-
-  const owner = isOwner(session);
 
   function handleSignOut() {
     clearSession();

@@ -121,7 +121,11 @@ async function listFolders(
       access: await resolveAccess(ddb, FOLDERS_TABLE_NAME, FOLDER_SHARES_TABLE_NAME, folder.folderId, userId),
     }))
   );
-  return jsonResponse(200, { folders: visible.filter((v) => v.access !== null).map((v) => v.folder) });
+  return jsonResponse(200, {
+    folders: visible
+      .filter((v) => v.access !== null)
+      .map((v) => ({ ...v.folder, myPermission: v.access!.permission })),
+  });
 }
 
 async function getFolder(

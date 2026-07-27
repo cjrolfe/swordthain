@@ -31,6 +31,8 @@ export interface Folder {
   guestUploadEnabled: boolean;
   coverThumbnail: string | null;
   createdAt: string;
+  /** Only present for a Member's own folders — their resolved permission on this folder. */
+  myPermission?: Permission;
 }
 
 export interface MediaItem {
@@ -74,6 +76,12 @@ export const api = {
   renameFolder: (folderId: string, title: string) => request<Folder>("PATCH", `/folders/${folderId}`, { title }),
   deleteFolder: (folderId: string) => request<{ deleted: boolean }>("DELETE", `/folders/${folderId}`),
   listFolderMedia: (folderId: string) => request<{ media: MediaItem[] }>("GET", `/folders/${folderId}/media`),
+  getUploadUrl: (body: { folderId: string; fileName: string; contentType: string }) =>
+    request<{ mediaId: string; s3Key: string; uploadUrl: string; expiresIn: number }>(
+      "POST",
+      "/media/upload-url",
+      body
+    ),
 
   permissionsMatrix: () => request<PermissionsMatrix>("GET", "/admin/permissions-matrix"),
   updateShare: (folderId: string, body: { action: "grant" | "revoke"; email: string; permission?: Permission }) =>
