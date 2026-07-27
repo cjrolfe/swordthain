@@ -16,10 +16,17 @@ const hashCode = (code: string) => createHash("sha256").update(code).digest("hex
 const generateCode = () => randomInt(0, 1_000_000).toString().padStart(6, "0");
 
 export const handler: CreateAuthChallengeTriggerHandler = async (event) => {
-  const email = event.request.userAttributes.email ?? event.userName;
+  // For a nonexistent user, Cognito's preventUserExistenceErrors setting still
+  // invokes this trigger but with no real email attribute, so this signals a
+  // genuine account rather than the synthetic event Cognito uses to avoid
+  // revealing whether the address is registered. Skip the send in that case
+  // so we never call SES with a non-address and leak an AWS exception to the
+  // client — and so sign-in behaves identically either way.
+  const realEmail = event.request.userAttributes.email;
+  const email = realEmail ?? event.userName;
   const isFreshChallenge = event.request.session.length === 0;
 
-  if (isFreshChallenge) {
+  if (isFreshChallenge && realEmail) {
     const code = generateCode();
     const expiresAt = Math.floor(Date.now() / 1000) + OTP_TTL_SECONDS;
 
