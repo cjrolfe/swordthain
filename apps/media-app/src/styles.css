@@ -71,6 +71,26 @@ body {
   padding: 1.5rem;
 }
 
+.idle-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #d9483f;
+  color: #fff;
+}
+
+.idle-warning button {
+  background: #fff;
+  color: #d9483f;
+}
+
 header {
   display: flex;
   justify-content: space-between;

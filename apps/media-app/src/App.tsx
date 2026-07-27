@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadSession, clearSession, isOwner, Session } from "./auth";
+import { useIdleTimeout } from "./useIdleTimeout";
 import { Login } from "./components/Login";
 import { FolderBrowser } from "./components/FolderBrowser";
 import { PermissionsMatrix } from "./components/PermissionsMatrix";
@@ -13,21 +14,29 @@ export function App() {
   const [tab, setTab] = useState<Tab>("folders");
   const owner = session ? isOwner(session) : false;
 
-  useEffect(() => {
-    if (session) document.title = owner ? "Swordthain Admin" : "Swordthain Film Archive";
-  }, [session, owner]);
-
-  if (!session) {
-    return <Login onLogin={setSession} />;
-  }
-
   function handleSignOut() {
     clearSession();
     setSession(null);
   }
 
+  useEffect(() => {
+    if (session) document.title = owner ? "Swordthain Admin" : "Swordthain Film Archive";
+  }, [session, owner]);
+
+  const { showWarning, stayActive } = useIdleTimeout(!!session, handleSignOut);
+
+  if (!session) {
+    return <Login onLogin={setSession} />;
+  }
+
   return (
     <div className="app">
+      {showWarning && (
+        <div className="idle-warning">
+          <p>You've been inactive — you'll be signed out in 2 minutes.</p>
+          <button onClick={stayActive}>Stay signed in</button>
+        </div>
+      )}
       <header>
         <h1>{owner ? "Swordthain Admin" : "Swordthain"}</h1>
         <button className="link" onClick={handleSignOut}>
