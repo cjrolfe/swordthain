@@ -15,28 +15,11 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
   padding: 2rem 1rem;
-  background: light-dark(
-    radial-gradient(ellipse at 50% 0%, #eef0f4 0%, #dfe2e8 60%, #d3d7de 100%),
-    radial-gradient(ellipse at 50% 0%, #23262c 0%, #16181c 60%, #101114 100%)
-  );
-}
-
-.login-hero {
-  width: 100%;
-  max-width: 420px;
-}
-
-.tape-photo {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 4px;
-  padding: 10px;
-  background: #fff;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
-  box-sizing: border-box;
+  /* Photographic, not themed — same image regardless of light/dark mode.
+     The card's own opaque background (below) is what keeps its text legible
+     regardless of how this crops at different viewport sizes. */
+  background: #0b0f12 url("./assets/film-strip-bg.jpg") no-repeat center center / cover;
 }
 
 .login-card {
@@ -45,7 +28,7 @@ body {
   padding: 2rem;
   border-radius: 12px;
   background: light-dark(#fff, #232427);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 
 .login-card h1 {

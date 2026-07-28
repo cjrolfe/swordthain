@@ -1,6 +1,5 @@
 import { useState, FormEvent } from "react";
 import { requestCode, submitCode, WrongCodeError, Session } from "../auth";
-import vhsTape from "../assets/vhs-tape.jpg";
 
 export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
   const [step, setStep] = useState<"email" | "code">("email");
@@ -46,9 +45,6 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
 
   return (
     <div className="login-page">
-      <div className="login-hero">
-        <img src={vhsTape} alt="A VHS tape labeled Swordthain" className="tape-photo" />
-      </div>
       <div className="login-card">
         <h1>Swordthain</h1>
         <p className="login-tagline">Family movies, straight from the vault.</p>
