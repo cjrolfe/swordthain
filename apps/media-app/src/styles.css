@@ -84,14 +84,16 @@ body {
   color: #cfcac2;
 }
 
-.member-theme .media-grid .thumb-button {
+/* Frame is video-only — plain photos keep the default square thumbnail
+   styling further down (.media-grid img, .thumb-placeholder). */
+.member-theme .media-grid .thumb-video {
   position: relative;
   border-radius: 0;
   overflow: hidden;
 }
 
-.member-theme .media-grid img,
-.member-theme .media-grid .thumb-placeholder {
+.member-theme .media-grid .thumb-video img,
+.member-theme .media-grid .thumb-video .thumb-placeholder {
   aspect-ratio: 3 / 2;
   border-radius: 0;
   padding: 14% 5%;
@@ -99,7 +101,7 @@ body {
   background: #060606;
 }
 
-.member-theme .media-grid .thumb-button::after {
+.member-theme .media-grid .thumb-video::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -256,6 +258,11 @@ button.danger {
   color: light-dark(#888, #999);
   font-size: 0.9rem;
   margin: 0.25rem 0 0.75rem;
+}
+
+h4 {
+  font-size: 1rem;
+  margin: 1rem 0 0.25rem;
 }
 
 .media-grid {

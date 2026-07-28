@@ -19,10 +19,36 @@ interface UploadStatus {
   message?: string;
 }
 
+function renderFigure(item: MediaItem, onOpen: (item: MediaItem) => void, onDownload: (item: MediaItem) => void) {
+  return (
+    <figure key={item.mediaId}>
+      <button
+        className={`thumb-button ${item.type === "video" ? "thumb-video" : "thumb-photo"}`}
+        onClick={() => onOpen(item)}
+      >
+        {item.thumbnailUrl ? (
+          <img src={item.thumbnailUrl} alt={item.fileName} loading="lazy" />
+        ) : (
+          <div className="thumb-placeholder">{item.type === "video" ? "🎬" : "🖼️"}</div>
+        )}
+      </button>
+      <figcaption>{item.fileName}</figcaption>
+      <button className="link" onClick={() => onDownload(item)}>
+        Download
+      </button>
+    </figure>
+  );
+}
+
 export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [path, setPath] = useState<Folder[]>([]); // breadcrumb trail; [] means at root
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [videos, setVideos] = useState<MediaItem[]>([]);
+  const [videosCursor, setVideosCursor] = useState<string | null>(null);
+  const [loadingMoreVideos, setLoadingMoreVideos] = useState(false);
+  const [photos, setPhotos] = useState<MediaItem[]>([]);
+  const [photosCursor, setPhotosCursor] = useState<string | null>(null);
+  const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -42,10 +68,19 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       const { folders } = await api.listFolders(currentParentId);
       setFolders(folders);
       if (currentFolder) {
-        const { media } = await api.listFolderMedia(currentFolder.folderId);
-        setMedia(media);
+        const [videoPage, photoPage] = await Promise.all([
+          api.listFolderMedia(currentFolder.folderId, { type: "video" }),
+          api.listFolderMedia(currentFolder.folderId, { type: "photo" }),
+        ]);
+        setVideos(videoPage.media);
+        setVideosCursor(videoPage.nextCursor);
+        setPhotos(photoPage.media);
+        setPhotosCursor(photoPage.nextCursor);
       } else {
-        setMedia([]);
+        setVideos([]);
+        setVideosCursor(null);
+        setPhotos([]);
+        setPhotosCursor(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load folders");
@@ -57,6 +92,34 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function loadMoreVideos() {
+    if (!currentFolder || !videosCursor) return;
+    setLoadingMoreVideos(true);
+    try {
+      const page = await api.listFolderMedia(currentFolder.folderId, { type: "video", cursor: videosCursor });
+      setVideos((prev) => [...prev, ...page.media]);
+      setVideosCursor(page.nextCursor);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load more videos");
+    } finally {
+      setLoadingMoreVideos(false);
+    }
+  }
+
+  async function loadMorePhotos() {
+    if (!currentFolder || !photosCursor) return;
+    setLoadingMorePhotos(true);
+    try {
+      const page = await api.listFolderMedia(currentFolder.folderId, { type: "photo", cursor: photosCursor });
+      setPhotos((prev) => [...prev, ...page.media]);
+      setPhotosCursor(page.nextCursor);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load more photos");
+    } finally {
+      setLoadingMorePhotos(false);
+    }
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -217,7 +280,9 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       {currentFolder && (
         <>
           <h3>Media in "{currentFolder.title}"</h3>
-          {!isOwner && media.length > 0 && <p className="hint">Click on the image/video to view.</p>}
+          {!isOwner && (videos.length > 0 || photos.length > 0) && (
+            <p className="hint">Click on the image/video to view.</p>
+          )}
           {canUpload && (
             <div className="inline-form">
               <input
@@ -241,24 +306,34 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               ))}
             </ul>
           )}
-          <div className="media-grid">
-            {media.map((item) => (
-              <figure key={item.mediaId}>
-                <button className="thumb-button" onClick={() => setLightboxItem(item)}>
-                  {item.thumbnailUrl ? (
-                    <img src={item.thumbnailUrl} alt={item.fileName} loading="lazy" />
-                  ) : (
-                    <div className="thumb-placeholder">{item.type === "video" ? "🎬" : "🖼️"}</div>
-                  )}
+
+          {videos.length > 0 && (
+            <>
+              <h4>Videos</h4>
+              <div className="media-grid">{videos.map((item) => renderFigure(item, setLightboxItem, handleDownload))}</div>
+              {videosCursor && (
+                <button className="link" disabled={loadingMoreVideos} onClick={loadMoreVideos}>
+                  {loadingMoreVideos ? "Loading…" : "Load more videos"}
                 </button>
-                <figcaption>{item.fileName}</figcaption>
-                <button className="link" onClick={() => handleDownload(item)}>
-                  Download
+              )}
+            </>
+          )}
+
+          {photos.length > 0 && (
+            <>
+              <h4>Photos</h4>
+              <div className="media-grid">{photos.map((item) => renderFigure(item, setLightboxItem, handleDownload))}</div>
+              {photosCursor && (
+                <button className="link" disabled={loadingMorePhotos} onClick={loadMorePhotos}>
+                  {loadingMorePhotos ? "Loading…" : "Load more photos"}
                 </button>
-              </figure>
-            ))}
-            {media.length === 0 && !loading && <p className="empty">No media uploaded here yet.</p>}
-          </div>
+              )}
+            </>
+          )}
+
+          {videos.length === 0 && photos.length === 0 && !loading && (
+            <p className="empty">No media uploaded here yet.</p>
+          )}
         </>
       )}
 

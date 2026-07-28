@@ -75,7 +75,15 @@ export const api = {
     request<Folder>("POST", "/folders", body),
   renameFolder: (folderId: string, title: string) => request<Folder>("PATCH", `/folders/${folderId}`, { title }),
   deleteFolder: (folderId: string) => request<{ deleted: boolean }>("DELETE", `/folders/${folderId}`),
-  listFolderMedia: (folderId: string) => request<{ media: MediaItem[] }>("GET", `/folders/${folderId}/media`),
+  listFolderMedia: (folderId: string, opts: { type: "photo" | "video"; cursor?: string; limit?: number }) => {
+    const params = new URLSearchParams({ type: opts.type });
+    if (opts.cursor) params.set("cursor", opts.cursor);
+    if (opts.limit) params.set("limit", String(opts.limit));
+    return request<{ media: MediaItem[]; nextCursor: string | null }>(
+      "GET",
+      `/folders/${folderId}/media?${params.toString()}`
+    );
+  },
   getUploadUrl: (body: { folderId: string; fileName: string; contentType: string }) =>
     request<{ mediaId: string; s3Key: string; uploadUrl: string; expiresIn: number }>(
       "POST",

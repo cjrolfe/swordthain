@@ -178,6 +178,15 @@ export class MediaAppDataStack extends Stack {
       partitionKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "uploadedAt", type: dynamodb.AttributeType.STRING },
     });
+    // Lets listFolderMedia page through just-videos or just-photos
+    // independently (folderIdType is a computed "{folderId}#{type}" string,
+    // written by thumbnail.ts) — the older byFolder index above can't filter
+    // by type without scanning past non-matching items first.
+    this.mediaItemsTable.addGlobalSecondaryIndex({
+      indexName: "byFolderType",
+      partitionKey: { name: "folderIdType", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "uploadedAt", type: dynamodb.AttributeType.STRING },
+    });
 
     this.foldersTable = new dynamodb.Table(this, "FoldersTable", {
       tableName: "swordthain-folders",

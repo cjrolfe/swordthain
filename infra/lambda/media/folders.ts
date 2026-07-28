@@ -146,6 +146,21 @@ async function getFolder(
   return jsonResponse(200, result.Item);
 }
 
+const DEFAULT_MEDIA_PAGE_SIZE = 30;
+
+function decodeCursor(cursor: string): Record<string, unknown> | undefined {
+  try {
+    return JSON.parse(Buffer.from(cursor, "base64").toString("utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+function encodeCursor(key: Record<string, unknown> | undefined): string | null {
+  if (!key) return null;
+  return Buffer.from(JSON.stringify(key), "utf8").toString("base64");
+}
+
 async function listFolderMedia(
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
   owner: boolean,
@@ -153,6 +168,15 @@ async function listFolderMedia(
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const folderId = event.pathParameters?.folderId;
   if (!folderId) return jsonResponse(400, { error: "folderId is required" });
+
+  const type = event.queryStringParameters?.type;
+  if (type !== "photo" && type !== "video") {
+    return jsonResponse(400, { error: 'type must be "photo" or "video"' });
+  }
+  const limitParam = Number(event.queryStringParameters?.limit);
+  const limit = Number.isInteger(limitParam) && limitParam > 0 ? limitParam : DEFAULT_MEDIA_PAGE_SIZE;
+  const cursorParam = event.queryStringParameters?.cursor;
+  const exclusiveStartKey = cursorParam ? decodeCursor(cursorParam) : undefined;
 
   if (!owner) {
     const access = await resolveAccess(ddb, FOLDERS_TABLE_NAME, FOLDER_SHARES_TABLE_NAME, folderId, userId);
@@ -162,9 +186,11 @@ async function listFolderMedia(
   const result = await ddb.send(
     new QueryCommand({
       TableName: MEDIA_TABLE_NAME,
-      IndexName: "byFolder",
-      KeyConditionExpression: "folderId = :f",
-      ExpressionAttributeValues: { ":f": folderId },
+      IndexName: "byFolderType",
+      KeyConditionExpression: "folderIdType = :ft",
+      ExpressionAttributeValues: { ":ft": `${folderId}#${type}` },
+      Limit: limit,
+      ExclusiveStartKey: exclusiveStartKey,
     })
   );
 
@@ -179,7 +205,7 @@ async function listFolderMedia(
     }))
   );
 
-  return jsonResponse(200, { media });
+  return jsonResponse(200, { media, nextCursor: encodeCursor(result.LastEvaluatedKey) });
 }
 
 async function updateFolder(

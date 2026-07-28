@@ -85,6 +85,7 @@ export const handler: S3Handler = async (event) => {
         Item: {
           mediaId,
           folderId,
+          folderIdType: `${folderId}#${mediaType}`,
           type: mediaType,
           s3Key: key,
           thumbnailKey,
