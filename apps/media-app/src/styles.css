@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Playfair Display";
+  src: url("./assets/fonts/playfair-display-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light dark;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -32,7 +40,10 @@ body {
 }
 
 .login-card h1 {
-  font-size: 1.25rem;
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
   margin: 0;
 }
 
