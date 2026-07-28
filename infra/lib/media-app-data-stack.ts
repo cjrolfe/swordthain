@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy, Stack, StackProps, CfnOutput, ILocalBundling } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Size, Stack, StackProps, CfnOutput, ILocalBundling } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -184,6 +184,7 @@ export class MediaAppDataStack extends Stack {
       partitionKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
     });
     this.foldersTable.addGlobalSecondaryIndex({
       indexName: "byParent",
@@ -273,8 +274,13 @@ export class MediaAppDataStack extends Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.X86_64,
       entry: path.join(lambdaDir, "thumbnail.ts"),
-      timeout: Duration.seconds(60),
-      memorySize: 1024,
+      // Sized for real-world video: a 490MB upload OOM'd at 1024MB/512MB
+      // ephemeral storage even after switching to a streamed (not buffered)
+      // S3 download — ffmpeg's own decode memory plus input+output both
+      // living on /tmp needs real headroom.
+      timeout: Duration.seconds(120),
+      memorySize: 2048,
+      ephemeralStorageSize: Size.mebibytes(3072),
       layers: [sharpLayer, ffmpegLayer],
       environment: {
         MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
@@ -309,7 +315,7 @@ export class MediaAppDataStack extends Stack {
       },
     });
     this.foldersTable.grantReadWriteData(foldersFn);
-    this.folderSharesTable.grantReadData(foldersFn);
+    this.folderSharesTable.grantReadWriteData(foldersFn);
     this.mediaItemsTable.grantReadData(foldersFn);
     this.mediaBucket.grantRead(foldersFn);
 

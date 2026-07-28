@@ -11,6 +11,8 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import sharp from "sharp";
 
 const s3 = new S3Client({});
@@ -43,24 +45,25 @@ export const handler: S3Handler = async (event) => {
     const contentType = head.ContentType ?? "application/octet-stream";
     const sizeBytes = head.ContentLength ?? 0;
 
-    const original = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-    const originalBuffer = Buffer.from(await original.Body!.transformToByteArray());
-
     let thumbnailBuffer: Buffer;
     let mediaType: "photo" | "video";
 
     if (SHARP_IMAGE_TYPES.has(contentType)) {
       mediaType = "photo";
+      const original = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      const originalBuffer = Buffer.from(await original.Body!.transformToByteArray());
       thumbnailBuffer = await sharp(originalBuffer)
         .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, { fit: "inside" })
         .jpeg({ quality: 80 })
         .toBuffer();
     } else if (FFMPEG_IMAGE_TYPES.has(contentType)) {
       mediaType = "photo";
-      thumbnailBuffer = extractFrameWithFfmpeg(originalBuffer, fileName, "0");
+      const original = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      thumbnailBuffer = await extractFrameWithFfmpeg(original.Body as Readable, fileName, "0");
     } else if (VIDEO_TYPES.has(contentType)) {
       mediaType = "video";
-      thumbnailBuffer = extractFrameWithFfmpeg(originalBuffer, fileName, "00:00:01");
+      const original = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      thumbnailBuffer = await extractFrameWithFfmpeg(original.Body as Readable, fileName, "00:00:01");
     } else {
       console.warn(`Unsupported content type ${contentType} for ${key}, skipping`);
       continue;
@@ -96,11 +99,15 @@ export const handler: S3Handler = async (event) => {
   }
 };
 
-function extractFrameWithFfmpeg(inputBuffer: Buffer, fileName: string, timestamp: string): Buffer {
+async function extractFrameWithFfmpeg(inputStream: Readable, fileName: string, timestamp: string): Promise<Buffer> {
   const ext = path.extname(fileName) || ".bin";
   const inputPath = `/tmp/${randomUUID()}${ext}`;
   const outputPath = `/tmp/${randomUUID()}.jpg`;
-  fs.writeFileSync(inputPath, inputBuffer);
+  // Stream straight to disk rather than buffering the whole object in memory
+  // first — for a multi-hundred-MB video, holding it all in a JS Buffer
+  // alongside ffmpeg's own decode memory was enough to OOM the Lambda even
+  // at 1024MB (confirmed via CloudWatch on a real 490MB upload).
+  await pipeline(inputStream, fs.createWriteStream(inputPath));
   try {
     execFileSync("/opt/bin/ffmpeg", [
       "-y",
