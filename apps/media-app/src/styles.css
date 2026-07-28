@@ -59,10 +59,51 @@ body {
   gap: 0.5rem;
 }
 
-.app {
+.app-content {
   max-width: 960px;
   margin: 0 auto;
   padding: 1.5rem;
+}
+
+.member-theme {
+  min-height: 100vh;
+  color: #f0ece4;
+  /* Same photo as the login screen — full-bleed behind the centered
+     .app-content column, not constrained to its 960px width. */
+  background: #0b0f12 url("./assets/film-strip-bg.jpg") no-repeat center center / cover;
+}
+
+.member-theme header h1 {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.member-theme .empty {
+  color: #cfcac2;
+}
+
+.member-theme .media-grid .thumb-button {
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.member-theme .media-grid img,
+.member-theme .media-grid .thumb-placeholder {
+  aspect-ratio: 3 / 2;
+  border-radius: 0;
+  padding: 14% 5%;
+  box-sizing: border-box;
+  background: #060606;
+}
+
+.member-theme .media-grid .thumb-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("./assets/film-frame.png") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 .idle-warning {

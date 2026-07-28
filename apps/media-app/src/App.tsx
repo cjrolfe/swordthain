@@ -30,47 +30,49 @@ export function App() {
   }
 
   return (
-    <div className="app">
+    <div className={owner ? "app" : "app member-theme"}>
       {showWarning && (
         <div className="idle-warning">
           <p>You've been inactive — you'll be signed out in 2 minutes.</p>
           <button onClick={stayActive}>Stay signed in</button>
         </div>
       )}
-      <header>
-        <h1>{owner ? "Swordthain Admin" : "Swordthain"}</h1>
-        <button className="link" onClick={handleSignOut}>
-          Sign out
-        </button>
-      </header>
-      {owner && (
-        <nav className="tabs">
-          <button className={tab === "folders" ? "active" : ""} onClick={() => setTab("folders")}>
-            Folders
+      <div className="app-content">
+        <header>
+          <h1>{owner ? "Swordthain Admin" : "Swordthain"}</h1>
+          <button className="link" onClick={handleSignOut}>
+            Sign out
           </button>
-          <button className={tab === "permissions" ? "active" : ""} onClick={() => setTab("permissions")}>
-            Permissions
-          </button>
-          <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
-            Friends
-          </button>
-          <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
-            Activity
-          </button>
-        </nav>
-      )}
-      <main>
-        {owner ? (
-          <>
-            {tab === "folders" && <FolderBrowser isOwner />}
-            {tab === "permissions" && <PermissionsMatrix />}
-            {tab === "friends" && <Friends />}
-            {tab === "activity" && <Activity />}
-          </>
-        ) : (
-          <FolderBrowser isOwner={false} />
+        </header>
+        {owner && (
+          <nav className="tabs">
+            <button className={tab === "folders" ? "active" : ""} onClick={() => setTab("folders")}>
+              Folders
+            </button>
+            <button className={tab === "permissions" ? "active" : ""} onClick={() => setTab("permissions")}>
+              Permissions
+            </button>
+            <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
+              Friends
+            </button>
+            <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
+              Activity
+            </button>
+          </nav>
         )}
-      </main>
+        <main>
+          {owner ? (
+            <>
+              {tab === "folders" && <FolderBrowser isOwner />}
+              {tab === "permissions" && <PermissionsMatrix />}
+              {tab === "friends" && <Friends />}
+              {tab === "activity" && <Activity />}
+            </>
+          ) : (
+            <FolderBrowser isOwner={false} />
+          )}
+        </main>
+      </div>
     </div>
   );
 }
