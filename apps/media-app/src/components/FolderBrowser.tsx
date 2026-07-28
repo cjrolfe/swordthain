@@ -19,7 +19,12 @@ interface UploadStatus {
   message?: string;
 }
 
-function renderFigure(item: MediaItem, onOpen: (item: MediaItem) => void, onDownload: (item: MediaItem) => void) {
+function renderFigure(
+  item: MediaItem,
+  onOpen: (item: MediaItem) => void,
+  onDownload: (item: MediaItem) => void,
+  canDownload: boolean
+) {
   return (
     <figure key={item.mediaId}>
       <button
@@ -33,9 +38,11 @@ function renderFigure(item: MediaItem, onOpen: (item: MediaItem) => void, onDown
         )}
       </button>
       <figcaption>{item.fileName}</figcaption>
-      <button className="link" onClick={() => onDownload(item)}>
-        Download
-      </button>
+      {canDownload && (
+        <button className="link" onClick={() => onDownload(item)}>
+          Download
+        </button>
+      )}
     </figure>
   );
 }
@@ -60,6 +67,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const currentFolder = path[path.length - 1] ?? null;
   const currentParentId = currentFolder?.folderId ?? ROOT;
   const canUpload = isOwner || currentFolder?.myPermission === "upload";
+  const canDownload = isOwner || currentFolder?.myPermission === "download" || currentFolder?.myPermission === "upload";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -310,7 +318,9 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
           {videos.length > 0 && (
             <>
               <h4>Videos</h4>
-              <div className="media-grid">{videos.map((item) => renderFigure(item, setLightboxItem, handleDownload))}</div>
+              <div className="media-grid">
+                {videos.map((item) => renderFigure(item, setLightboxItem, handleDownload, canDownload))}
+              </div>
               {videosCursor && (
                 <button className="link" disabled={loadingMoreVideos} onClick={loadMoreVideos}>
                   {loadingMoreVideos ? "Loading…" : "Load more videos"}
@@ -322,7 +332,9 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
           {photos.length > 0 && (
             <>
               <h4>Photos</h4>
-              <div className="media-grid">{photos.map((item) => renderFigure(item, setLightboxItem, handleDownload))}</div>
+              <div className="media-grid">
+                {photos.map((item) => renderFigure(item, setLightboxItem, handleDownload, canDownload))}
+              </div>
               {photosCursor && (
                 <button className="link" disabled={loadingMorePhotos} onClick={loadMorePhotos}>
                   {loadingMorePhotos ? "Loading…" : "Load more photos"}

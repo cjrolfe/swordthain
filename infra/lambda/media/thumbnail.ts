@@ -53,6 +53,7 @@ export const handler: S3Handler = async (event) => {
       const original = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
       const originalBuffer = Buffer.from(await original.Body!.transformToByteArray());
       thumbnailBuffer = await sharp(originalBuffer)
+        .rotate() // apply EXIF orientation before resizing — Sharp ignores it otherwise
         .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, { fit: "inside" })
         .jpeg({ quality: 80 })
         .toBuffer();
