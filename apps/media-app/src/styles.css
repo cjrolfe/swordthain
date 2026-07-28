@@ -79,7 +79,8 @@ body {
   letter-spacing: 0.02em;
 }
 
-.member-theme .empty {
+.member-theme .empty,
+.member-theme .hint {
   color: #cfcac2;
 }
 
@@ -136,6 +137,12 @@ header h1 {
   font-size: 1.25rem;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .tabs {
   display: flex;
   gap: 0.25rem;
@@ -190,7 +197,8 @@ button:disabled {
   cursor: default;
 }
 
-button.link {
+button.link,
+a.link {
   background: none;
   border: none;
   color: #4a7dff;
@@ -242,6 +250,12 @@ button.danger {
 .empty {
   color: light-dark(#888, #999);
   font-style: italic;
+}
+
+.hint {
+  color: light-dark(#888, #999);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0.75rem;
 }
 
 .media-grid {

@@ -217,6 +217,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       {currentFolder && (
         <>
           <h3>Media in "{currentFolder.title}"</h3>
+          {!isOwner && media.length > 0 && <p className="hint">Click on the image/video to view.</p>}
           {canUpload && (
             <div className="inline-form">
               <input

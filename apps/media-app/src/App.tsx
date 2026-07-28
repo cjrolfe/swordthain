@@ -40,9 +40,16 @@ export function App() {
       <div className="app-content">
         <header>
           <h1>{owner ? "Swordthain Admin" : "Swordthain"}</h1>
-          <button className="link" onClick={handleSignOut}>
-            Sign out
-          </button>
+          <div className="header-actions">
+            {owner && (
+              <a className="link" href="https://labs.swordthain.com" target="_blank" rel="noopener noreferrer">
+                Labs
+              </a>
+            )}
+            <button className="link" onClick={handleSignOut}>
+              Sign out
+            </button>
+          </div>
         </header>
         {owner && (
           <nav className="tabs">
