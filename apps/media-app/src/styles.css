@@ -406,3 +406,70 @@ table.matrix td {
 .friend-list li {
   padding: 0.3rem 0;
 }
+
+/* Invitee-only readability pass for TV-sized screens (10-foot viewing
+   distance). Scoped to .login-page/.member-theme so the Owner's admin
+   view is untouched, and gated to very wide viewports so phone/laptop
+   invitees see no change. */
+@media (min-width: 1600px) {
+  .login-page .login-card {
+    max-width: 560px;
+    padding: 3rem;
+  }
+
+  .login-card h1 {
+    font-size: 3rem;
+  }
+
+  .login-tagline {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .login-card label {
+    font-size: 1.3rem;
+  }
+
+  .login-card input,
+  .login-card button,
+  .login-card p {
+    font-size: 1.4rem;
+  }
+
+  .login-card input {
+    padding: 0.75rem 1rem;
+  }
+
+  .login-card button {
+    padding: 0.75rem 1.5rem;
+  }
+
+  .member-theme {
+    font-size: 1.4rem;
+  }
+
+  .member-theme .app-content {
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 16px;
+    padding: 2.5rem;
+  }
+
+  .member-theme header h1 {
+    font-size: 3rem;
+  }
+
+  .member-theme .breadcrumbs,
+  .member-theme .folder-name,
+  .member-theme .link {
+    font-size: 1.4rem;
+  }
+
+  .member-theme .media-grid figcaption {
+    font-size: 1.1rem;
+  }
+
+  .member-theme .hint,
+  .member-theme .empty {
+    font-size: 1.3rem;
+  }
+}
