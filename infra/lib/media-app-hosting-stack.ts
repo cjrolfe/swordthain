@@ -1,9 +1,13 @@
-import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
+import { Stack, StackProps, CfnOutput, Duration } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
+import * as cloudwatchActions from "aws-cdk-lib/aws-cloudwatch-actions";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 
 export interface MediaAppHostingStackProps extends StackProps {
@@ -25,6 +29,8 @@ export interface MediaAppHostingStackProps extends StackProps {
   siteDomainNames?: string[];
   /** ACM cert (us-east-1) covering siteDomainNames — required together with it. */
   siteCertificateArn?: string;
+  /** Where WAF security alarms are emailed. */
+  alertEmail: string;
 }
 
 /**
@@ -51,7 +57,14 @@ export class MediaAppHostingStack extends Stack {
     });
 
     // CloudFront-scope WAF (free managed rule groups).
+    // Explicit `name` (rather than letting CloudFormation auto-generate one)
+    // so the CloudWatch `WebACL` dimension is a known, stable value — needed
+    // so MediaAppDataStack's StatsFn (a different stack/region) can query
+    // this ACL's aggregate BlockedRequests metric without a cross-stack
+    // reference, matching this codebase's existing region-split pattern of
+    // passing plain known strings across the boundary instead.
     const siteWebAcl = new wafv2.CfnWebACL(this, "SiteWebAcl", {
+      name: "swordthain-site-waf",
       scope: "CLOUDFRONT",
       defaultAction: { allow: {} },
       visibilityConfig: {
@@ -122,5 +135,29 @@ export class MediaAppHostingStack extends Stack {
 
     new CfnOutput(this, "SiteDistributionId", { value: this.siteDistribution.distributionId });
     new CfnOutput(this, "SiteDistributionDomainName", { value: this.siteDistribution.distributionDomainName });
+
+    // --- Security alerting: email if WAF starts blocking a lot of requests ---
+    const siteAlertsTopic = new sns.Topic(this, "SiteAlertsTopic", {
+      topicName: "swordthain-site-alerts",
+    });
+    siteAlertsTopic.addSubscription(new snsSubscriptions.EmailSubscription(props.alertEmail));
+
+    new cloudwatch.Alarm(this, "WafBlockedRequestsAlarm", {
+      alarmName: "swordthain-waf-blocked-requests",
+      metric: new cloudwatch.Metric({
+        namespace: "AWS/WAFV2",
+        metricName: "BlockedRequests",
+        // Rule=<the ACL's own metricName> is WAF's aggregate "blocked by
+        // any rule" count, not a specific rule group — confirmed against
+        // the real deployed metrics rather than assumed from docs.
+        dimensionsMap: { WebACL: "swordthain-site-waf", Rule: "swordthain-site-waf" },
+        statistic: "Sum",
+        period: Duration.hours(1),
+      }),
+      threshold: 20,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    }).addAlarmAction(new cloudwatchActions.SnsAction(siteAlertsTopic));
   }
 }

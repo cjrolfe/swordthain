@@ -3,6 +3,8 @@ import { Construct } from "constructs";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import * as cloudwatch from "aws-cdk-lib/aws-cloudwatch";
+import * as cloudwatchActions from "aws-cdk-lib/aws-cloudwatch-actions";
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
@@ -10,6 +12,8 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -32,6 +36,8 @@ export interface MediaAppDataStackProps extends StackProps {
   sesFromAddress: string;
   /** Root site URL included in invite emails, e.g. "https://swordthain.com". */
   siteUrl: string;
+  /** Where API Gateway security alarms are emailed. */
+  alertEmail: string;
 }
 
 const SHARP_VERSION = "0.33.5";
@@ -436,6 +442,61 @@ export class MediaAppDataStack extends Stack {
       })
     );
 
+    // --- Admin storage/health stats (S3 tier breakdown + cost estimate,
+    // Lambda error counts, DynamoDB item counts, SES quota) — pulled live
+    // from CloudWatch/DynamoDB/SES on each admin page load, no polling
+    // infra needed since none of this needs to be realtime ---
+    const statsFn = new NodejsFunction(this, "StatsFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "stats.ts"),
+      timeout: Duration.seconds(15),
+      memorySize: 256,
+      environment: {
+        MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
+        MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
+        ACTIVITY_LOG_TABLE_NAME: this.activityLogTable.tableName,
+        // JSON so the admin UI can show readable names instead of CDK's
+        // auto-generated function names (e.g. "...-UploadUrlFn8F3A2B1C-...").
+        LAMBDA_FUNCTIONS_JSON: JSON.stringify([
+          { label: "Upload URL", functionName: uploadUrlFn.functionName },
+          { label: "Thumbnail", functionName: thumbnailFn.functionName },
+          { label: "Folders", functionName: foldersFn.functionName },
+          { label: "Shares", functionName: sharesFn.functionName },
+          { label: "Invites", functionName: invitesFn.functionName },
+          { label: "Media Access", functionName: mediaAccessFn.functionName },
+          { label: "Activity", functionName: activityFn.functionName },
+        ]),
+        // Must match the explicit `name` given to the WAF Web ACL in
+        // MediaAppHostingStack (a different stack/region) — literal string
+        // rather than a cross-stack reference, matching this codebase's
+        // region-split pattern of passing plain known values across the
+        // boundary instead of CDK's cross-region reference machinery.
+        SITE_WAF_NAME: "swordthain-site-waf",
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    // CloudWatch's GetMetricData and SES's GetAccount are account/region-level
+    // reads with no resource ARN to scope to — "*" is the only valid resource.
+    statsFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cloudwatch:GetMetricData"],
+        resources: ["*"],
+      })
+    );
+    statsFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ses:GetAccount"],
+        resources: ["*"],
+      })
+    );
+    for (const table of [this.mediaItemsTable, this.foldersTable, this.folderSharesTable, this.activityLogTable]) {
+      table.grant(statsFn, "dynamodb:DescribeTable");
+    }
+
     // --- Static site's own bucket (the built SPA — CloudFront distribution
     // lives separately in MediaAppHostingStack, us-east-1; a bucket has no
     // region requirement as a CloudFront origin, so it stays here) ---
@@ -528,6 +589,13 @@ export class MediaAppDataStack extends Stack {
       authorizer,
     });
 
+    httpApi.addRoutes({
+      path: "/admin/stats",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new HttpLambdaIntegration("StatsIntegration", statsFn),
+      authorizer,
+    });
+
     const mediaAccessIntegration = new HttpLambdaIntegration("MediaAccessIntegration", mediaAccessFn);
     httpApi.addRoutes({
       path: "/media/{mediaId}/view-url",
@@ -568,6 +636,49 @@ export class MediaAppDataStack extends Stack {
       throttlingRateLimit: 20, // sustained requests/sec across the whole API
       throttlingBurstLimit: 40,
     };
+
+    // Set after httpApi exists — StatsFn's other env vars are literals
+    // available at declaration time, but the API's id is only known once
+    // the HttpApi construct above is created.
+    statsFn.addEnvironment("HTTP_API_ID", httpApi.apiId);
+
+    // --- Security alerting: email if the API sees unusual 4xx volume or
+    // actually gets throttled (both free CloudWatch metrics API Gateway
+    // already publishes — see StatsFn for the read side of the same data) ---
+    const apiAlertsTopic = new sns.Topic(this, "ApiAlertsTopic", {
+      topicName: "swordthain-api-alerts",
+    });
+    apiAlertsTopic.addSubscription(new snsSubscriptions.EmailSubscription(props.alertEmail));
+
+    new cloudwatch.Alarm(this, "Api4xxAlarm", {
+      alarmName: "swordthain-api-4xx-errors",
+      metric: new cloudwatch.Metric({
+        namespace: "AWS/ApiGateway",
+        metricName: "4XXError",
+        dimensionsMap: { ApiId: httpApi.apiId },
+        statistic: "Sum",
+        period: Duration.hours(1),
+      }),
+      threshold: 50,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    }).addAlarmAction(new cloudwatchActions.SnsAction(apiAlertsTopic));
+
+    new cloudwatch.Alarm(this, "ApiThrottleAlarm", {
+      alarmName: "swordthain-api-throttled",
+      metric: new cloudwatch.Metric({
+        namespace: "AWS/ApiGateway",
+        metricName: "ThrottleCount",
+        dimensionsMap: { ApiId: httpApi.apiId },
+        statistic: "Sum",
+        period: Duration.minutes(5),
+      }),
+      threshold: 0,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    }).addAlarmAction(new cloudwatchActions.SnsAction(apiAlertsTopic));
 
     new CfnOutput(this, "MediaBucketName", { value: this.mediaBucket.bucketName });
     new CfnOutput(this, "MediaItemsTableName", { value: this.mediaItemsTable.tableName });

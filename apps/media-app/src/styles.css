@@ -385,6 +385,37 @@ table.matrix td {
   background: light-dark(#eee, #333);
 }
 
+.badge-warn {
+  background: light-dark(#fde2e1, #4a2323);
+  color: light-dark(#8a1f1f, #f5a3a3);
+}
+
+.stat-cards {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 1rem;
+  border: 1px solid light-dark(#eee, #2a2b2e);
+  border-radius: 8px;
+}
+
+.stat-card h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: light-dark(#726e63, #9a988f);
+}
+
+.stat-card .value {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 .invite-form {
   display: flex;
   flex-direction: column;

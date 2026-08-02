@@ -47,6 +47,9 @@ const USER_POOL_ARN = `arn:aws:cognito-idp:us-east-1:${account}:userpool/${USER_
 const USER_POOL_CLIENT_ID = "71qr9fcrcspphp0n2p8htiq8ug";
 const SES_IDENTITY_ARN = `arn:aws:ses:us-east-1:${account}:identity/swordthain.com`;
 const SES_FROM_ADDRESS = "Swordthain <noreply@swordthain.com>";
+// Where WAF/API Gateway security alarms are emailed — not the same as
+// SES_FROM_ADDRESS above, which is the app's *sending* address.
+const ALERT_EMAIL = "cjrolfe@icloud.com";
 
 // Same reasoning: MediaAppHostingStack (us-east-1) needs MediaAppDataStack's
 // (eu-west-1) SiteBucket by name only — not pulled off a construct
@@ -82,6 +85,7 @@ new MediaAppDataStack(app, "SwordthainMediaAppDataStack", {
   sesIdentityArn: SES_IDENTITY_ARN,
   sesFromAddress: SES_FROM_ADDRESS,
   siteUrl: "https://swordthain.com",
+  alertEmail: ALERT_EMAIL,
 });
 
 const mediaAppHostingStack = new MediaAppHostingStack(app, "SwordthainMediaAppHostingStack", {
@@ -94,6 +98,7 @@ const mediaAppHostingStack = new MediaAppHostingStack(app, "SwordthainMediaAppHo
   // playground distribution originally.
   siteDomainNames: ["swordthain.com", "www.swordthain.com"],
   siteCertificateArn: "arn:aws:acm:us-east-1:584000479246:certificate/710894e4-c91f-4986-a21d-812e52eaceb5",
+  alertEmail: ALERT_EMAIL,
 });
 
 const playgroundStack = new PlaygroundStack(app, "SwordthainPlaygroundStack", {

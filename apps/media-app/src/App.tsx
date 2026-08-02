@@ -6,8 +6,9 @@ import { FolderBrowser } from "./components/FolderBrowser";
 import { PermissionsMatrix } from "./components/PermissionsMatrix";
 import { Friends } from "./components/Friends";
 import { Activity } from "./components/Activity";
+import { Storage } from "./components/Storage";
 
-type Tab = "folders" | "permissions" | "friends" | "activity";
+type Tab = "folders" | "permissions" | "friends" | "activity" | "storage";
 
 export function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
@@ -65,6 +66,9 @@ export function App() {
             <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
               Activity
             </button>
+            <button className={tab === "storage" ? "active" : ""} onClick={() => setTab("storage")}>
+              Storage
+            </button>
           </nav>
         )}
         <main>
@@ -74,6 +78,7 @@ export function App() {
               {tab === "permissions" && <PermissionsMatrix />}
               {tab === "friends" && <Friends />}
               {tab === "activity" && <Activity />}
+              {tab === "storage" && <Storage />}
             </>
           ) : (
             <FolderBrowser isOwner={false} />

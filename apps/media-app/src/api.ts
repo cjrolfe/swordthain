@@ -108,6 +108,8 @@ export const api = {
     if (filter.userId) params.set("userId", filter.userId);
     return request<{ activity: ActivityEntry[] }>("GET", `/admin/activity?${params.toString()}`);
   },
+
+  stats: () => request<StorageStats>("GET", "/admin/stats"),
 };
 
 export interface ActivityEntry {
@@ -120,4 +122,27 @@ export interface ActivityEntry {
   folderTitle: string;
   action: "view" | "download";
   timestamp: string;
+}
+
+export interface StorageStats {
+  storage: {
+    totalBytes: number;
+    objectCount: number;
+    byTier: {
+      standardBytes: number;
+      intelligentTieringFrequentBytes: number;
+      intelligentTieringInfrequentBytes: number;
+      intelligentTieringArchiveInstantBytes: number;
+    };
+    estimatedMonthlyCostUsd: number;
+  };
+  security: {
+    wafBlockedRequests: number;
+    api4xxErrors: number;
+    api5xxErrors: number;
+    apiThrottleCount: number;
+  };
+  itemCounts: Record<string, number>;
+  lambdaErrors: { label: string; errorsLast7Days: number }[];
+  ses: { productionAccessEnabled: boolean; max24HourSend: number; sentLast24Hours: number } | null;
 }
