@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a monorepo with two independent apps under `apps/`:
 
-- `apps/playground/` — the original swordthain.com app (a directory of company demo sites). Its own `CLAUDE.md` has full details. Slated to move to `labs.swordthain.com`, gated to the owner only, once the media app takes over the root domain.
-- `apps/media-app/` — the new private, invite-only media-sharing app for friends, serving the root `swordthain.com` domain once fully built. Currently just the admin UI (React + Vite) — see its `README.md`. Talks to the backend in `infra/`; has no server component of its own.
-- `infra/` — shared AWS CDK (TypeScript) app, deployed. Three stacks: `SwordthainAuthStack` (Cognito), `SwordthainMediaAppStack` (media-app's S3/DynamoDB/API/Lambda backend), `SwordthainCiStack` (GitHub OIDC deploy roles). See `infra/README.md` for what each contains.
+- `apps/playground/` — the original swordthain.com app (a directory of company demo sites). Its own `CLAUDE.md` has full details. Now hosted at `labs.swordthain.com`, gated to the owner only.
+- `apps/media-app/` — the private, invite-only media-sharing app for friends, serving the root `swordthain.com` domain. React + Vite admin UI plus a friend-facing view — see its `README.md`. Talks to the backend in `infra/`; has no server component of its own.
+- `infra/` — shared AWS CDK (TypeScript) app, deployed. Five stacks: `SwordthainAuthStack` (Cognito), `SwordthainMediaAppDataStack` (media-app's S3/DynamoDB/API/Lambda backend, eu-west-1), `SwordthainMediaAppHostingStack` (media-app's CloudFront/WAF hosting, us-east-1), `SwordthainPlaygroundStack` (playground's `labs.swordthain.com` hosting + API auth), `SwordthainCiStack` (GitHub OIDC deploy roles). See `infra/README.md` for what each contains.
 
 Read the relevant app's docs before working inside it — conventions, deploy commands, and architecture are documented per-app, not here.
 

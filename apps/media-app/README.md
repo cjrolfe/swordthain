@@ -2,7 +2,7 @@
 
 Private, invite-only photo/video sharing for a closed group of friends. Serves `swordthain.com`.
 
-React + Vite SPA with two views sharing one app shell, branched on the signed-in user's Cognito group: the **admin UI** (Owner) — folder management, the permissions matrix, friend invites, and a lightbox/player for viewing + downloading media — and a **friend view** (Member) — the same folder browser and lightbox/player, minus anything mutating (no add/rename/delete folder, no tabs beyond Folders). The friend view doesn't add any new components; it reuses `FolderBrowser` with an `isOwner={false}` prop that hides the owner-only controls. Server-side authorization (`resolveAccess`, `MediaAccessFn`) was already correct for Members since Phase 3/5 — this was purely a client-side gating change.
+React + Vite SPA with two views sharing one app shell, branched on the signed-in user's Cognito group: the **admin UI** (Owner) — folder management, the permissions matrix, friend invites, storage/security stats, and a lightbox/player for viewing + downloading media — and a **friend view** (Member) — the same folder browser and lightbox/player, plus a Playlists tab, minus anything mutating (no add/rename/delete folder). The friend view doesn't add any new components for folder browsing; it reuses `FolderBrowser` with an `isOwner={false}` prop that hides the owner-only controls. Server-side authorization (`resolveAccess`, `MediaAccessFn`) was already correct for Members since Phase 3/5 — this was purely a client-side gating change.
 
 ## Stack
 
@@ -32,13 +32,15 @@ Served from a private S3 bucket (`SiteBucket`, `infra/lib/media-app-data-stack.t
 
 ## Pages
 
-Owner sees all four tabs below. Member sees only Folders, with no tab nav at all (just the browser) and no "Add folder"/Rename/Delete controls within it.
+Owner sees all six tabs below. Member sees Folders and Playlists only, with no "Add folder"/Rename/Delete controls within Folders.
 
 - **Folders** — browse (breadcrumb navigation, nested), create, rename, delete (blocked with a 409 if the folder still has sub-folders or media — has to be emptied first). Members get a read-only version: browse only, folders outside what's shared with them (directly or via an ancestor) simply don't appear.
+- **Playlists** — private, video-only queues (`Playlists.tsx`/`PlaylistPlayer.tsx`). Both Owner and Members can create playlists and add videos from any folder they have access to, then play them back to back. Playback reuses the `view-url` endpoint unchanged and never calls `download-url`, so the feature adds no new download surface. The Owner can browse any Member's playlist contents, matching the folders convention elsewhere in this app.
 - **Permissions** — the friends × folders grid from the spec. Each cell is a `none / view / download / upload` select; changing it calls the grant/revoke share endpoint directly.
-- **Friends** — invite form (email + optional immediate folder access + personal note) and the current friend list. SES is still in sandbox mode (see `infra/README.md`), so real invite emails won't deliver until production access is granted — verified this flow works via SES's mailbox simulator instead.
+- **Friends** — invite form (email + optional immediate folder access + personal note) and the current friend list. SES production access is enabled, so real invite emails deliver.
 - Within Folders, clicking a thumbnail opens a **lightbox** — an `<img>` for photos, a native `<video controls>` player for videos (progressive streaming via a presigned URL; see `infra/README.md` for why this isn't adaptive HLS yet). A separate **Download** action fetches a short-lived download URL and triggers a browser download. Both call the backend's `resolveAccess`-gated `view-url`/`download-url` endpoints and get logged to `ActivityLog`, and both work identically for Members with `view`/`download` permission on the folder.
 - **Activity** — filter by folder and/or friend (at least one required — matches the backend's two GSIs), see a table of who viewed/downloaded what and when, export the current view as CSV. Folder/friend options come from the same `permissionsMatrix()` call the Permissions and Friends tabs already use. Owner-only.
+- **Storage** — S3 storage-class breakdown, DynamoDB item counts, Lambda error rates, WAF/API Gateway metrics, and SES sending status (`Storage.tsx`, backed by `stats.ts`). Owner-only.
 
 ## A bug this caught
 
