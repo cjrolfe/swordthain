@@ -27,6 +27,7 @@
     "@aws-sdk/client-dynamodb": "^3.687.0",
     "@aws-sdk/client-s3": "^3.687.0",
     "@aws-sdk/client-sesv2": "^3.687.0",
+    "@aws-sdk/client-ssm": "^3.1101.0",
     "@aws-sdk/lib-dynamodb": "^3.687.0",
     "@aws-sdk/s3-request-presigner": "^3.687.0",
     "aws-cdk-lib": "^2.170.0",

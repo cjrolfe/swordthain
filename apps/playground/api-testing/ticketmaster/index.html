@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ticketmaster Discovery • API Testing • Swordthain Labs</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-name" id="apiTitle">Ticketmaster Discovery</div>
+          <div class="brand-sub">API Testing</div>
+        </div>
+      </div>
+      <nav class="topbar-actions" aria-label="Header actions">
+        <a class="btn ghost" href="/api-testing/index.html">← API Testing</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-row">
+        <div>
+          <h1>Ticketmaster Discovery</h1>
+          <p id="apiDescription"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <form id="paramForm">
+        <label class="field">
+          <span>Endpoint</span>
+          <select id="endpointSelect" class="search"></select>
+        </label>
+
+        <div id="paramsContainer"></div>
+
+        <div class="modal-actions">
+          <button class="btn" id="sendBtn" type="submit">Send request</button>
+          <span class="pill" id="responseMeta"></span>
+        </div>
+      </form>
+
+      <div class="response-box">
+        <pre id="response"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>window.SWORDTHAIN_API = "https://x7g9r0sdmc.execute-api.us-east-1.amazonaws.com/prod";</script>
+  <script src="config.js"></script>
+  <script src="/api-testing/assets/api-tester.js"></script>
+</body>
+</html>

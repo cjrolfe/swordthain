@@ -108,6 +108,10 @@ const playgroundStack = new PlaygroundStack(app, "SwordthainPlaygroundStack", {
   labsSubdomain: "labs.swordthain.com",
   playgroundBucketName: "swordthain-demo-sites",
   playgroundApiId: "x7g9r0sdmc",
+  // The REST API's root ("/") resource id — found via
+  // `aws apigateway get-resources --rest-api-id x7g9r0sdmc`, stable unless
+  // the API itself is recreated.
+  playgroundRootResourceId: "dw1lrcj6z5",
   userPool: authStack.userPool,
 });
 

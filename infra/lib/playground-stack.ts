@@ -1,10 +1,13 @@
-import { Stack, StackProps, CfnOutput } from "aws-cdk-lib";
+import { Duration, Stack, StackProps, CfnOutput } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -24,6 +27,9 @@ export interface PlaygroundStackProps extends StackProps {
   /** apps/playground's existing REST API v1 (id only — same "reference,
    * don't adopt" rule as the bucket above). */
   playgroundApiId: string;
+  /** That same REST API's root ("/") resource id — needed to add new
+   * CDK-managed child resources without importing/adopting the whole API. */
+  playgroundRootResourceId: string;
   /** Shared Cognito pool from SwordthainAuthStack, backing the new authorizer. */
   userPool: cognito.IUserPool;
 }
@@ -178,5 +184,54 @@ export class PlaygroundStack extends Stack {
     });
 
     new CfnOutput(this, "PlaygroundAuthorizerId", { value: playgroundAuthorizer.ref });
+
+    // --- API Testing playground: a new /api-testing endpoint on the same
+    // REST API, referencing playgroundAuthorizer above at creation time —
+    // exactly the pattern its own comment anticipated, rather than the
+    // one-time manual-attach script used for the 4 pre-existing methods. ---
+    const apiTestingProxyFn = new NodejsFunction(this, "ApiTestingProxyFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, "..", "lambda", "playground", "api-testing-proxy.ts"),
+      timeout: Duration.seconds(15),
+      memorySize: 256,
+      bundling: {
+        externalModules: [],
+      },
+    });
+    // Real third-party API keys live in SSM SecureString parameters, never
+    // in code — populated out-of-band via `aws ssm put-parameter`, only the
+    // parameter *path* (not the secret value) appears here.
+    apiTestingProxyFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ssm:GetParameter"],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/swordthain/api-testing/*`],
+      })
+    );
+
+    // Imported by ID/root-resource-id only — same "reference, don't adopt"
+    // rule as playgroundBucket above — so adding this one new resource
+    // can't risk CDK trying to reconcile the whole existing API tree.
+    const importedPlaygroundApi = apigateway.RestApi.fromRestApiAttributes(this, "ImportedPlaygroundApi", {
+      restApiId: props.playgroundApiId,
+      rootResourceId: props.playgroundRootResourceId,
+    });
+
+    const apiTestingResource = importedPlaygroundApi.root.addResource("api-testing", {
+      defaultCorsPreflightOptions: {
+        allowOrigins: ["*"],
+        allowMethods: ["POST", "OPTIONS"],
+        allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token"],
+      },
+    });
+    apiTestingResource.addMethod("POST", new apigateway.LambdaIntegration(apiTestingProxyFn), {
+      authorizationType: apigateway.AuthorizationType.COGNITO,
+      authorizer: { authorizerId: playgroundAuthorizer.ref },
+    });
+
+    // CDK adding a resource/method to an *imported* REST API doesn't create
+    // a new deployment on its own — same one-time-manual-step rule as the
+    // authorizer attachment above. After `cdk deploy`, run:
+    //   aws apigateway create-deployment --rest-api-id <playgroundApiId> --stage-name prod
+    new CfnOutput(this, "ApiTestingProxyFnName", { value: apiTestingProxyFn.functionName });
   }
 }

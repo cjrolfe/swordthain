@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>API Testing • Swordthain Labs</title>
+  <meta name="description" content="Test real third-party APIs by entering data through the browser." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-name">API Testing</div>
+          <div class="brand-sub">Swordthain Labs</div>
+        </div>
+      </div>
+      <nav class="topbar-actions" aria-label="Header actions">
+        <a class="btn ghost" href="/">← All playgrounds</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-row">
+        <div>
+          <h1>API Testing</h1>
+          <p>
+            Send real requests to a set of third-party APIs by filling in a form — real keys are held
+            server-side and never reach the browser.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="grid">
+        <a class="card" href="/api-testing/weather/index.html" style="text-decoration:none;">
+          <h3>Weather</h3>
+          <p>Current conditions and forecast, via WeatherAPI.com.</p>
+          <span class="tag">Open →</span>
+        </a>
+        <a class="card" href="/api-testing/police/index.html" style="text-decoration:none;">
+          <h3>UK Police Data</h3>
+          <p>Street-level crime, stop-and-search, and force data. No API key required.</p>
+          <span class="tag">Open →</span>
+        </a>
+        <a class="card" href="/api-testing/ticketmaster/index.html" style="text-decoration:none;">
+          <h3>Ticketmaster Discovery</h3>
+          <p>Search events, attractions, venues, and classifications.</p>
+          <span class="tag">Open →</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <small>© <span id="year"></span> Swordthain • Internal tools</small>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = String(new Date().getFullYear());
+  </script>
+</body>
+</html>
