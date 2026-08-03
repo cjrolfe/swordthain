@@ -22,6 +22,10 @@ interface EndpointDef {
   pathTemplate: string;
   /** Query param name the secret is injected under, e.g. "key" or "apikey". Omit if the endpoint needs no secret. */
   secretQueryParam?: string;
+  /** Header name the secret is injected under, e.g. "x-api-key" — alternative to secretQueryParam. */
+  secretHeaderName?: string;
+  /** When true, non-path params are JSON-encoded into a POST body instead of appended as a query string. */
+  hasJsonBody?: boolean;
 }
 
 interface ProviderDef {
@@ -103,6 +107,28 @@ const PROVIDERS: Record<string, ProviderDef> = {
       "find-suggest": { pathTemplate: "/suggest.json", secretQueryParam: "apikey" },
     },
   },
+  "ves-uat": {
+    baseUrl: "https://uat.driver-vehicle-licensing.api.gov.uk",
+    ssmParameterName: "/swordthain/api-testing/ves-uat-api-key",
+    endpoints: {
+      "vehicle-details": {
+        pathTemplate: "/vehicle-enquiry/v1/vehicles",
+        secretHeaderName: "x-api-key",
+        hasJsonBody: true,
+      },
+    },
+  },
+  "ves-production": {
+    baseUrl: "https://driver-vehicle-licensing.api.gov.uk",
+    ssmParameterName: "/swordthain/api-testing/ves-production-api-key",
+    endpoints: {
+      "vehicle-details": {
+        pathTemplate: "/vehicle-enquiry/v1/vehicles",
+        secretHeaderName: "x-api-key",
+        hasJsonBody: true,
+      },
+    },
+  },
 };
 
 const CORS_HEADERS = {
@@ -118,21 +144,40 @@ const jsonResponse = (statusCode: number, body: unknown) => ({
   body: JSON.stringify(body),
 });
 
-function buildUrl(provider: ProviderDef, endpoint: EndpointDef, params: Record<string, string>, secret?: string) {
+function buildPath(pathTemplate: string, params: Record<string, string>) {
   const usedKeys = new Set<string>();
-  const path = endpoint.pathTemplate.replace(/:(\w+)/g, (_match, name: string) => {
+  const path = pathTemplate.replace(/:(\w+)/g, (_match, name: string) => {
     usedKeys.add(name);
     return encodeURIComponent(params[name] ?? "");
   });
+  return { path, usedKeys };
+}
+
+function buildRequest(
+  provider: ProviderDef,
+  endpoint: EndpointDef,
+  params: Record<string, string>,
+  secret?: string
+): { url: string; init: RequestInit } {
+  const { path, usedKeys } = buildPath(endpoint.pathTemplate, params);
+  const remaining: Record<string, string> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (!usedKeys.has(key)) remaining[key] = value;
+  }
+
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (endpoint.secretHeaderName && secret) headers[endpoint.secretHeaderName] = secret;
+
+  if (endpoint.hasJsonBody) {
+    headers["Content-Type"] = "application/json";
+    return { url: `${provider.baseUrl}${path}`, init: { method: "POST", headers, body: JSON.stringify(remaining) } };
+  }
 
   const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (!usedKeys.has(key)) query.set(key, value);
-  }
+  for (const [key, value] of Object.entries(remaining)) query.set(key, value);
   if (endpoint.secretQueryParam && secret) query.set(endpoint.secretQueryParam, secret);
-
   const qs = query.toString();
-  return `${provider.baseUrl}${path}${qs ? `?${qs}` : ""}`;
+  return { url: `${provider.baseUrl}${path}${qs ? `?${qs}` : ""}`, init: { headers } };
 }
 
 // REST API v1's COGNITO_USER_POOLS authorizer puts decoded claims at
@@ -163,9 +208,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   try {
     const secret = provider.ssmParameterName ? await getSecret(provider.ssmParameterName) : undefined;
-    const url = buildUrl(provider, endpoint, params, secret);
+    const { url, init } = buildRequest(provider, endpoint, params, secret);
 
-    const upstream = await fetch(url, { headers: { Accept: "application/json" } });
+    const upstream = await fetch(url, init);
     const text = await upstream.text();
 
     let parsed: unknown;
