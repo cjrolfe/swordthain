@@ -340,6 +340,19 @@ h4 {
   cursor: pointer;
 }
 
+.playlist-player-chrome {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.playlist-player-controls {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
 .matrix-wrap {
   overflow-x: auto;
 }
@@ -493,6 +506,13 @@ table.matrix td {
   .member-theme .folder-name,
   .member-theme .link {
     font-size: 1.4rem;
+  }
+
+  /* Members get real tab nav for the first time (Folders/Playlists) —
+     same TV-scale treatment as the rest of the member theme. */
+  .member-theme .tabs button {
+    font-size: 1.4rem;
+    padding: 0.9rem 1.4rem;
   }
 
   .member-theme .media-grid figcaption {

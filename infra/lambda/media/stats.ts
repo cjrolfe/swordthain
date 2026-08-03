@@ -21,6 +21,8 @@ const MEDIA_TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
 const FOLDERS_TABLE_NAME = process.env.FOLDERS_TABLE_NAME!;
 const FOLDER_SHARES_TABLE_NAME = process.env.FOLDER_SHARES_TABLE_NAME!;
 const ACTIVITY_LOG_TABLE_NAME = process.env.ACTIVITY_LOG_TABLE_NAME!;
+const PLAYLISTS_TABLE_NAME = process.env.PLAYLISTS_TABLE_NAME!;
+const PLAYLIST_ITEMS_TABLE_NAME = process.env.PLAYLIST_ITEMS_TABLE_NAME!;
 const LAMBDA_FUNCTIONS: { label: string; functionName: string }[] = JSON.parse(process.env.LAMBDA_FUNCTIONS_JSON!);
 const SITE_WAF_NAME = process.env.SITE_WAF_NAME!;
 const HTTP_API_ID = process.env.HTTP_API_ID!;
@@ -147,6 +149,8 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
           ["folders", FOLDERS_TABLE_NAME],
           ["shares", FOLDER_SHARES_TABLE_NAME],
           ["activity", ACTIVITY_LOG_TABLE_NAME],
+          ["playlists", PLAYLISTS_TABLE_NAME],
+          ["playlistItems", PLAYLIST_ITEMS_TABLE_NAME],
         ] as const
       ).map(async ([key, tableName]) => {
         const result = await ddb.send(new DescribeTableCommand({ TableName: tableName }));

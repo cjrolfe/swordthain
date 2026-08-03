@@ -110,6 +110,18 @@ export const api = {
   },
 
   stats: () => request<StorageStats>("GET", "/admin/stats"),
+
+  listPlaylists: () => request<{ playlists: Playlist[] }>("GET", "/playlists"),
+  createPlaylist: (name: string) => request<Playlist>("POST", "/playlists", { name }),
+  renamePlaylist: (playlistId: string, name: string) =>
+    request<Playlist>("PATCH", `/playlists/${playlistId}`, { name }),
+  deletePlaylist: (playlistId: string) => request<{ deleted: boolean }>("DELETE", `/playlists/${playlistId}`),
+  getPlaylistItems: (playlistId: string) =>
+    request<{ playlistId: string; name: string; items: PlaylistItem[] }>("GET", `/playlists/${playlistId}/items`),
+  addPlaylistItem: (playlistId: string, mediaId: string) =>
+    request<{ position: number }>("POST", `/playlists/${playlistId}/items`, { mediaId }),
+  removePlaylistItem: (playlistId: string, position: number) =>
+    request<{ deleted: boolean }>("DELETE", `/playlists/${playlistId}/items/${position}`),
 };
 
 export interface ActivityEntry {
@@ -122,6 +134,37 @@ export interface ActivityEntry {
   folderTitle: string;
   action: "view" | "download";
   timestamp: string;
+}
+
+export interface Playlist {
+  playlistId: string;
+  ownerUserId: string;
+  name: string;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+  /** True if the current signed-in user created this playlist. */
+  isMine: boolean;
+  /** Only present when the caller is Owner viewing everyone's playlists. */
+  ownerEmail?: string;
+}
+
+export interface PlaylistItem {
+  position: number;
+  mediaId: string;
+  addedAt: string;
+  fileName: string | null;
+  folderId: string | null;
+  thumbnailUrl: string | null;
+  /** False if the underlying media record no longer exists. */
+  available: boolean;
+  /**
+   * Advisory only, computed at list-time — for greying out UI. The
+   * authoritative access check is api.viewUrl(mediaId), called fresh at
+   * playback time, which re-validates on every call. Never gate playback
+   * itself on this flag.
+   */
+  accessible: boolean;
 }
 
 export interface StorageStats {

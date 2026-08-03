@@ -113,6 +113,8 @@ export class MediaAppDataStack extends Stack {
   public readonly foldersTable: dynamodb.Table;
   public readonly folderSharesTable: dynamodb.Table;
   public readonly activityLogTable: dynamodb.Table;
+  public readonly playlistsTable: dynamodb.Table;
+  public readonly playlistItemsTable: dynamodb.Table;
   public readonly siteBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props: MediaAppDataStackProps) {
@@ -241,6 +243,34 @@ export class MediaAppDataStack extends Stack {
       indexName: "byFolder",
       partitionKey: { name: "folderId", type: dynamodb.AttributeType.STRING },
       sortKey: { name: "timestamp", type: dynamodb.AttributeType.STRING },
+    });
+
+    // --- Playlists: private, editable lists of videos that play back to
+    // back. Owner sees every playlist (same convention as folders/activity
+    // elsewhere in this stack) — a Member only ever sees their own. ---
+    this.playlistsTable = new dynamodb.Table(this, "PlaylistsTable", {
+      tableName: "swordthain-playlists",
+      partitionKey: { name: "playlistId", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+    this.playlistsTable.addGlobalSecondaryIndex({
+      indexName: "byOwner",
+      partitionKey: { name: "ownerUserId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "createdAt", type: dynamodb.AttributeType.STRING },
+    });
+
+    // Sort key is a numeric position, so a plain Query returns items
+    // already in playback order — no reordering support needed (not
+    // required by the spec). No folderId/permission/access snapshot is
+    // stored on an item; access is always resolved live at read/play time
+    // via view-url, so revoked access stops working automatically.
+    this.playlistItemsTable = new dynamodb.Table(this, "PlaylistItemsTable", {
+      tableName: "swordthain-playlist-items",
+      partitionKey: { name: "playlistId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "position", type: dynamodb.AttributeType.NUMBER },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
 
     const lambdaDir = path.join(__dirname, "..", "lambda", "media");
@@ -442,6 +472,38 @@ export class MediaAppDataStack extends Stack {
       })
     );
 
+    // --- Playlists (create/list/rename/delete, add/remove items) ---
+    const playlistsFn = new NodejsFunction(this, "PlaylistsFn", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(lambdaDir, "playlists.ts"),
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      environment: {
+        PLAYLISTS_TABLE_NAME: this.playlistsTable.tableName,
+        PLAYLIST_ITEMS_TABLE_NAME: this.playlistItemsTable.tableName,
+        FOLDERS_TABLE_NAME: this.foldersTable.tableName,
+        FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
+        MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
+        MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
+        USER_POOL_ID: props.userPoolId,
+      },
+      bundling: {
+        externalModules: [],
+      },
+    });
+    this.playlistsTable.grantReadWriteData(playlistsFn);
+    this.playlistItemsTable.grantReadWriteData(playlistsFn);
+    this.foldersTable.grantReadData(playlistsFn);
+    this.folderSharesTable.grantReadData(playlistsFn);
+    this.mediaItemsTable.grantReadData(playlistsFn);
+    this.mediaBucket.grantRead(playlistsFn);
+    playlistsFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:ListUsers"],
+        resources: [props.userPoolArn],
+      })
+    );
+
     // --- Admin storage/health stats (S3 tier breakdown + cost estimate,
     // Lambda error counts, DynamoDB item counts, SES quota) — pulled live
     // from CloudWatch/DynamoDB/SES on each admin page load, no polling
@@ -457,6 +519,8 @@ export class MediaAppDataStack extends Stack {
         FOLDERS_TABLE_NAME: this.foldersTable.tableName,
         FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
         ACTIVITY_LOG_TABLE_NAME: this.activityLogTable.tableName,
+        PLAYLISTS_TABLE_NAME: this.playlistsTable.tableName,
+        PLAYLIST_ITEMS_TABLE_NAME: this.playlistItemsTable.tableName,
         // JSON so the admin UI can show readable names instead of CDK's
         // auto-generated function names (e.g. "...-UploadUrlFn8F3A2B1C-...").
         LAMBDA_FUNCTIONS_JSON: JSON.stringify([
@@ -467,6 +531,7 @@ export class MediaAppDataStack extends Stack {
           { label: "Invites", functionName: invitesFn.functionName },
           { label: "Media Access", functionName: mediaAccessFn.functionName },
           { label: "Activity", functionName: activityFn.functionName },
+          { label: "Playlists", functionName: playlistsFn.functionName },
         ]),
         // Must match the explicit `name` given to the WAF Web ACL in
         // MediaAppHostingStack (a different stack/region) — literal string
@@ -493,7 +558,14 @@ export class MediaAppDataStack extends Stack {
         resources: ["*"],
       })
     );
-    for (const table of [this.mediaItemsTable, this.foldersTable, this.folderSharesTable, this.activityLogTable]) {
+    for (const table of [
+      this.mediaItemsTable,
+      this.foldersTable,
+      this.folderSharesTable,
+      this.activityLogTable,
+      this.playlistsTable,
+      this.playlistItemsTable,
+    ]) {
       table.grant(statsFn, "dynamodb:DescribeTable");
     }
 
@@ -596,6 +668,32 @@ export class MediaAppDataStack extends Stack {
       authorizer,
     });
 
+    const playlistsIntegration = new HttpLambdaIntegration("PlaylistsIntegration", playlistsFn);
+    httpApi.addRoutes({
+      path: "/playlists",
+      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.GET],
+      integration: playlistsIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/playlists/{playlistId}",
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PATCH, apigwv2.HttpMethod.DELETE],
+      integration: playlistsIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/playlists/{playlistId}/items",
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: playlistsIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/playlists/{playlistId}/items/{position}",
+      methods: [apigwv2.HttpMethod.DELETE],
+      integration: playlistsIntegration,
+      authorizer,
+    });
+
     const mediaAccessIntegration = new HttpLambdaIntegration("MediaAccessIntegration", mediaAccessFn);
     httpApi.addRoutes({
       path: "/media/{mediaId}/view-url",
@@ -685,6 +783,8 @@ export class MediaAppDataStack extends Stack {
     new CfnOutput(this, "FoldersTableName", { value: this.foldersTable.tableName });
     new CfnOutput(this, "FolderSharesTableName", { value: this.folderSharesTable.tableName });
     new CfnOutput(this, "ActivityLogTableName", { value: this.activityLogTable.tableName });
+    new CfnOutput(this, "PlaylistsTableName", { value: this.playlistsTable.tableName });
+    new CfnOutput(this, "PlaylistItemsTableName", { value: this.playlistItemsTable.tableName });
     new CfnOutput(this, "MediaApiUrl", { value: httpApi.apiEndpoint });
     new CfnOutput(this, "SiteBucketName", { value: this.siteBucket.bucketName });
   }

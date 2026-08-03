@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { api, Folder, MediaItem, ApiError } from "../api";
+import { api, Folder, MediaItem, ApiError, Playlist } from "../api";
 import { Lightbox } from "./Lightbox";
 
 const ROOT = "ROOT";
@@ -23,7 +23,8 @@ function renderFigure(
   item: MediaItem,
   onOpen: (item: MediaItem) => void,
   onDownload: (item: MediaItem) => void,
-  canDownload: boolean
+  canDownload: boolean,
+  addToPlaylist?: { label: string; onClick: () => void }
 ) {
   return (
     <figure key={item.mediaId}>
@@ -41,6 +42,11 @@ function renderFigure(
       {canDownload && (
         <button className="link" onClick={() => onDownload(item)}>
           Download
+        </button>
+      )}
+      {addToPlaylist && (
+        <button className="link" onClick={addToPlaylist.onClick}>
+          {addToPlaylist.label}
         </button>
       )}
     </figure>
@@ -63,6 +69,9 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [loading, setLoading] = useState(true);
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
   const [uploads, setUploads] = useState<UploadStatus[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+  const [justAddedId, setJustAddedId] = useState<string | null>(null);
 
   const currentFolder = path[path.length - 1] ?? null;
   const currentParentId = currentFolder?.folderId ?? ROOT;
@@ -100,6 +109,24 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    api
+      .listPlaylists()
+      .then(({ playlists }) => setPlaylists(playlists))
+      .catch(() => {}); // non-fatal — the "add to playlist" picker just won't have options yet
+  }, []);
+
+  async function handleAddToPlaylist(item: MediaItem) {
+    if (!selectedPlaylistId) return;
+    try {
+      await api.addPlaylistItem(selectedPlaylistId, item.mediaId);
+      setJustAddedId(item.mediaId);
+      setTimeout(() => setJustAddedId((id) => (id === item.mediaId ? null : id)), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add to playlist");
+    }
+  }
 
   async function loadMoreVideos() {
     if (!currentFolder || !videosCursor) return;
@@ -318,8 +345,38 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
           {videos.length > 0 && (
             <>
               <h4>Videos</h4>
+              {playlists.length > 0 && (
+                <div className="inline-form">
+                  <label htmlFor="add-to-playlist-select">Add videos to</label>
+                  <select
+                    id="add-to-playlist-select"
+                    value={selectedPlaylistId}
+                    onChange={(e) => setSelectedPlaylistId(e.target.value)}
+                  >
+                    <option value="">— choose a playlist —</option>
+                    {playlists.map((p) => (
+                      <option key={p.playlistId} value={p.playlistId}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="media-grid">
-                {videos.map((item) => renderFigure(item, setLightboxItem, handleDownload, canDownload))}
+                {videos.map((item) =>
+                  renderFigure(
+                    item,
+                    setLightboxItem,
+                    handleDownload,
+                    canDownload,
+                    selectedPlaylistId
+                      ? {
+                          label: justAddedId === item.mediaId ? "Added ✓" : "+ Playlist",
+                          onClick: () => handleAddToPlaylist(item),
+                        }
+                      : undefined
+                  )
+                )}
               </div>
               {videosCursor && (
                 <button className="link" disabled={loadingMoreVideos} onClick={loadMoreVideos}>

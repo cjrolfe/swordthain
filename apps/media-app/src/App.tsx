@@ -7,8 +7,9 @@ import { PermissionsMatrix } from "./components/PermissionsMatrix";
 import { Friends } from "./components/Friends";
 import { Activity } from "./components/Activity";
 import { Storage } from "./components/Storage";
+import { Playlists } from "./components/Playlists";
 
-type Tab = "folders" | "permissions" | "friends" | "activity" | "storage";
+type Tab = "folders" | "playlists" | "permissions" | "friends" | "activity" | "storage";
 
 export function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
@@ -23,6 +24,13 @@ export function App() {
   useEffect(() => {
     if (session) document.title = owner ? "Swordthain Admin" : "Swordthain Film Archive";
   }, [session, owner]);
+
+  // Can't be reached through the tab nav itself, but guards against e.g. an
+  // Owner signing out and a Member signing in on the same page load, which
+  // would otherwise leave `tab` pointed at an owner-only view.
+  useEffect(() => {
+    if (!owner && tab !== "folders" && tab !== "playlists") setTab("folders");
+  }, [owner, tab]);
 
   const { showWarning, stayActive } = useIdleTimeout(!!session, handleSignOut);
 
@@ -52,37 +60,37 @@ export function App() {
             </button>
           </div>
         </header>
-        {owner && (
-          <nav className="tabs">
-            <button className={tab === "folders" ? "active" : ""} onClick={() => setTab("folders")}>
-              Folders
-            </button>
-            <button className={tab === "permissions" ? "active" : ""} onClick={() => setTab("permissions")}>
-              Permissions
-            </button>
-            <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
-              Friends
-            </button>
-            <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
-              Activity
-            </button>
-            <button className={tab === "storage" ? "active" : ""} onClick={() => setTab("storage")}>
-              Storage
-            </button>
-          </nav>
-        )}
-        <main>
-          {owner ? (
+        <nav className="tabs">
+          <button className={tab === "folders" ? "active" : ""} onClick={() => setTab("folders")}>
+            Folders
+          </button>
+          <button className={tab === "playlists" ? "active" : ""} onClick={() => setTab("playlists")}>
+            Playlists
+          </button>
+          {owner && (
             <>
-              {tab === "folders" && <FolderBrowser isOwner />}
-              {tab === "permissions" && <PermissionsMatrix />}
-              {tab === "friends" && <Friends />}
-              {tab === "activity" && <Activity />}
-              {tab === "storage" && <Storage />}
+              <button className={tab === "permissions" ? "active" : ""} onClick={() => setTab("permissions")}>
+                Permissions
+              </button>
+              <button className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
+                Friends
+              </button>
+              <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>
+                Activity
+              </button>
+              <button className={tab === "storage" ? "active" : ""} onClick={() => setTab("storage")}>
+                Storage
+              </button>
             </>
-          ) : (
-            <FolderBrowser isOwner={false} />
           )}
+        </nav>
+        <main>
+          {tab === "folders" && <FolderBrowser isOwner={owner} />}
+          {tab === "playlists" && <Playlists isOwner={owner} />}
+          {owner && tab === "permissions" && <PermissionsMatrix />}
+          {owner && tab === "friends" && <Friends />}
+          {owner && tab === "activity" && <Activity />}
+          {owner && tab === "storage" && <Storage />}
         </main>
       </div>
     </div>
