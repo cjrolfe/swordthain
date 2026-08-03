@@ -65,7 +65,7 @@ function authHeaders() {
       label.className = "field";
       label.innerHTML = `
         <span>${p.key}${p.required ? " *" : ""} <span class="muted">(${p.kind})</span></span>
-        <input class="search" type="text" name="${p.key}" placeholder="${p.example || ""}" />
+        <input class="search" type="text" name="${p.key}" value="${p.example || ""}" />
       `;
       paramsContainer.appendChild(label);
     }
