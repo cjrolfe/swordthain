@@ -1,6 +1,9 @@
-# Swordthain Demo Sites
+# Swordthain Labs
 
-A directory of company demo sites hosted on AWS (S3 + CloudFront). Each company has its own page, and each company can have one or more projects. Everything is managed through a UI backed by API Gateway + Lambda.
+Owner-only internal playgrounds hosted at `labs.swordthain.com` (S3 + CloudFront, gated by a CloudFront Function stealth check on the shared `swordthain_session` cookie — see `infra/README.md`'s `SwordthainPlaygroundStack` section). Root `index.html` is a small hub linking to two independent playgrounds:
+
+- **Company Demos** (`demos/`) — a directory of company demo sites, each with one or more projects. Everything is managed through a UI backed by API Gateway + Lambda.
+- **API Testing** (`api-testing/`) — send real requests to a set of third-party APIs by filling in a form, with real keys held server-side.
 
 ## Architecture
 
@@ -8,22 +11,27 @@ A directory of company demo sites hosted on AWS (S3 + CloudFront). Each company 
 |-----------|------------|
 | Static site | S3 (`swordthain-demo-sites`) |
 | CDN | CloudFront |
-| DNS | Route 53 (swordthain.com) |
-| API | API Gateway + Lambda (`swordthain-automation`) |
+| DNS | Route 53 (`labs.swordthain.com`) |
+| Company Demos API | API Gateway + Lambda (`swordthain-automation`, Python, manually deployed — see below) |
+| API Testing proxy | Same API Gateway, `/api-testing` resource + a separate Lambda (`infra/lambda/playground/api-testing-proxy.ts`, TypeScript, CDK-managed) |
 | Logos | S3 (`sfdcdemoimages`, eu-west-1) |
 
-## How it works
+All endpoints on both Lambdas require a Cognito `Owner`-group Bearer token (see `infra/README.md`'s "Playground API auth retrofit"). There's no login UI here — `labs.swordthain.com`'s CloudFront Function already requires a valid Owner session cookie just to serve any page, and both `assets/app.js` and `api-testing/assets/api-tester.js` read that same cookie and attach it as the Bearer token automatically.
+
+## Company Demos (`demos/`)
 
 ### Frontend
 
 | File | Purpose |
 |------|---------|
-| `index.html` | Landing page — company directory and "Create new company" modal |
-| `archived.html` | Archived companies (restore / delete) |
+| `demos/index.html` | Company directory and "Create new company" modal |
+| `demos/archived.html` | Archived companies (restore / delete) |
 | `assets/app.js` | Fetches `sites.json`, renders cards, handles all API calls with in-memory updates |
 | `assets/sites.json` | Source of truth for all companies, their metadata, and their projects |
 | `company-template/index.html` | Template used by Lambda when creating a new company |
 | `project-template/index.html` | Template used by Lambda when creating a new project |
+
+All paths in these files are absolute (`/assets/...`), so moving the directory pages into `demos/` didn't require touching how they load shared assets.
 
 ### API endpoints
 
@@ -35,8 +43,6 @@ A directory of company demo sites hosted on AWS (S3 + CloudFront). Each company 
 | `/project/delete` | POST | Permanently delete a project |
 
 After each operation, Lambda updates `assets/sites.json` in S3 and invalidates the CloudFront cache. The frontend updates its card grid immediately in memory — no page reload required.
-
-**All 4 endpoints require a Cognito `Owner`-group Bearer token** (see `infra/README.md`'s "Playground API auth retrofit" — this API had no auth at all before that). `assets/app.js` and `company-template/index.html` each read the `swordthain_session` cookie (set by `apps/media-app` on `.swordthain.com` after sign-in) and attach it automatically; there's no separate login UI here since `labs.swordthain.com`'s CloudFront Function already requires that same cookie just to serve any page.
 
 ### Data structure (`sites.json`)
 
@@ -109,6 +115,18 @@ Set Lambda environment variables:
 
 If AI is unavailable the Lambda falls back to the website's meta description, or a generic placeholder. Creation never fails due to AI issues.
 
+## API Testing (`api-testing/`)
+
+A form-driven way to send real requests to a set of third-party APIs without ever putting a real key in the browser.
+
+- `api-testing/index.html` — hub page linking to each provider.
+- `api-testing/{provider}/index.html` + `config.js` — one pair per provider (`weather`, `police`, `ticketmaster`, `ves`). `config.js` declares the provider's endpoints as plain data: `{id, name, method, pathTemplate, pathParams, queryParams, bodyParams}` per endpoint — no per-provider HTML/JS.
+- `api-testing/assets/api-tester.js` — one shared, generic renderer. Reads `window.API_TESTING_CONFIG` (set by the page's `config.js`), builds a form for whatever params that provider's endpoints declare, and POSTs `{provider, endpointId, params}` to `${SWORDTHAIN_API}/api-testing` on submit.
+
+**Backend**: `infra/lambda/playground/api-testing-proxy.ts` (TypeScript, CDK-managed — a different Lambda and deploy path from the Python `swordthain-automation` above). A fixed, hardcoded allowlist of providers/endpoints/base-URLs lives in the Lambda itself; the client only ever sends `{provider, endpointId, params}`, never a URL — deliberately not an open proxy, since that would be an SSRF endpoint even behind Owner-only auth. Real third-party keys live in SSM `SecureString` parameters (`/swordthain/api-testing/{provider}-api-key`), populated out-of-band via `aws ssm put-parameter`, never committed to git, and cached in-Lambda across warm invocations. Wired into the same REST API as the demos endpoints above, behind the same Cognito Owner authorizer, as a new `/api-testing` resource (see `infra/lib/playground-stack.ts`).
+
+Currently wired: **Weather** (WeatherAPI.com, needs a key), **UK Police** (no key needed), **Ticketmaster Discovery** (needs a key — see `apps/playground/BACKLOG.md`), **VES** (DVLA vehicle enquiry, UAT + Production environments, each its own SSM parameter — see `apps/playground/BACKLOG.md` for the dead UAT key). Adding a new provider means adding an entry to the `PROVIDERS` map in the Lambda, an SSM parameter if it needs a key, and a `{provider}/index.html` + `config.js` pair — no changes to `api-tester.js` itself.
+
 ## Deployment
 
 ### Deploy frontend to S3
@@ -124,7 +142,7 @@ aws s3 sync . s3://swordthain-demo-sites/ \
   --exclude "__pycache__/*"
 ```
 
-### Deploy Lambda
+### Deploy the Company Demos Lambda
 
 ```bash
 cd apps/playground/lambda
@@ -142,6 +160,15 @@ aws cloudfront create-invalidation --distribution-id E1AUXZ6C0Z7J9P --paths "/*"
 
 Lambda automatically invalidates the relevant CloudFront paths after each write if `CLOUDFRONT_DISTRIBUTION_ID` is set in its environment.
 
+### Deploy the API Testing proxy Lambda
+
+Not part of this app's manual deploy steps — it's CDK-managed, deployed the same way as any other infra change:
+
+```bash
+cd infra
+npx cdk deploy SwordthainPlaygroundStack
+```
+
 ## Local preview
 
 ```bash
@@ -156,18 +183,29 @@ Create/archive/delete buttons call the live API. There is no local API server.
 
 ```
 .
-├── index.html                  # Landing page
-├── archived.html               # Archived companies view
+├── index.html                  # Hub — links to demos/ and api-testing/
 ├── favicon.svg                 # Sword icon
+├── demos/
+│   ├── index.html              # Company directory
+│   └── archived.html           # Archived companies view
+├── api-testing/
+│   ├── index.html              # API Testing hub
+│   ├── assets/api-tester.js    # Shared generic form renderer
+│   ├── weather/{index.html,config.js}
+│   ├── police/{index.html,config.js}
+│   ├── ticketmaster/{index.html,config.js}
+│   └── ves/{index.html,config.js}
 ├── assets/
-│   ├── app.js                  # UI logic and API calls
-│   ├── styles.css              # Global styles
+│   ├── app.js                  # Company Demos UI logic and API calls
+│   ├── styles.css              # Global styles, shared by both playgrounds
 │   └── sites.json              # Company + project registry
 ├── company-template/
 │   └── index.html              # Template for new company pages
 ├── project-template/
 │   └── index.html              # Template for new project pages
-└── lambda/                     # Lambda source (pip deps excluded from git)
+├── docs/
+│   └── codebase-diagram.html   # Reference diagram
+└── lambda/                     # Company Demos Lambda source (pip deps excluded from git)
     ├── lambda_function.py      # Request router
     ├── create_company.py       # Company creation handler
     ├── archive_company.py      # Archive / restore / delete handler
@@ -178,3 +216,5 @@ Create/archive/delete buttons call the live API. There is no local API server.
     ├── ai_providers/           # OpenAI and Anthropic provider modules
     └── requirements.txt
 ```
+
+The API Testing proxy Lambda (`api-testing-proxy.ts`) lives in `infra/lambda/playground/`, not here — see "API Testing" above.

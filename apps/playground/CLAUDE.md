@@ -4,18 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This app lives at `apps/playground/` in the `swordthain` monorepo (see the repo-root `CLAUDE.md` for how it relates to `apps/media-app/`). It is an AWS-hosted directory of company demo sites. Each company has its own folder with an `index.html` page, and each company can have one or more **projects**, each with their own `index.html` page. The landing page displays company cards read from `assets/sites.json`. All CRUD operations (create, archive, restore, delete) are **API-driven** and automated via Lambda functions. The `company-template` entry is hidden from the landing page UI but must remain in `sites.json` and S3 — it is the template Lambda uses to create new companies.
+This app lives at `apps/playground/` in the `swordthain` monorepo (see the repo-root `CLAUDE.md` for how it relates to `apps/media-app/`), hosted at `labs.swordthain.com`, owner-only. Root `index.html` is a small hub linking to two independent playgrounds:
+
+1. **Company Demos** (`demos/`) — an AWS-hosted directory of company demo sites. Each company has its own folder at the **site root** (`/{company-id}/index.html`, not under `demos/` — only the directory/listing pages moved), and each company can have one or more **projects**, each with their own `index.html` page. The directory page displays company cards read from `assets/sites.json`. All CRUD operations (create, archive, restore, delete) are **API-driven** and automated via Python Lambda functions. The `company-template` entry is hidden from the directory UI but must remain in `sites.json` and S3 — it is the template Lambda uses to create new companies.
+2. **API Testing** (`api-testing/`) — send real requests to a set of third-party APIs by filling in a generic, config-driven form, with real keys held server-side in SSM. See "API Testing Playground" below.
+
+The rest of this file covers Company Demos in depth (it's the older, larger surface); API Testing gets its own section further down.
 
 ## Architecture
 
 ### Frontend (Static HTML/CSS/JS on AWS)
 - **Hosting:** S3 + CloudFront CDN
-- **Domain:** Route 53 (swordthain.com)
-- `index.html` - Main landing page with company directory and "Create new company" modal
-- `archived.html` - Shows archived companies (with restore/delete options)
-- `favicon.svg` - Custom sword icon (SVG format for scalability)
+- **Domain:** Route 53 (`labs.swordthain.com`)
+- `index.html` - Root hub, links to `demos/` and `api-testing/` (not Company Demos itself — see Project Overview above)
+- `demos/index.html` - Company directory and "Create new company" modal
+- `demos/archived.html` - Shows archived companies (with restore/delete options)
+- `favicon.svg` - Custom sword icon (SVG format for scalability), shared by both playgrounds
 - `assets/app.js` - Renders cards from `sites.json`, handles search, and calls API endpoints. After each operation the in-memory `sites` array is mutated and the grid re-renders immediately — no `window.location.reload()`.
 - `assets/sites.json` - **Source of truth** for all companies, their metadata, and their projects
+
+All paths in these files are absolute (`/assets/...`), so moving the directory pages into `demos/` didn't require touching how they load shared assets or how `SWORDTHAIN_API` is configured.
 
 ### Backend (Lambda + API Gateway)
 Four Lambda endpoints:
@@ -139,16 +147,16 @@ aws cloudfront create-invalidation --distribution-id E1AUXZ6C0Z7J9P --paths "/*"
 **Note:** Lambda automatically invalidates CloudFront after updates if `CLOUDFRONT_DISTRIBUTION_ID` env var is set.
 
 ### API Gateway Configuration
-The frontend needs the API base URL. Set in `index.html`, `archived.html`, and rendered company pages:
+The frontend needs the API base URL. Set in `demos/index.html`, `demos/archived.html`, `api-testing/**/index.html`, and rendered company pages:
 ```html
 <script>window.SWORDTHAIN_API = "https://x7g9r0sdmc.execute-api.us-east-1.amazonaws.com/prod";</script>
 ```
 
 **CORS Configuration:**
 - Lambda returns CORS headers: `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Headers: Content-Type`, `Access-Control-Allow-Methods: POST, OPTIONS`
-- API Gateway has OPTIONS + POST methods configured for: `/create`, `/archive`, `/project/create`, `/project/delete`
-- All POST methods use `AWS_PROXY` integration type
-- When adding new endpoints, grant Lambda invoke permission and redeploy the API stage
+- API Gateway has OPTIONS + POST methods configured for: `/create`, `/archive`, `/project/create`, `/project/delete`, and `/api-testing` (the last one CDK-managed, Cognito-authorized — see "API Testing Playground" below, not the CORS/`AWS_PROXY` pattern this section otherwise describes)
+- All 4 Company Demos POST methods use `AWS_PROXY` integration type
+- When adding new Company Demos endpoints, grant Lambda invoke permission and redeploy the API stage manually (see `infra/README.md`'s "Playground API auth retrofit" for why this one API mixes a manually-managed part with a CDK-managed part)
 
 ## AI Provider Integration
 
@@ -202,6 +210,31 @@ Create `lambda/ai_providers/new_provider.py` extending `AIProvider` base class, 
 1. `POST /project/delete` with `{"companyId", "projectId"}`
 2. Lambda removes project from `sites.json` and deletes `/{companyId}/{projectId}/` prefix in S3
 3. Company page JS re-renders project cards
+
+## API Testing Playground
+
+A form-driven way to send real requests to a set of third-party APIs without ever putting a real key in the browser. Entirely independent of Company Demos above — separate frontend files, separate (CDK-managed, TypeScript) Lambda, same underlying REST API and Cognito authorizer.
+
+### Frontend (`api-testing/`)
+- `api-testing/index.html` — hub linking to each provider's page.
+- `api-testing/{provider}/index.html` + `config.js` — one pair per provider (currently `weather`, `police`, `ticketmaster`, `ves`). `config.js` sets `window.API_TESTING_CONFIG = {provider, title, description, endpoints}`, where each endpoint is plain data: `{id, name, method, pathTemplate, pathParams, queryParams, bodyParams}`. Adding a provider means adding a new `{provider}/` folder with these two files — no changes to the shared renderer.
+- `api-testing/assets/api-tester.js` — one shared, generic form renderer used by every provider page. Reads `window.API_TESTING_CONFIG`, builds inputs for whatever params the endpoints declare, and on submit POSTs `{provider, endpointId, params}` to `${window.SWORDTHAIN_API}/api-testing`.
+
+### Backend (`infra/lambda/playground/api-testing-proxy.ts`)
+CDK-managed (unlike the Python Company Demos Lambda), deployed via `infra`'s normal `cdk deploy`, not this app's manual Lambda deploy step. Key design points:
+- A **fixed, hardcoded allowlist** of providers/endpoints/base-URLs (the `PROVIDERS` map in the Lambda) — the client only ever sends `{provider, endpointId, params}`, never a URL. Deliberate: an open "proxy anything the client asks for" design would be an SSRF endpoint even behind Owner-only auth.
+- Real third-party keys live in SSM **`SecureString`** parameters, path `/swordthain/api-testing/{provider}-api-key`, populated out-of-band via `aws ssm put-parameter` — never in code or committed to git. Cached in-memory across warm Lambda invocations, keyed by parameter name.
+- Auth: same Cognito authorizer as the 4 Company Demos endpoints, but reached through REST API v1's authorizer shape (`event.requestContext.authorizer.claims`, no `.jwt` nesting like HTTP API v2) rather than a manually-attached one — this endpoint was added at CDK-deploy time with the authorizer already wired in, unlike the retrofit the other 4 needed. Reuses `isOwner()` from `infra/lambda/media/authz.ts` — its bracket-stripping is a no-op on REST API v1's plain, unbracketed `cognito:groups` string, so the same function is safe across both authorizer shapes.
+- Per-endpoint config supports injecting the secret as a query param (`secretQueryParam`, e.g. Ticketmaster's `apikey`) or a header (`secretHeaderName`, e.g. VES's `x-api-key`), and can JSON-encode remaining params into a POST body instead of a query string (`hasJsonBody`, used by VES) — see the `EndpointDef`/`ProviderDef` types for the full shape.
+- Providers needing no key at all are supported (`ssmParameterName` omitted) — UK Police's ~25 endpoints are wired this way.
+
+### Currently wired providers
+- **Weather** (WeatherAPI.com) — needs a key.
+- **UK Police** — no key required, ~25 endpoints under one `police` config.
+- **Ticketmaster Discovery** — needs a key (Consumer Key only; see `apps/playground/BACKLOG.md`).
+- **VES** (DVLA vehicle enquiry) — two separate provider IDs, `ves-uat` and `ves-production`, each its own SSM parameter and base URL, sharing one frontend page. See `apps/playground/BACKLOG.md` for the UAT key's current status.
+
+Deferred providers (TfL, Animal Shelter/What3Words/ChipNDoodle, Charity Commission) are tracked in `apps/playground/BACKLOG.md`, not here.
 
 ## Local Development
 
