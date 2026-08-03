@@ -71,6 +71,10 @@ body {
   /* Same photo as the login screen — full-bleed behind the centered
      .app-content column, not constrained to its 960px width. */
   background: #0b0f12 url("./assets/film-strip-bg.jpg") no-repeat center center / cover;
+  /* Inherited by every descendant so text stays legible over whatever part
+     of the photo happens to be behind it (e.g. an inactive, non-bold tab
+     label like "Playlists" blending into a lighter patch of the image). */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
 }
 
 .member-theme header h1 {
