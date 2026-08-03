@@ -20,6 +20,7 @@ Deferred features, known limitations, and settled decisions that don't need re-l
 ## Settled decisions (recorded, not open questions)
 
 - **No Glacier/Deep Archive tiering.** Evaluated at ~2TB scale; the extra saving over what Intelligent-Tiering's automatic tiers already capture is small (~$15–18/month) relative to the multi-hour restore delay and new product surface it would need (restore-initiate endpoint, "warming up" UI state). Revisit only if the library grows into the tens of TB.
+- **Apple Photos upload** — already works on iPhone/iPad: the existing upload input's native OS picker (Safari's file input) browses the real Photos library, including iCloud Photos, with multi-select. No code change needed. Mac browser uploads can't reach the Photos library directly (Finder's Open panel doesn't browse it) — closing that gap would need an iCloud Shared Album import (unofficial public endpoint) or a Shortcuts-based share flow; not pursued since iPhone/iPad covers the actual need.
 
 ## Documentation debt
 
