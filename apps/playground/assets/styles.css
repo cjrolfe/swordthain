@@ -144,6 +144,12 @@ a.btn, a.btn:visited, a.btn:hover, a.btn:active{ color: var(--text); }
 }
 .search::placeholder, .input::placeholder{ color: rgba(232,238,252,.45); }
 
+/* API Testing's param form — bumped up from the inherited default, which
+   read a little small for the entry fields. Scoped to #paramForm rather
+   than .search generally, since that class is also used for unrelated
+   search boxes elsewhere that shouldn't change. */
+#paramForm .search{ font-size: 17px; }
+
 .grid{
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

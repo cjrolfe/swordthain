@@ -54,7 +54,10 @@ function authHeaders() {
     if (!ep) return;
 
     const allParams = [
-      ...ep.pathParams.map((key) => ({ key, kind: "path", required: true })),
+      // pathParams entries are usually a plain key string, but can also be
+      // an object ({key, label, example}) when a friendlier display label
+      // is needed (e.g. MOT History's "registration" -> "Car Reg Number").
+      ...ep.pathParams.map((p) => ({ ...(typeof p === "string" ? { key: p } : p), kind: "path", required: true })),
       ...ep.queryParams.map((p) => ({ ...p, kind: "query" })),
       ...(ep.bodyParams || []).map((p) => ({ ...p, kind: "body" })),
     ];
@@ -68,7 +71,7 @@ function authHeaders() {
       const label = document.createElement("label");
       label.className = "field";
       label.innerHTML = `
-        <span>${p.key}${p.required ? " *" : ""} <span class="muted">(${p.kind})</span></span>
+        <span>${p.label || p.key}${p.required ? " *" : ""} <span class="muted">(${p.kind})</span></span>
         <input class="search" type="text" name="${p.key}" value="${p.example || ""}" />
       `;
       paramsContainer.appendChild(label);

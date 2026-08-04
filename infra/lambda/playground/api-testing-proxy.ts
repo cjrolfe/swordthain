@@ -28,10 +28,28 @@ interface EndpointDef {
   hasJsonBody?: boolean;
 }
 
+/** OAuth2 client-credentials config for providers whose auth is a bearer
+ * token instead of (or in addition to) a static secret — e.g. MOT History,
+ * which exchanges a Client ID + Secret for a short-lived token at a
+ * Microsoft identity platform endpoint. */
+interface OAuth2ClientCredentialsConfig {
+  tokenUrl: string;
+  scope: string;
+  ssmClientIdParameterName: string;
+  ssmClientSecretParameterName: string;
+}
+
 interface ProviderDef {
   baseUrl: string;
   /** SSM SecureString parameter holding the real key — undefined means no auth needed (e.g. UK Police). */
   ssmParameterName?: string;
+  /** Enables an OAuth2 client-credentials bearer token, sent as `Authorization: Bearer <token>`. */
+  oauth2?: OAuth2ClientCredentialsConfig;
+  /** SSM SecureString params injected as static request headers, keyed by header name — for
+   * secrets that aren't the OAuth2 token itself (e.g. a required API key sent alongside it). */
+  ssmHeaderParameters?: Record<string, string>;
+  /** Fixed, non-secret headers sent on every request to this provider. */
+  staticHeaders?: Record<string, string>;
   endpoints: Record<string, EndpointDef>;
 }
 
@@ -129,6 +147,25 @@ const PROVIDERS: Record<string, ProviderDef> = {
       },
     },
   },
+  "mot-history": {
+    // Best-available base URL/path — DVSA's live spec page didn't yield
+    // exact details via fetch. If the first real call 404s on the path
+    // itself (not an auth error), fix pathTemplate here from the real
+    // response rather than guessing further.
+    baseUrl: "https://history.mot.api.gov.uk",
+    oauth2: {
+      tokenUrl: "https://login.microsoftonline.com/a455b827-244f-4c97-b5b4-ce5d13b4d00c/oauth2/v2.0/token",
+      scope: "https://tapi.dvsa.gov.uk/.default",
+      ssmClientIdParameterName: "/swordthain/api-testing/mot-history-client-id",
+      ssmClientSecretParameterName: "/swordthain/api-testing/mot-history-client-secret",
+    },
+    ssmHeaderParameters: {
+      "X-API-Key": "/swordthain/api-testing/mot-history-api-key",
+    },
+    endpoints: {
+      "mot-history-lookup": { pathTemplate: "/v1/trade/vehicles/registration/:registration" },
+    },
+  },
 };
 
 const CORS_HEADERS = {
@@ -157,7 +194,8 @@ function buildRequest(
   provider: ProviderDef,
   endpoint: EndpointDef,
   params: Record<string, string>,
-  secret?: string
+  secret?: string,
+  extraHeaders: Record<string, string> = {}
 ): { url: string; init: RequestInit } {
   const { path, usedKeys } = buildPath(endpoint.pathTemplate, params);
   const remaining: Record<string, string> = {};
@@ -165,7 +203,7 @@ function buildRequest(
     if (!usedKeys.has(key)) remaining[key] = value;
   }
 
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = { Accept: "application/json", ...extraHeaders };
   if (endpoint.secretHeaderName && secret) headers[endpoint.secretHeaderName] = secret;
 
   if (endpoint.hasJsonBody) {
@@ -178,6 +216,100 @@ function buildRequest(
   if (endpoint.secretQueryParam && secret) query.set(endpoint.secretQueryParam, secret);
   const qs = query.toString();
   return { url: `${provider.baseUrl}${path}${qs ? `?${qs}` : ""}`, init: { headers } };
+}
+
+interface CachedToken {
+  accessToken: string;
+  expiresAtMs: number;
+}
+
+// Cached across warm invocations, keyed by the client-id SSM parameter name
+// (unique per provider in practice). Refreshed this long before actual
+// expiry so a token fetched near the end of its life never gets used
+// mid-flight on the real request.
+const tokenCache = new Map<string, CachedToken>();
+const TOKEN_EXPIRY_MARGIN_MS = 60_000;
+
+async function getOAuth2Token(config: OAuth2ClientCredentialsConfig): Promise<string> {
+  const cacheKey = config.ssmClientIdParameterName;
+  const cached = tokenCache.get(cacheKey);
+  const now = Date.now();
+  if (cached && cached.expiresAtMs - TOKEN_EXPIRY_MARGIN_MS > now) return cached.accessToken;
+
+  const [clientId, clientSecret] = await Promise.all([
+    getSecret(config.ssmClientIdParameterName),
+    getSecret(config.ssmClientSecretParameterName),
+  ]);
+
+  const form = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: clientId,
+    client_secret: clientSecret,
+    scope: config.scope,
+  });
+
+  const tokenResponse = await fetch(config.tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form.toString(),
+  });
+
+  if (!tokenResponse.ok) {
+    const detail = await tokenResponse.text().catch(() => "");
+    throw new Error(`OAuth2 token request to ${config.tokenUrl} failed: ${tokenResponse.status} ${detail.slice(0, 500)}`);
+  }
+
+  const parsed = (await tokenResponse.json()) as { access_token?: string; expires_in?: number };
+  if (!parsed.access_token) {
+    throw new Error(`OAuth2 token response from ${config.tokenUrl} had no access_token`);
+  }
+
+  const expiresInMs = (parsed.expires_in ?? 3600) * 1000;
+  const token: CachedToken = { accessToken: parsed.access_token, expiresAtMs: now + expiresInMs };
+  tokenCache.set(cacheKey, token);
+  return token.accessToken;
+}
+
+async function resolveProviderHeaders(provider: ProviderDef): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { ...provider.staticHeaders };
+
+  if (provider.ssmHeaderParameters) {
+    const entries = await Promise.all(
+      Object.entries(provider.ssmHeaderParameters).map(
+        async ([headerName, parameterName]) => [headerName, await getSecret(parameterName)] as const
+      )
+    );
+    for (const [headerName, value] of entries) headers[headerName] = value;
+  }
+
+  if (provider.oauth2) {
+    headers.Authorization = `Bearer ${await getOAuth2Token(provider.oauth2)}`;
+  }
+
+  return headers;
+}
+
+async function callUpstream(
+  provider: ProviderDef,
+  endpoint: EndpointDef,
+  params: Record<string, string>,
+  secret: string | undefined
+): Promise<Response> {
+  const extraHeaders = await resolveProviderHeaders(provider);
+  const { url, init } = buildRequest(provider, endpoint, params, secret, extraHeaders);
+  const upstream = await fetch(url, init);
+
+  if (upstream.status === 401 && provider.oauth2) {
+    // Cached-but-now-invalid token (clock skew, revocation, etc.) — drop it
+    // and retry once with a freshly fetched one, so a stale cache doesn't
+    // look identical to a real auth failure in this debugging tool.
+    tokenCache.delete(provider.oauth2.ssmClientIdParameterName);
+    const retryHeaders = await resolveProviderHeaders(provider);
+    const retryReq = buildRequest(provider, endpoint, params, secret, retryHeaders);
+    return fetch(retryReq.url, retryReq.init);
+  }
+
+  return upstream;
 }
 
 // REST API v1's COGNITO_USER_POOLS authorizer puts decoded claims at
@@ -208,9 +340,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   try {
     const secret = provider.ssmParameterName ? await getSecret(provider.ssmParameterName) : undefined;
-    const { url, init } = buildRequest(provider, endpoint, params, secret);
-
-    const upstream = await fetch(url, init);
+    const upstream = await callUpstream(provider, endpoint, params, secret);
     const text = await upstream.text();
 
     let parsed: unknown;
