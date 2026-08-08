@@ -11,6 +11,15 @@ export function PermissionsMatrix() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Session-only (not persisted): folderIds granted to a friend during this
+  // browser session that haven't been emailed about yet. Keyed by
+  // friend.userId so switching between friends doesn't lose a pending
+  // notify batch for someone else. Lost on refresh — deliberate, not a bug.
+  const [pendingNotify, setPendingNotify] = useState<Record<string, string[]>>({});
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [notifyNote, setNotifyNote] = useState("");
+  const [notifyBusy, setNotifyBusy] = useState(false);
+
   const load = useCallback(async () => {
     try {
       setData(await api.permissionsMatrix());
@@ -68,6 +77,14 @@ export function PermissionsMatrix() {
     setBusy(true);
     try {
       await api.updateShare(addFolderId, { action: "grant", email: selectedFriend.email, permission: addPermission });
+      // A brand-new share (only reached on success) — track it as
+      // pending-notify. handleChangePermission never touches this, since
+      // it only ever operates on already-shared folders.
+      const friendUserId = selectedFriend.userId;
+      setPendingNotify((prev) => ({
+        ...prev,
+        [friendUserId]: [...(prev[friendUserId] ?? []), addFolderId],
+      }));
       setAddFolderId("");
       setAddPermission("view");
       await load();
@@ -75,6 +92,31 @@ export function PermissionsMatrix() {
       setError(err instanceof Error ? err.message : "Failed to add access");
     } finally {
       setBusy(false);
+    }
+  }
+
+  function clearPending(userId: string) {
+    setPendingNotify((prev) => {
+      const { [userId]: _removed, ...rest } = prev;
+      return rest;
+    });
+  }
+
+  async function handleSendNotify() {
+    if (!selectedFriend) return;
+    const folderIds = pendingNotify[selectedFriend.userId] ?? [];
+    if (folderIds.length === 0) return;
+    setNotifyBusy(true);
+    try {
+      await api.notifyShares({ email: selectedFriend.email, folderIds, message: notifyNote || undefined });
+      clearPending(selectedFriend.userId);
+      setNotifyOpen(false);
+      setNotifyNote("");
+    } catch (err) {
+      // Preserve pendingNotify on failure so the Owner can retry.
+      setError(err instanceof Error ? err.message : "Failed to send notification");
+    } finally {
+      setNotifyBusy(false);
     }
   }
 
@@ -123,6 +165,37 @@ export function PermissionsMatrix() {
               ))}
               {grants.length === 0 && <li className="empty">No folders shared with this friend yet.</li>}
             </ul>
+
+            {(pendingNotify[selectedFriend.userId]?.length ?? 0) > 0 && (
+              <div className="notify-banner">
+                <span>
+                  {pendingNotify[selectedFriend.userId].length} new folder
+                  {pendingNotify[selectedFriend.userId].length > 1 ? "s" : ""} granted this session.
+                </span>{" "}
+                <button onClick={() => setNotifyOpen(true)}>Notify {selectedFriend.email}</button>{" "}
+                <button className="link" onClick={() => clearPending(selectedFriend.userId)}>
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {notifyOpen && (
+              <div className="notify-dialog">
+                <p>Send {selectedFriend.email} an email about new media?</p>
+                <textarea
+                  placeholder="Optional personal note…"
+                  value={notifyNote}
+                  onChange={(e) => setNotifyNote(e.target.value)}
+                  rows={3}
+                />
+                <button disabled={notifyBusy} onClick={handleSendNotify}>
+                  {notifyBusy ? "Sending…" : "Send"}
+                </button>{" "}
+                <button className="link" disabled={notifyBusy} onClick={() => setNotifyOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            )}
 
             {availableFolders.length > 0 && (
               <div className="inline-form">

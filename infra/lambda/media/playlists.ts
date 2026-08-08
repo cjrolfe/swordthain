@@ -61,6 +61,8 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
       return addPlaylistItem(event, owner, userId);
     case "DELETE /playlists/{playlistId}/items/{position}":
       return removePlaylistItem(event, owner, userId);
+    case "PATCH /playlists/{playlistId}/items/{position}":
+      return moveItem(event, owner, userId);
     default:
       return jsonResponse(404, { error: "Not found" });
   }
@@ -399,6 +401,69 @@ async function removePlaylistItem(
   );
 
   return jsonResponse(200, { playlistId, position, deleted: true });
+}
+
+/**
+ * position is the DynamoDB sort key, so an item's identity is
+ * {playlistId, position} — it can't be changed via UpdateItem. Reordering
+ * swaps content (mediaId/addedAt) between the two adjacent position slots
+ * instead of renumbering, so position values never move.
+ */
+async function moveItem(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  owner: boolean,
+  userId: string
+): Promise<APIGatewayProxyStructuredResultV2> {
+  const playlistId = event.pathParameters?.playlistId;
+  const positionParam = event.pathParameters?.position;
+  if (!playlistId || positionParam === undefined) {
+    return jsonResponse(400, { error: "playlistId and position are required" });
+  }
+  const position = Number(positionParam);
+  if (!Number.isInteger(position)) return jsonResponse(400, { error: "position must be an integer" });
+
+  const loaded = await loadPlaylist(playlistId, owner, userId);
+  if ("deny" in loaded) return denyResponse(loaded.deny);
+
+  let payload: { direction?: string };
+  try {
+    payload = event.body ? JSON.parse(event.body) : {};
+  } catch {
+    return jsonResponse(400, { error: "Invalid JSON body" });
+  }
+  const direction = payload.direction;
+  if (direction !== "up" && direction !== "down") {
+    return jsonResponse(400, { error: 'direction must be "up" or "down"' });
+  }
+
+  const result = await ddb.send(
+    new QueryCommand({
+      TableName: PLAYLIST_ITEMS_TABLE_NAME,
+      KeyConditionExpression: "playlistId = :p",
+      ExpressionAttributeValues: { ":p": playlistId },
+    })
+  );
+  const items = (result.Items ?? []) as { position: number; mediaId: string; addedAt: string }[];
+  const idx = items.findIndex((i) => i.position === position);
+  if (idx === -1) return jsonResponse(404, { error: "Item not found" });
+
+  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= items.length) {
+    return jsonResponse(400, { error: `Already at the ${direction === "up" ? "top" : "bottom"}` });
+  }
+
+  const a = items[idx];
+  const b = items[swapIdx];
+  await Promise.all([
+    ddb.send(
+      new PutCommand({ TableName: PLAYLIST_ITEMS_TABLE_NAME, Item: { playlistId, position: a.position, mediaId: b.mediaId, addedAt: b.addedAt } })
+    ),
+    ddb.send(
+      new PutCommand({ TableName: PLAYLIST_ITEMS_TABLE_NAME, Item: { playlistId, position: b.position, mediaId: a.mediaId, addedAt: a.addedAt } })
+    ),
+  ]);
+
+  return jsonResponse(200, { swapped: [a.position, b.position] });
 }
 
 async function resolveEmails(userIds: string[]): Promise<Map<string, string>> {

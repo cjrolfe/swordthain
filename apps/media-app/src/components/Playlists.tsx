@@ -89,6 +89,16 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
     }
   }
 
+  async function handleMoveItem(position: number, direction: "up" | "down") {
+    if (!openPlaylist) return;
+    try {
+      await api.movePlaylistItem(openPlaylist.playlistId, position, direction);
+      loadItems(openPlaylist);
+    } catch (err) {
+      setItemsError(err instanceof Error ? err.message : "Failed to reorder");
+    }
+  }
+
   return (
     <div>
       <h3>{isOwner ? "New playlist" : "Create a playlist"}</h3>
@@ -150,7 +160,7 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
                 ▶ Play
               </button>
               <ul className="folder-list">
-                {items.map((item) => (
+                {items.map((item, i) => (
                   <li key={item.position}>
                     {item.thumbnailUrl && (
                       <img src={item.thumbnailUrl} alt="" style={{ width: 40, height: 40, objectFit: "cover" }} />
@@ -159,6 +169,22 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
                     {item.available && !item.accessible && (
                       <span className="badge">you no longer have access</span>
                     )}
+                    <button
+                      className="link"
+                      disabled={i === 0}
+                      onClick={() => handleMoveItem(item.position, "up")}
+                      aria-label="Move up"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      className="link"
+                      disabled={i === items.length - 1}
+                      onClick={() => handleMoveItem(item.position, "down")}
+                      aria-label="Move down"
+                    >
+                      ↓
+                    </button>
                     <button className="link danger" onClick={() => handleRemoveItem(item.position)}>
                       Remove
                     </button>

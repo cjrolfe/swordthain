@@ -234,6 +234,22 @@ button.danger {
   margin-bottom: 1rem;
 }
 
+.notify-banner,
+.notify-dialog {
+  background: light-dark(#eef3ff, #1c2333);
+  border: 1px solid light-dark(#c9d8ff, #33456b);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.notify-dialog textarea {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 0.5rem 0;
+}
+
 .folder-list {
   list-style: none;
   padding: 0;
@@ -444,6 +460,15 @@ table.matrix td {
 .invite-form label {
   font-size: 0.85rem;
   margin-top: 0.4rem;
+}
+
+.invite-preview {
+  width: 100%;
+  max-width: 560px;
+  height: 420px;
+  border: 1px solid light-dark(#ccc, #444);
+  border-radius: 6px;
+  background: #fff;
 }
 
 .friend-list {

@@ -279,7 +279,7 @@ export class MediaAppDataStack extends Stack {
     const uploadUrlFn = new NodejsFunction(this, "UploadUrlFn", {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(lambdaDir, "upload-url.ts"),
-      timeout: Duration.seconds(10),
+      timeout: Duration.seconds(15),
       memorySize: 256,
       environment: {
         MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
@@ -295,6 +295,16 @@ export class MediaAppDataStack extends Stack {
     this.mediaBucket.grantPut(uploadUrlFn);
     this.foldersTable.grantReadData(uploadUrlFn);
     this.folderSharesTable.grantReadData(uploadUrlFn);
+    // s3:PutObject (granted via grantPut above) already authorizes
+    // CreateMultipartUpload/UploadPart/CompleteMultipartUpload — those
+    // aren't separate IAM actions. Only AbortMultipartUpload needs its own
+    // grant.
+    uploadUrlFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["s3:AbortMultipartUpload"],
+        resources: [`${this.mediaBucket.bucketArn}/*`],
+      })
+    );
 
     // --- Thumbnail generation (S3-triggered) ---
     const sharpLayer = new lambda.LayerVersion(this, "SharpLayer", {
@@ -368,12 +378,14 @@ export class MediaAppDataStack extends Stack {
     const sharesFn = new NodejsFunction(this, "SharesFn", {
       runtime: lambda.Runtime.NODEJS_20_X,
       entry: path.join(lambdaDir, "shares.ts"),
-      timeout: Duration.seconds(10),
+      timeout: Duration.seconds(15),
       memorySize: 256,
       environment: {
         FOLDERS_TABLE_NAME: this.foldersTable.tableName,
         FOLDER_SHARES_TABLE_NAME: this.folderSharesTable.tableName,
         USER_POOL_ID: props.userPoolId,
+        SES_FROM_ADDRESS: props.sesFromAddress,
+        SITE_URL: props.siteUrl,
       },
       bundling: {
         externalModules: [],
@@ -385,6 +397,12 @@ export class MediaAppDataStack extends Stack {
       new iam.PolicyStatement({
         actions: ["cognito-idp:AdminGetUser", "cognito-idp:ListUsersInGroup"],
         resources: [props.userPoolArn],
+      })
+    );
+    sharesFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ses:SendEmail"],
+        resources: [props.sesIdentityArn],
       })
     );
 
@@ -606,10 +624,35 @@ export class MediaAppDataStack extends Stack {
       },
     });
 
+    const uploadUrlIntegration = new HttpLambdaIntegration("UploadUrlIntegration", uploadUrlFn);
     httpApi.addRoutes({
       path: "/media/upload-url",
       methods: [apigwv2.HttpMethod.POST],
-      integration: new HttpLambdaIntegration("UploadUrlIntegration", uploadUrlFn),
+      integration: uploadUrlIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/media/upload-url/multipart/init",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: uploadUrlIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/media/upload-url/multipart/part-url",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: uploadUrlIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/media/upload-url/multipart/complete",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: uploadUrlIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/media/upload-url/multipart/abort",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: uploadUrlIntegration,
       authorizer,
     });
 
@@ -646,11 +689,24 @@ export class MediaAppDataStack extends Stack {
       integration: sharesIntegration,
       authorizer,
     });
+    httpApi.addRoutes({
+      path: "/admin/notify-shares",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: sharesIntegration,
+      authorizer,
+    });
 
+    const invitesIntegration = new HttpLambdaIntegration("InvitesIntegration", invitesFn);
     httpApi.addRoutes({
       path: "/admin/invites",
       methods: [apigwv2.HttpMethod.POST],
-      integration: new HttpLambdaIntegration("InvitesIntegration", invitesFn),
+      integration: invitesIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/admin/invites/preview",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: invitesIntegration,
       authorizer,
     });
 
@@ -689,7 +745,7 @@ export class MediaAppDataStack extends Stack {
     });
     httpApi.addRoutes({
       path: "/playlists/{playlistId}/items/{position}",
-      methods: [apigwv2.HttpMethod.DELETE],
+      methods: [apigwv2.HttpMethod.DELETE, apigwv2.HttpMethod.PATCH],
       integration: playlistsIntegration,
       authorizer,
     });

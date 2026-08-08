@@ -1,6 +1,6 @@
 # New-media-shared email notification — design
 
-Status: not started. Backlog item — see `apps/media-app/BACKLOG.md`.
+Status: implemented, built exactly as designed below.
 
 ## What this is
 

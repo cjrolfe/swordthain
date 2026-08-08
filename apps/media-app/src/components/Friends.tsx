@@ -8,6 +8,8 @@ export function Friends() {
   const [folderId, setFolderId] = useState("");
   const [permission, setPermission] = useState<Permission>("view");
   const [message, setMessage] = useState("");
+  const [subject, setSubject] = useState("");
+  const [previewHtml, setPreviewHtml] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -22,6 +24,23 @@ export function Friends() {
     load();
   }, [load]);
 
+  // Debounced live preview — reuses the exact same buildInviteEmailHtml()
+  // the real send uses, so this is guaranteed pixel-identical, not a
+  // separately maintained re-implementation of the template.
+  useEffect(() => {
+    if (!email.trim()) {
+      setPreviewHtml("");
+      return;
+    }
+    const timer = setTimeout(() => {
+      api
+        .previewInvite({ email: email.trim(), message: message.trim() || undefined, subject: subject.trim() || undefined })
+        .then((res) => setPreviewHtml(res.html))
+        .catch(() => {}); // preview is a convenience — a failure here shouldn't block the form
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [email, message, subject]);
+
   async function handleInvite(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -33,10 +52,12 @@ export function Friends() {
         folderId: folderId || undefined,
         permission: folderId ? permission : undefined,
         message: message.trim() || undefined,
+        subject: subject.trim() || undefined,
       });
       setSuccess(`Invited ${email}.`);
       setEmail("");
       setMessage("");
+      setSubject("");
       setFolderId("");
       load();
     } catch (err) {
@@ -78,6 +99,15 @@ export function Friends() {
           </>
         )}
 
+        <label htmlFor="invite-subject">Subject (optional)</label>
+        <input
+          id="invite-subject"
+          type="text"
+          placeholder="You're invited to Swordthain"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        />
+
         <label htmlFor="invite-message">Personal note (optional)</label>
         <textarea id="invite-message" value={message} onChange={(e) => setMessage(e.target.value)} rows={3} />
 
@@ -87,6 +117,13 @@ export function Friends() {
       </form>
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
+
+      {previewHtml && (
+        <>
+          <h4>Preview</h4>
+          <iframe title="Invite email preview" srcDoc={previewHtml} className="invite-preview" />
+        </>
+      )}
 
       <h3>Friends</h3>
       <ul className="friend-list">

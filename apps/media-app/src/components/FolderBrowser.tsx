@@ -13,10 +13,101 @@ const SUPPORTED_CONTENT_TYPES = new Set([
   "video/quicktime",
 ]);
 
+// S3's hard limit for a single presigned PUT. Files at or under this stay
+// on the simple single-PUT flow, unchanged; larger files use the
+// resumable multipart flow below.
+const MULTIPART_THRESHOLD = 5 * 1024 * 1024 * 1024;
+
 interface UploadStatus {
   name: string;
   status: "uploading" | "done" | "error";
   message?: string;
+  /** Only set for an in-progress multipart upload — lets the UI offer Cancel. */
+  cancel?: () => void;
+}
+
+interface MultipartUploadState {
+  mediaId: string;
+  s3Key: string;
+  uploadId: string;
+  partSize: number;
+  totalParts: number;
+  completedParts: { partNumber: number; etag: string }[];
+}
+
+function multipartStorageKey(folderId: string, file: File): string {
+  return `swordthain-multipart:${folderId}:${file.name}:${file.size}:${file.lastModified}`;
+}
+
+/**
+ * Resumable multipart upload: tracks completed parts in localStorage keyed
+ * to the file (folder + name + size + lastModified), so re-selecting the
+ * same file after a refresh/crash resumes from the next un-uploaded part
+ * instead of restarting. Same browser/device only — no server-side
+ * tracking. Parts upload sequentially, not in parallel, to keep this
+ * simple and avoid concurrent localStorage writes.
+ */
+async function uploadMultipart(
+  file: File,
+  folderId: string,
+  onProgress: (doneParts: number, totalParts: number) => void,
+  onReadyToCancel: (cancel: () => void) => void
+): Promise<void> {
+  const storageKey = multipartStorageKey(folderId, file);
+  const saved = localStorage.getItem(storageKey);
+  const state: MultipartUploadState = saved
+    ? JSON.parse(saved)
+    : {
+        ...(await api.initMultipartUpload({
+          folderId,
+          fileName: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        })),
+        completedParts: [],
+      };
+  if (!saved) localStorage.setItem(storageKey, JSON.stringify(state));
+
+  let cancelled = false;
+  onReadyToCancel(async () => {
+    cancelled = true;
+    localStorage.removeItem(storageKey);
+    await api.abortMultipartUpload({ folderId, s3Key: state.s3Key, uploadId: state.uploadId });
+  });
+
+  const completedPartNumbers = new Set(state.completedParts.map((p) => p.partNumber));
+  onProgress(state.completedParts.length, state.totalParts);
+
+  for (let partNumber = 1; partNumber <= state.totalParts; partNumber++) {
+    if (cancelled) return;
+    if (completedPartNumbers.has(partNumber)) continue;
+
+    const { url } = await api.getMultipartPartUrl({
+      folderId,
+      s3Key: state.s3Key,
+      uploadId: state.uploadId,
+      partNumber,
+    });
+    const start = (partNumber - 1) * state.partSize;
+    const chunk = file.slice(start, start + state.partSize);
+    const res = await fetch(url, { method: "PUT", body: chunk });
+    if (!res.ok) throw new Error(`Part ${partNumber} of ${state.totalParts} failed (${res.status})`);
+    const etag = res.headers.get("ETag");
+    if (!etag) throw new Error(`Part ${partNumber} response missing ETag`);
+
+    state.completedParts.push({ partNumber, etag });
+    localStorage.setItem(storageKey, JSON.stringify(state));
+    onProgress(state.completedParts.length, state.totalParts);
+  }
+
+  if (cancelled) return;
+  await api.completeMultipartUpload({
+    folderId,
+    s3Key: state.s3Key,
+    uploadId: state.uploadId,
+    parts: state.completedParts,
+  });
+  localStorage.removeItem(storageKey);
 }
 
 function renderFigure(
@@ -63,8 +154,10 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [photosCursor, setPhotosCursor] = useState<string | null>(null);
   const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [newGuestUpload, setNewGuestUpload] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [renameGuestUpload, setRenameGuestUpload] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
@@ -163,8 +256,10 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       await api.createFolder({
         title: newTitle.trim(),
         parentFolderId: currentFolder?.folderId,
+        guestUploadEnabled: newGuestUpload,
       });
       setNewTitle("");
+      setNewGuestUpload(false);
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create folder");
@@ -174,7 +269,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   async function handleRename(folderId: string) {
     if (!renameValue.trim()) return;
     try {
-      await api.renameFolder(folderId, renameValue.trim());
+      await api.updateFolder(folderId, { title: renameValue.trim(), guestUploadEnabled: renameGuestUpload });
       setRenamingId(null);
       load();
     } catch (err) {
@@ -213,21 +308,33 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       files.map(async (file, i) => {
         const setStatus = (status: UploadStatus["status"], message?: string) =>
           setUploads((prev) => prev.map((u, idx) => (idx === i ? { ...u, status, message } : u)));
+        const setCancel = (cancel: () => void) =>
+          setUploads((prev) => prev.map((u, idx) => (idx === i ? { ...u, cancel } : u)));
         try {
           if (!SUPPORTED_CONTENT_TYPES.has(file.type)) {
             throw new Error(`Unsupported file type: ${file.type || "unknown"}`);
           }
-          const { uploadUrl } = await api.getUploadUrl({
-            folderId: currentFolder.folderId,
-            fileName: file.name,
-            contentType: file.type,
-          });
-          const res = await fetch(uploadUrl, {
-            method: "PUT",
-            headers: { "content-type": file.type },
-            body: file,
-          });
-          if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+
+          if (file.size <= MULTIPART_THRESHOLD) {
+            const { uploadUrl } = await api.getUploadUrl({
+              folderId: currentFolder.folderId,
+              fileName: file.name,
+              contentType: file.type,
+            });
+            const res = await fetch(uploadUrl, {
+              method: "PUT",
+              headers: { "content-type": file.type },
+              body: file,
+            });
+            if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+          } else {
+            await uploadMultipart(
+              file,
+              currentFolder.folderId,
+              (done, total) => setStatus("uploading", `Part ${done}/${total}`),
+              setCancel
+            );
+          }
           setStatus("done");
         } catch (err) {
           setStatus("error", err instanceof Error ? err.message : "Upload failed");
@@ -267,6 +374,14 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
           />
+          <label>
+            <input
+              type="checkbox"
+              checked={newGuestUpload}
+              onChange={(e) => setNewGuestUpload(e.target.checked)}
+            />{" "}
+            Guests can upload here
+          </label>
           <button type="submit">Add folder</button>
         </form>
       )}
@@ -277,6 +392,14 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
             {isOwner && renamingId === folder.folderId ? (
               <>
                 <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus />
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={renameGuestUpload}
+                    onChange={(e) => setRenameGuestUpload(e.target.checked)}
+                  />{" "}
+                  Guests can upload here
+                </label>
                 <button onClick={() => handleRename(folder.folderId)}>Save</button>
                 <button className="link" onClick={() => setRenamingId(null)}>
                   Cancel
@@ -286,6 +409,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               <>
                 <button className="link folder-name" onClick={() => setPath([...path, folder])}>
                   📁 {folder.title}
+                  {folder.guestUploadEnabled && <span className="badge">guest upload</span>}
                 </button>
                 {isOwner && (
                   <>
@@ -294,6 +418,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                       onClick={() => {
                         setRenamingId(folder.folderId);
                         setRenameValue(folder.title);
+                        setRenameGuestUpload(folder.guestUploadEnabled);
                       }}
                     >
                       Rename
@@ -336,7 +461,14 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               {uploads.map((u, i) => (
                 <li key={i}>
                   {u.name} — {u.status}
-                  {u.status === "error" && u.message && <span className="error"> ({u.message})</span>}
+                  {u.message && (
+                    <span className={u.status === "error" ? "error" : "hint"}> ({u.message})</span>
+                  )}
+                  {u.cancel && u.status === "uploading" && (
+                    <button className="link danger" onClick={u.cancel}>
+                      Cancel
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

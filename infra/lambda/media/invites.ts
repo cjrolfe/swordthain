@@ -34,14 +34,21 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
     return jsonResponse(403, { error: "Owner access required" });
   }
 
-  let payload: { email?: string; folderId?: string; permission?: string; message?: string };
+  if (event.routeKey === "POST /admin/invites/preview") {
+    return previewInvite(event);
+  }
+  return sendInvite(event);
+};
+
+async function sendInvite(event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0]) {
+  let payload: { email?: string; folderId?: string; permission?: string; message?: string; subject?: string };
   try {
     payload = event.body ? JSON.parse(event.body) : {};
   } catch {
     return jsonResponse(400, { error: "Invalid JSON body" });
   }
 
-  const { email, folderId, permission, message } = payload;
+  const { email, folderId, permission, message, subject } = payload;
   if (!email) {
     return jsonResponse(400, { error: "email is required" });
   }
@@ -94,10 +101,29 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
     );
   }
 
-  await sendInviteEmail(email, message);
+  await sendInviteEmail(email, message, subject);
 
   return jsonResponse(201, { userId: sub, email, folderId: folderId ?? null, permission: permission ?? null });
-};
+}
+
+/**
+ * Never sends anything — renders the exact same buildInviteEmailHtml() used
+ * by the real send, so the admin UI's live preview is guaranteed
+ * pixel-identical to what actually goes out, not a separately maintained
+ * re-implementation of the template.
+ */
+async function previewInvite(event: Parameters<APIGatewayProxyHandlerV2WithJWTAuthorizer>[0]) {
+  let payload: { email?: string; message?: string; subject?: string };
+  try {
+    payload = event.body ? JSON.parse(event.body) : {};
+  } catch {
+    return jsonResponse(400, { error: "Invalid JSON body" });
+  }
+  const { email, message } = payload;
+  if (!email) return jsonResponse(400, { error: "email is required" });
+
+  return jsonResponse(200, { html: buildInviteEmailHtml(email, message) });
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -107,7 +133,11 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-async function sendInviteEmail(email: string, personalMessage: string | undefined): Promise<void> {
+async function sendInviteEmail(
+  email: string,
+  personalMessage: string | undefined,
+  subject: string | undefined
+): Promise<void> {
   const personalParagraph = personalMessage ? `\n${personalMessage}\n` : "";
   const text =
     `You've been invited to Swordthain, a private photo and video site.\n` +
@@ -125,7 +155,7 @@ async function sendInviteEmail(email: string, personalMessage: string | undefine
       Destination: { ToAddresses: [email] },
       Content: {
         Simple: {
-          Subject: { Data: "You're invited to Swordthain" },
+          Subject: { Data: subject?.trim() || "You're invited to Swordthain" },
           Body: {
             Text: { Data: text },
             Html: { Data: buildInviteEmailHtml(email, personalMessage) },

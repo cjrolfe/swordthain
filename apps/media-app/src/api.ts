@@ -71,9 +71,13 @@ export const api = {
   listFolders: (parentId?: string) =>
     request<{ folders: Folder[] }>("GET", `/folders${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ""}`),
   getFolder: (folderId: string) => request<Folder>("GET", `/folders/${folderId}`),
-  createFolder: (body: { title: string; parentFolderId?: string; date?: string }) =>
+  createFolder: (body: { title: string; parentFolderId?: string; date?: string; guestUploadEnabled?: boolean }) =>
     request<Folder>("POST", "/folders", body),
   renameFolder: (folderId: string, title: string) => request<Folder>("PATCH", `/folders/${folderId}`, { title }),
+  updateFolder: (
+    folderId: string,
+    body: Partial<Pick<Folder, "title" | "date" | "guestUploadEnabled" | "coverThumbnail">>
+  ) => request<Folder>("PATCH", `/folders/${folderId}`, body),
   deleteFolder: (folderId: string) => request<{ deleted: boolean }>("DELETE", `/folders/${folderId}`),
   listFolderMedia: (folderId: string, opts: { type: "photo" | "video"; cursor?: string; limit?: number }) => {
     const params = new URLSearchParams({ type: opts.type });
@@ -90,13 +94,37 @@ export const api = {
       "/media/upload-url",
       body
     ),
+  initMultipartUpload: (body: { folderId: string; fileName: string; contentType: string; fileSize: number }) =>
+    request<{ mediaId: string; s3Key: string; uploadId: string; partSize: number; totalParts: number }>(
+      "POST",
+      "/media/upload-url/multipart/init",
+      body
+    ),
+  getMultipartPartUrl: (body: { folderId: string; s3Key: string; uploadId: string; partNumber: number }) =>
+    request<{ url: string }>("POST", "/media/upload-url/multipart/part-url", body),
+  completeMultipartUpload: (body: {
+    folderId: string;
+    s3Key: string;
+    uploadId: string;
+    parts: { partNumber: number; etag: string }[];
+  }) => request<{ completed: boolean }>("POST", "/media/upload-url/multipart/complete", body),
+  abortMultipartUpload: (body: { folderId: string; s3Key: string; uploadId: string }) =>
+    request<{ aborted: boolean }>("POST", "/media/upload-url/multipart/abort", body),
 
   permissionsMatrix: () => request<PermissionsMatrix>("GET", "/admin/permissions-matrix"),
   updateShare: (folderId: string, body: { action: "grant" | "revoke"; email: string; permission?: Permission }) =>
     request("POST", `/folders/${folderId}/shares`, body),
+  notifyShares: (body: { email: string; folderIds: string[]; message?: string }) =>
+    request<{ email: string; notifiedFolderIds: string[]; invalidFolderIds: string[] }>(
+      "POST",
+      "/admin/notify-shares",
+      body
+    ),
 
-  invite: (body: { email: string; folderId?: string; permission?: Permission; message?: string }) =>
+  invite: (body: { email: string; folderId?: string; permission?: Permission; message?: string; subject?: string }) =>
     request("POST", "/admin/invites", body),
+  previewInvite: (body: { email: string; message?: string; subject?: string }) =>
+    request<{ html: string }>("POST", "/admin/invites/preview", body),
 
   viewUrl: (mediaId: string) => request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/view-url`),
   downloadUrl: (mediaId: string) =>
@@ -122,6 +150,8 @@ export const api = {
     request<{ position: number }>("POST", `/playlists/${playlistId}/items`, { mediaId }),
   removePlaylistItem: (playlistId: string, position: number) =>
     request<{ deleted: boolean }>("DELETE", `/playlists/${playlistId}/items/${position}`),
+  movePlaylistItem: (playlistId: string, position: number, direction: "up" | "down") =>
+    request<{ swapped: [number, number] }>("PATCH", `/playlists/${playlistId}/items/${position}`, { direction }),
 };
 
 export interface ActivityEntry {
