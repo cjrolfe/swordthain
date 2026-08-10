@@ -41,6 +41,7 @@ const SUPPORTED_CONTENT_TYPES = new Set([
   "image/heif",
   "video/mp4",
   "video/quicktime",
+  "video/x-m4v",
 ]);
 
 /**

@@ -11,7 +11,18 @@ const SUPPORTED_CONTENT_TYPES = new Set([
   "image/heif",
   "video/mp4",
   "video/quicktime",
+  "video/x-m4v",
 ]);
+
+/**
+ * Browser MIME detection for .m4v is inconsistent across OS/browser (could
+ * report video/x-m4v, video/mp4, or empty string) — detect by extension and
+ * normalize to a single canonical type instead of trusting file.type.
+ */
+function effectiveContentType(file: File): string {
+  if (file.name.toLowerCase().endsWith(".m4v")) return "video/x-m4v";
+  return file.type;
+}
 
 // S3's hard limit for a single presigned PUT. Files at or under this stay
 // on the simple single-PUT flow, unchanged; larger files use the
@@ -39,6 +50,21 @@ function multipartStorageKey(folderId: string, file: File): string {
   return `swordthain-multipart:${folderId}:${file.name}:${file.size}:${file.lastModified}`;
 }
 
+/** XMLHttpRequest is the only way to get real byte-level upload progress — fetch() has no upload-progress event. */
+function xhrPut(url: string, file: File, contentType: string, onProgress: (percent: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    xhr.setRequestHeader("content-type", contentType);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed (${xhr.status})`)));
+    xhr.onerror = () => reject(new Error("Upload failed (network error)"));
+    xhr.send(file);
+  });
+}
+
 /**
  * Resumable multipart upload: tracks completed parts in localStorage keyed
  * to the file (folder + name + size + lastModified), so re-selecting the
@@ -61,7 +87,7 @@ async function uploadMultipart(
         ...(await api.initMultipartUpload({
           folderId,
           fileName: file.name,
-          contentType: file.type,
+          contentType: effectiveContentType(file),
           fileSize: file.size,
         })),
         completedParts: [],
@@ -204,6 +230,10 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   }, [load]);
 
   useEffect(() => {
+    setUploads([]);
+  }, [currentFolder?.folderId]);
+
+  useEffect(() => {
     api
       .listPlaylists()
       .then(({ playlists }) => setPlaylists(playlists))
@@ -311,27 +341,23 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
         const setCancel = (cancel: () => void) =>
           setUploads((prev) => prev.map((u, idx) => (idx === i ? { ...u, cancel } : u)));
         try {
-          if (!SUPPORTED_CONTENT_TYPES.has(file.type)) {
-            throw new Error(`Unsupported file type: ${file.type || "unknown"}`);
+          const contentType = effectiveContentType(file);
+          if (!SUPPORTED_CONTENT_TYPES.has(contentType)) {
+            throw new Error(`Unsupported file type: ${contentType || "unknown"}`);
           }
 
           if (file.size <= MULTIPART_THRESHOLD) {
             const { uploadUrl } = await api.getUploadUrl({
               folderId: currentFolder.folderId,
               fileName: file.name,
-              contentType: file.type,
+              contentType,
             });
-            const res = await fetch(uploadUrl, {
-              method: "PUT",
-              headers: { "content-type": file.type },
-              body: file,
-            });
-            if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+            await xhrPut(uploadUrl, file, contentType, (percent) => setStatus("uploading", `${percent}%`));
           } else {
             await uploadMultipart(
               file,
               currentFolder.folderId,
-              (done, total) => setStatus("uploading", `Part ${done}/${total}`),
+              (done, total) => setStatus("uploading", `Part ${done}/${total} (${Math.round((done / total) * 100)}%)`),
               setCancel
             );
           }
@@ -448,7 +474,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               <input
                 type="file"
                 multiple
-                accept="image/jpeg,image/png,image/heic,image/heif,video/mp4,video/quicktime"
+                accept="image/jpeg,image/png,image/heic,image/heif,video/mp4,video/quicktime,.m4v,video/x-m4v"
                 onChange={(e) => {
                   handleUpload(e.target.files);
                   e.target.value = "";

@@ -25,7 +25,7 @@ const THUMBNAIL_SIZE = 400;
 // so HEIC/HEIF stills are routed through ffmpeg instead of Sharp.
 const SHARP_IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
 const FFMPEG_IMAGE_TYPES = new Set(["image/heic", "image/heif"]);
-const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime"]);
+const VIDEO_TYPES = new Set(["video/mp4", "video/quicktime", "video/x-m4v"]);
 
 const KEY_PATTERN = /^originals\/([^/]+)\/([^/]+)\/(.+)$/;
 
