@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "apps/media-app"],
       "port": 5173
+    },
+    {
+      "name": "infra-docs",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8743", "--directory", "infra/docs"],
+      "port": 8743
     }
   ]
 }

@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Swordthain — Infrastructure Architecture</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #f1f3f5;
+    --surface: #ffffff;
+    --surface-2: #e7ebef;
+    --ink: #16202b;
+    --muted: #5b6b7a;
+    --line: rgba(22, 32, 43, 0.12);
+    --accent-edge: #6c5ce0;
+    --accent-auth: #d14d68;
+    --accent-compute: #c6821a;
+    --accent-data: #1e9a92;
+    --accent-ci: #4c8f58;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141b;
+    --surface: #161d27;
+    --surface-2: #1d2530;
+    --ink: #e7ecf2;
+    --muted: #93a0af;
+    --line: rgba(231, 236, 242, 0.12);
+    --accent-edge: #9c90e0;
+    --accent-auth: #e8748c;
+    --accent-compute: #e8a94a;
+    --accent-data: #4fbfb8;
+    --accent-ci: #7fb88a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141b;
+      --surface: #161d27;
+      --surface-2: #1d2530;
+      --ink: #e7ecf2;
+      --muted: #93a0af;
+      --line: rgba(231, 236, 242, 0.12);
+      --accent-edge: #9c90e0;
+      --accent-auth: #e8748c;
+      --accent-compute: #e8a94a;
+      --accent-data: #4fbfb8;
+      --accent-ci: #7fb88a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  header.manifest {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2.5rem;
+    background: var(--surface);
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.4rem;
+    text-wrap: balance;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 1rem;
+    margin: 0 0 1.2rem;
+    max-width: 62ch;
+  }
+  .manifest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.9rem 1.5rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+  }
+  .manifest-item .label {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .manifest-item .value {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    margin: 0 0 2.75rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .legend-swatch {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 2px;
+    flex: none;
+  }
+
+  section.diagram-block {
+    margin-bottom: 3.5rem;
+  }
+  .section-num {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.005em;
+    margin: 0.2rem 0 0.35rem;
+    text-wrap: balance;
+  }
+  .diagram-caption {
+    color: var(--muted);
+    font-size: 0.94rem;
+    max-width: 68ch;
+    margin: 0 0 1.1rem;
+  }
+
+  .diagram-frame {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 1.25rem;
+    overflow-x: auto;
+  }
+  .diagram-frame .mermaid {
+    display: flex;
+    justify-content: center;
+    min-width: 560px;
+  }
+
+  .note {
+    margin-top: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-left: 3px solid var(--accent-edge);
+    background: var(--surface-2);
+    border-radius: 0 4px 4px 0;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  .note strong { font-weight: 700; }
+
+  table.resource-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    margin-top: 0.5rem;
+  }
+  table.resource-table th,
+  table.resource-table td {
+    text-align: left;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--line);
+  }
+  table.resource-table th {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  table.resource-table td.mono { font-size: 0.83rem; }
+  .table-wrap { overflow-x: auto; }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+  footer a { color: inherit; }
+  footer .mono { font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="manifest">
+    <p class="eyebrow">Infrastructure reference</p>
+    <h1>Swordthain — Architecture</h1>
+    <p class="subtitle">Generated from the actual CDK stack definitions in <span class="mono">infra/lib/*.ts</span> — not a mockup. Regenerate this page whenever a stack changes.</p>
+    <div class="manifest-grid">
+      <div class="manifest-item"><span class="label">Stacks</span><span class="value">5 (CDK / TypeScript)</span></div>
+      <div class="manifest-item"><span class="label">Regions</span><span class="value">us-east-1 + eu-west-1</span></div>
+      <div class="manifest-item"><span class="label">Compute</span><span class="value">11 Lambda functions</span></div>
+      <div class="manifest-item"><span class="label">Data</span><span class="value">7 tables · 4 buckets</span></div>
+      <div class="manifest-item"><span class="label">Apps</span><span class="value">media-app · playground · CLI</span></div>
+      <div class="manifest-item"><span class="label">Updated</span><span class="value">2026-08-10</span></div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--accent-edge)"></span>Edge / network</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--accent-auth)"></span>Auth &amp; identity</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--accent-compute)"></span>Compute (Lambda)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--accent-data)"></span>Data (S3 / DynamoDB)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--accent-ci)"></span>CI/CD</div>
+  </div>
+
+  <section class="diagram-block">
+    <p class="section-num">01</p>
+    <h2>System overview</h2>
+    <p class="diagram-caption">Three clients (the media app, the owner-only playground, and the CLI upload tool) sit in front of two independently-deployed applications, sharing one Cognito user pool for identity. The region split is deliberate — see the note below.</p>
+    <div class="diagram-frame"><pre class="mermaid">
+flowchart TB
+  classDef edge fill:#6c5ce022,stroke:#6c5ce0,color:#6c5ce0,stroke-width:1.5px
+  classDef auth fill:#d14d6822,stroke:#d14d68,color:#d14d68,stroke-width:1.5px
+  classDef compute fill:#c6821a22,stroke:#c6821a,color:#c6821a,stroke-width:1.5px
+  classDef data fill:#1e9a9222,stroke:#1e9a92,color:#1e9a92,stroke-width:1.5px
+  classDef client fill:transparent,stroke:#5b6b7a,color:#5b6b7a,stroke-dasharray:3 3
+
+  familyBrowser["Family member<br/>browser"]:::client
+  ownerBrowser["Owner browser<br/>(stealth-gated)"]:::client
+  cliTool["media-app-cli<br/>(Terminal)"]:::client
+  ghIssues["GitHub Issue<br/>create/archive company"]:::client
+
+  subgraph EDGE["Edge — us-east-1"]
+    siteCf["CloudFront<br/>swordthain.com"]:::edge
+    labsCf["CloudFront<br/>labs.swordthain.com"]:::edge
+  end
+
+  subgraph AUTH["Auth — SwordthainAuthStack, us-east-1"]
+    cognito["Cognito User Pool<br/>Owner / Member groups"]:::auth
+    ses["SES identity<br/>noreply@swordthain.com"]:::auth
+  end
+
+  subgraph APIS["APIs"]
+    mediaApi["Media HTTP API<br/>eu-west-1"]:::compute
+    pgApi["Playground REST API<br/>us-east-1"]:::compute
+  end
+
+  subgraph MEDIACOMPUTE["Media app compute — eu-west-1<br/>SwordthainMediaAppDataStack"]
+    mediaLambdas["9 Lambda functions<br/>upload · thumbnail · folders · shares<br/>invites · access · activity · playlists · stats"]:::compute
+  end
+
+  subgraph MEDIADATA["Media app data — eu-west-1"]
+    mediaBucket[("S3: media bucket")]:::data
+    mediaTables[("DynamoDB: 6 tables")]:::data
+  end
+
+  subgraph PGCOMPUTE["Playground compute — us-east-1"]
+    pgProxy["ApiTestingProxyFn"]:::compute
+    pgAutomation["Automation Lambda (Python)<br/>create/archive company"]:::compute
+  end
+
+  subgraph PGDATA["Playground data"]
+    pgBucket[("S3: demo-sites bucket")]:::data
+  end
+
+  familyBrowser --> siteCf --> mediaApi
+  ownerBrowser --> labsCf --> pgApi
+  cliTool --> mediaApi
+  ghIssues --> pgAutomation
+
+  familyBrowser -. sign in .-> cognito
+  ownerBrowser -. sign in .-> cognito
+  cliTool -. sign in .-> cognito
+  mediaApi -. authorize .-> cognito
+  pgApi -. authorize .-> cognito
+
+  mediaApi --> mediaLambdas --> mediaBucket
+  mediaLambdas --> mediaTables
+  mediaLambdas -. email .-> ses
+
+  pgApi --> pgProxy
+  pgAutomation --> pgBucket
+    </pre></div>
+    <div class="note"><strong>Why two regions:</strong> presigned S3 URLs for the media library go straight from a browser to the bucket, bypassing CloudFront entirely — so the media app's data plane (bucket + tables + API) lives in <span class="mono">eu-west-1</span> for UK latency and EU data residency. CloudFront distributions, their ACM certs, and CloudFront-scoped WAFv2 web ACLs can only be managed from <span class="mono">us-east-1</span>, which is why the edge layer, Cognito, and the playground stack are pinned there instead.</div>
+  </section>
+
+  <section class="diagram-block">
+    <p class="section-num">02</p>
+    <h2>Media app — request &amp; data flow</h2>
+    <p class="diagram-caption">Every route on the Cognito-authorized HTTP API, and exactly which Lambda and storage each one touches. <span class="mono">ThumbnailFn</span> is the only function not reachable from the API directly — it's triggered by S3 itself.</p>
+    <div class="diagram-frame"><pre class="mermaid">
+flowchart LR
+  classDef compute fill:#c6821a22,stroke:#c6821a,color:#c6821a,stroke-width:1.5px
+  classDef data fill:#1e9a9222,stroke:#1e9a92,color:#1e9a92,stroke-width:1.5px
+  classDef auth fill:#d14d6822,stroke:#d14d68,color:#d14d68,stroke-width:1.5px
+
+  api["Media HTTP API"]:::compute
+
+  upload["UploadUrlFn<br/>presign PUT / multipart"]:::compute
+  thumb["ThumbnailFn<br/>Sharp + FFmpeg layers"]:::compute
+  folders["FoldersFn"]:::compute
+  shares["SharesFn"]:::compute
+  invites["InvitesFn"]:::compute
+  access["MediaAccessFn<br/>view/download URLs"]:::compute
+  activity["ActivityFn"]:::compute
+  playlists["PlaylistsFn"]:::compute
+  stats["StatsFn"]:::compute
+
+  mediaBucket[("media bucket<br/>private, presigned only")]:::data
+  mediaItems[("MediaItems")]:::data
+  foldersT[("Folders")]:::data
+  sharesT[("FolderShares")]:::data
+  activityT[("ActivityLog")]:::data
+  playlistsT[("Playlists")]:::data
+  playlistItemsT[("PlaylistItems")]:::data
+
+  identity["Cognito Admin API<br/>+ SES SendEmail"]:::auth
+
+  api -->|"POST /media/upload-url*"| upload
+  api -->|"/folders*"| folders
+  api -->|"/folders/{id}/shares<br/>/admin/permissions-matrix<br/>/admin/notify-shares"| shares
+  api -->|"/admin/invites*"| invites
+  api -->|"/media/{id}/view-url<br/>/media/{id}/download-url"| access
+  api -->|"/admin/activity"| activity
+  api -->|"/playlists*"| playlists
+  api -->|"/admin/stats"| stats
+
+  upload -->|PutObject| mediaBucket
+  mediaBucket -. "ObjectCreated<br/>originals/*" .-> thumb
+  thumb -->|write item| mediaItems
+  thumb -->|read/write| mediaBucket
+
+  folders --> foldersT
+  folders --> sharesT
+  folders --> mediaItems
+
+  shares --> sharesT
+  shares -.-> identity
+
+  invites --> sharesT
+  invites -.-> identity
+
+  access --> mediaItems
+  access -->|write| activityT
+  access --> mediaBucket
+
+  activity --> activityT
+
+  playlists --> playlistsT
+  playlists --> playlistItemsT
+  playlists --> mediaItems
+
+  stats -. "CloudWatch metrics<br/>SES quota" .-> identity
+  stats -.->|DescribeTable x6| mediaItems
+    </pre></div>
+    <div class="note"><strong>Sort-key immutability, in practice:</strong> <span class="mono">PlaylistItemsTable</span>'s sort key is a numeric <span class="mono">position</span>, so reordering swaps content between two existing position keys rather than updating the key itself — DynamoDB can't change a sort key in place.</div>
+  </section>
+
+  <section class="diagram-block">
+    <p class="section-num">03</p>
+    <h2>Auth — passwordless sign-in</h2>
+    <p class="diagram-caption">Every sign-in (browser or CLI) is the same Cognito <span class="mono">CUSTOM_AUTH</span> challenge chain — a 6-digit code emailed via SES, hashed and checked server-side. No passwords exist anywhere in this system.</p>
+    <div class="diagram-frame"><pre class="mermaid">
+sequenceDiagram
+  participant U as Browser / CLI
+  participant C as Cognito
+  participant Cr as CreateAuthChallengeFn
+  participant O as OTP table
+  participant S as SES
+  participant V as VerifyAuthChallengeResponseFn
+
+  U->>C: InitiateAuth (CUSTOM_AUTH, email)
+  C->>Cr: generate challenge
+  Cr->>O: store hashed code + expiry
+  Cr->>S: SendEmail (6-digit code)
+  S-->>U: code delivered
+  U->>C: RespondToAuthChallenge (code)
+  C->>V: verify answer
+  V->>O: check hash + expiry
+  alt correct
+    V->>C: pass
+    C-->>U: access + id + refresh tokens
+  else wrong or expired
+    V->>C: fail
+    C-->>U: new challenge, retry
+  end
+    </pre></div>
+    <div class="note"><strong>Token lifetimes:</strong> access/ID tokens last 1 hour; the refresh token lasts 365 days and is never rotated — so a signed-in session effectively persists for a year without re-entering a code, refreshing silently in the background.</div>
+  </section>
+
+  <section class="diagram-block">
+    <p class="section-num">04</p>
+    <h2>CI/CD — deploy topology</h2>
+    <p class="diagram-caption">Three independently-scoped GitHub Actions pipelines, gated by path filters, each assuming a purpose-built IAM role via OIDC — no long-lived AWS keys stored anywhere. A playground-only change cannot touch infra permissions, and vice versa.</p>
+    <div class="diagram-frame"><pre class="mermaid">
+flowchart LR
+  classDef ci fill:#4c8f5822,stroke:#4c8f58,color:#4c8f58,stroke-width:1.5px
+  classDef compute fill:#c6821a22,stroke:#c6821a,color:#c6821a,stroke-width:1.5px
+
+  gh["push to main"]:::ci
+  oidc["GitHub OIDC<br/>Provider"]:::ci
+
+  infraRole["InfraCiRole<br/>assumes CDK bootstrap roles"]:::ci
+  mediaRole["MediaAppCiRole<br/>S3 + CloudFront invalidate"]:::ci
+  pgRole["PlaygroundCiRole<br/>S3 + Lambda + CloudFront invalidate"]:::ci
+
+  cdkStacks["5 CDK stacks<br/>us-east-1 + eu-west-1"]:::compute
+  mediaSite["media-app site bucket<br/>+ CloudFront"]:::compute
+  pgSite["playground site bucket<br/>+ automation Lambda<br/>+ CloudFront"]:::compute
+
+  gh -->|"infra/**"| infraRole --> cdkStacks
+  gh -->|"apps/media-app/**"| mediaRole --> mediaSite
+  gh -->|"apps/playground/**"| pgRole --> pgSite
+  oidc -. trust .-> infraRole
+  oidc -. trust .-> mediaRole
+  oidc -. trust .-> pgRole
+    </pre></div>
+    <div class="note"><strong>Playground's sync is scoped per-subdirectory</strong> (not a single bucket-wide sync), so the deploy can never delete company/project pages the automation Lambda writes straight to S3 at runtime — those pages exist only in the bucket, never in this git checkout.</div>
+  </section>
+
+  <section class="diagram-block">
+    <p class="section-num">05</p>
+    <h2>Resource inventory</h2>
+    <p class="diagram-caption">Every stack, for reference.</p>
+    <div class="table-wrap">
+    <table class="resource-table">
+      <thead><tr><th>Stack</th><th>Region</th><th>Owns</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">SwordthainAuthStack</td><td class="mono">us-east-1</td><td>Cognito user pool, 3 custom-auth Lambda triggers, OTP DynamoDB table, SES identity + DKIM, SPF/DMARC/CAA DNS records</td></tr>
+        <tr><td class="mono">SwordthainMediaAppDataStack</td><td class="mono">eu-west-1</td><td>Media + site S3 buckets, 6 DynamoDB tables, 9 Lambda functions, Cognito-authorized HTTP API, Sharp/FFmpeg layers</td></tr>
+        <tr><td class="mono">SwordthainMediaAppHostingStack</td><td class="mono">us-east-1</td><td>CloudFront distribution, WAF web ACL, Response Headers Policy (enforced CSP)</td></tr>
+        <tr><td class="mono">SwordthainPlaygroundStack</td><td class="mono">us-east-1</td><td>CloudFront distribution, WAF web ACL, stealth-gate Function, Response Headers Policy (enforced CSP), API Testing proxy Lambda + REST API retrofit</td></tr>
+        <tr><td class="mono">SwordthainCiStack</td><td class="mono">us-east-1</td><td>GitHub OIDC provider, 3 per-app IAM deploy roles</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>Source of truth: <span class="mono">infra/lib/*.ts</span> (5 CDK stacks). Regenerate this page after any stack change rather than hand-editing it out of sync. The demo-sites automation pipeline (create/archive company, <span class="mono">sites.json</span>) has its own diagram at <span class="mono">apps/playground/docs/codebase-diagram.html</span> — not duplicated here.</p>
+  </footer>
+
+</div>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default",
+    themeVariables: { fontFamily: "ui-monospace, SF Mono, Cascadia Code, Consolas, monospace" }
+  });
+</script>
+</body>
+</html>
