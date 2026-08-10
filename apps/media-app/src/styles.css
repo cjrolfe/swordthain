@@ -280,6 +280,12 @@ button.danger {
   margin: 0.25rem 0 0.75rem;
 }
 
+.playlist-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
 .code-block {
   background: light-dark(#f0f0f0, #2a2a2a);
   color: light-dark(#222, #eee);

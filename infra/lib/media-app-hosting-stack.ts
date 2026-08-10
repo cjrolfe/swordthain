@@ -120,6 +120,58 @@ export class MediaAppHostingStack extends Stack {
         ? acm.Certificate.fromCertificateArn(this, "SiteCertificate", props.siteCertificateArn)
         : undefined;
 
+    // CSP is scoped to this app's *real* network calls (not a generic
+    // template): the API Gateway and Cognito IDP for fetch()/sign-in, and
+    // the media S3 bucket for thumbnails/photos/video playback — omitting
+    // any of these would silently break the app (blank media grid, or
+    // nobody able to sign in at all).
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self'",
+      "img-src 'self' https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
+      "media-src 'self' https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
+      "connect-src 'self' https://ox8boap6v6.execute-api.eu-west-1.amazonaws.com https://cognito-idp.us-east-1.amazonaws.com",
+      "frame-ancestors 'none'",
+    ].join("; ");
+
+    // `server: AmazonS3` and `x-amz-server-side-encryption` are the S3
+    // origin's untouched default headers, disclosing the hosting mechanism
+    // to anyone probing the site — overridden here. Permissions-Policy has
+    // no typed field on ResponseSecurityHeadersBehavior, so it's a plain
+    // custom header alongside those overrides.
+    const siteResponseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, "SiteResponseHeadersPolicy", {
+      responseHeadersPolicyName: "swordthain-site-security-headers",
+      comment: "Security headers + origin-header suppression for swordthain.com",
+      securityHeadersBehavior: {
+        contentSecurityPolicy: { contentSecurityPolicy: csp, override: true },
+        strictTransportSecurity: {
+          accessControlMaxAge: Duration.days(365),
+          includeSubdomains: true,
+          preload: true,
+          override: true,
+        },
+        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+        contentTypeOptions: { override: true },
+        referrerPolicy: {
+          referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+          override: true,
+        },
+      },
+      customHeadersBehavior: {
+        customHeaders: [
+          { header: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), fullscreen=()", override: true },
+          { header: "Server", value: "cloudfront", override: true },
+        ],
+      },
+      // CloudFront may not permit overriding a reserved header like `Server`
+      // via customHeadersBehavior even with override:true — verify after
+      // deploy; if it doesn't take, a viewer-response CloudFront Function
+      // (matching the pattern already used for labs-stealth-gate.js) is the
+      // fallback rather than fighting the response headers policy.
+      removeHeaders: ["x-amz-server-side-encryption"],
+    });
+
     this.siteDistribution = new cloudfront.Distribution(this, "SiteDistribution", {
       comment: "apps/media-app static site (swordthain.com root domain)",
       defaultRootObject: "index.html",
@@ -127,6 +179,7 @@ export class MediaAppHostingStack extends Stack {
         origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        responseHeadersPolicy: siteResponseHeadersPolicy,
       },
       webAclId: siteWebAcl.attrArn,
       domainNames: siteCertificate ? props.siteDomainNames : undefined,

@@ -51,6 +51,35 @@ export class AuthStack extends Stack {
       mailFromDomain: `mail.${props.domainName}`,
     });
 
+    // The apex domain had no SPF/DMARC/CAA records at all — since the domain
+    // actively sends real email via SES (above), SPF must authorize SES
+    // rather than deny everything, or invite/share-notification emails
+    // would start failing.
+    new route53.TxtRecord(this, "SpfRecord", {
+      zone: hostedZone,
+      values: ["v=spf1 include:amazonses.com -all"],
+    });
+
+    // Monitoring-only to start — escalate to p=reject after reviewing a few
+    // weeks of aggregate reports, once confident no legitimate mail is
+    // being flagged.
+    new route53.TxtRecord(this, "DmarcRecord", {
+      zone: hostedZone,
+      recordName: `_dmarc.${props.domainName}`,
+      values: [`v=DMARC1; p=none; rua=mailto:dmarc-reports@${props.domainName}`],
+    });
+
+    // Certificates are issued via ACM for CloudFront — restrict issuance to
+    // that CA so a compromised/buggy third-party CA can't mint a trusted
+    // cert for this domain.
+    new route53.CaaRecord(this, "CaaRecord", {
+      zone: hostedZone,
+      values: [
+        { flag: 0, tag: route53.CaaTag.ISSUE, value: "amazon.com" },
+        { flag: 0, tag: route53.CaaTag.ISSUEWILD, value: "amazon.com" },
+      ],
+    });
+
     this.sesFromAddress = `Swordthain <noreply@${props.domainName}>`;
 
     const lambdaDir = path.join(__dirname, "..", "lambda", "auth");

@@ -139,6 +139,42 @@ export class PlaygroundStack extends Stack {
       ],
     });
 
+    // The other 5 headers are enforced immediately (safe — nothing here
+    // relies on framing, MIME-sniffing, unrestricted referrers, or
+    // permissions-policy-gated browser features). CSP is Report-Only:
+    // apps/playground has real inline <script> blocks across many pages
+    // (index.html, api-testing/*, company-template/*, etc.), so a strict
+    // enforced script-src would break the site outright. Report-Only lets
+    // violations surface (browser console / a future report endpoint)
+    // without blocking anything, until those inline scripts are migrated to
+    // external files and this can move to enforced mode.
+    const labsCsp = ["default-src 'self'", "script-src 'self' 'unsafe-inline'", "frame-ancestors 'none'"].join("; ");
+
+    const labsResponseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, "LabsResponseHeadersPolicy", {
+      responseHeadersPolicyName: "swordthain-labs-security-headers",
+      comment: "Security headers for labs.swordthain.com (CSP in Report-Only — see comment above)",
+      securityHeadersBehavior: {
+        strictTransportSecurity: {
+          accessControlMaxAge: Duration.days(365),
+          includeSubdomains: true,
+          preload: true,
+          override: true,
+        },
+        frameOptions: { frameOption: cloudfront.HeadersFrameOption.DENY, override: true },
+        contentTypeOptions: { override: true },
+        referrerPolicy: {
+          referrerPolicy: cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
+          override: true,
+        },
+      },
+      customHeadersBehavior: {
+        customHeaders: [
+          { header: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), fullscreen=()", override: true },
+          { header: "Content-Security-Policy-Report-Only", value: labsCsp, override: true },
+        ],
+      },
+    });
+
     this.distribution = new cloudfront.Distribution(this, "LabsDistribution", {
       comment: "apps/playground (labs.swordthain.com) — stealth-gated, Owner-only",
       defaultRootObject: "index.html",
@@ -152,6 +188,7 @@ export class PlaygroundStack extends Stack {
         functionAssociations: [
           { function: stealthGateFn, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
         ],
+        responseHeadersPolicy: labsResponseHeadersPolicy,
       },
     });
 

@@ -163,7 +163,7 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
                 {items.map((item, i) => (
                   <li key={item.position}>
                     {item.thumbnailUrl && (
-                      <img src={item.thumbnailUrl} alt="" style={{ width: 40, height: 40, objectFit: "cover" }} />
+                      <img src={item.thumbnailUrl} alt="" className="playlist-thumb" />
                     )}{" "}
                     {item.available ? item.fileName : <em>Removed from the library</em>}
                     {item.available && !item.accessible && (
