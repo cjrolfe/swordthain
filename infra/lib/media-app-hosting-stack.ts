@@ -128,7 +128,12 @@ export class MediaAppHostingStack extends Stack {
     const csp = [
       "default-src 'self'",
       "script-src 'self'",
-      "style-src 'self'",
+      // 'unsafe-inline' here (script-src stays strict) is for Mermaid's
+      // client-rendered SVGs on the Architecture tab: mermaid.render()
+      // embeds a <style> block per diagram for theming, with no way to
+      // hash or nonce it from a static CDK config — same tradeoff already
+      // made for labs.swordthain.com's hand-written inline styles.
+      "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
       "media-src 'self' https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
       "connect-src 'self' https://ox8boap6v6.execute-api.eu-west-1.amazonaws.com https://cognito-idp.us-east-1.amazonaws.com",
