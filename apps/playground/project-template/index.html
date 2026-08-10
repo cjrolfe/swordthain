@@ -37,7 +37,7 @@
           <div class="hero-meta">
             <span class="pill">Company: {{COMPANY_NAME}}</span>
             <span class="pill">Type: Project</span>
-            <span class="pill">Created: <span id="lu">—</span></span>
+            <span class="pill">Created: <span id="lu" data-created="{{CREATED_AT}}">—</span></span>
           </div>
         </div>
       </div>
@@ -64,9 +64,7 @@
     </section>
   </main>
 
-  <script>
-    document.getElementById("lu").textContent = "{{CREATED_AT}}";
-  </script>
+  <script src="/assets/set-created.js"></script>
 
 </body>
 </html>

@@ -139,21 +139,35 @@ export class PlaygroundStack extends Stack {
       ],
     });
 
-    // The other 5 headers are enforced immediately (safe — nothing here
-    // relies on framing, MIME-sniffing, unrestricted referrers, or
-    // permissions-policy-gated browser features). CSP is Report-Only:
-    // apps/playground has real inline <script> blocks across many pages
-    // (index.html, api-testing/*, company-template/*, etc.), so a strict
-    // enforced script-src would break the site outright. Report-Only lets
-    // violations surface (browser console / a future report endpoint)
-    // without blocking anything, until those inline scripts are migrated to
-    // external files and this can move to enforced mode.
-    const labsCsp = ["default-src 'self'", "script-src 'self' 'unsafe-inline'", "frame-ancestors 'none'"].join("; ");
+    // All inline <script> blocks across apps/playground have been migrated
+    // to external files (see apps/playground/assets/*.js and the per-page
+    // <script src> references) — CSP is now enforced rather than
+    // Report-Only. script-src allows the one third-party script actually in
+    // use (Mermaid, on docs/codebase-diagram.html via jsdelivr); connect-src
+    // allows the playground's own API Gateway, which every page's
+    // create/archive/delete/api-testing fetch() call depends on — omitting
+    // either would silently break real functionality despite passing a
+    // superficial "no more inline scripts" check.
+    const labsCsp = [
+      "default-src 'self'",
+      "script-src 'self' https://cdn.jsdelivr.net",
+      "connect-src 'self' https://x7g9r0sdmc.execute-api.us-east-1.amazonaws.com",
+      // Company logos are always the known S3 bucket, but each generated
+      // company page's screenshot is scraped from that company's own real
+      // website (an Open Graph image URL — see create_company.py) at
+      // page-creation time, so there's no fixed set of origins to
+      // allowlist. Images are a low-severity CSP vector compared to
+      // script-src/connect-src, so this is a deliberate, scoped-down
+      // exception rather than loosening the policy generally.
+      "img-src 'self' https:",
+      "frame-ancestors 'none'",
+    ].join("; ");
 
     const labsResponseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, "LabsResponseHeadersPolicy", {
       responseHeadersPolicyName: "swordthain-labs-security-headers",
-      comment: "Security headers for labs.swordthain.com (CSP in Report-Only — see comment above)",
+      comment: "Security headers for labs.swordthain.com, including an enforced CSP",
       securityHeadersBehavior: {
+        contentSecurityPolicy: { contentSecurityPolicy: labsCsp, override: true },
         strictTransportSecurity: {
           accessControlMaxAge: Duration.days(365),
           includeSubdomains: true,
@@ -170,7 +184,6 @@ export class PlaygroundStack extends Stack {
       customHeadersBehavior: {
         customHeaders: [
           { header: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), fullscreen=()", override: true },
-          { header: "Content-Security-Policy-Report-Only", value: labsCsp, override: true },
         ],
       },
     });
