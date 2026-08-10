@@ -208,13 +208,39 @@ async function listFolderMedia(
   return jsonResponse(200, { media, nextCursor: encodeCursor(result.LastEvaluatedKey) });
 }
 
+/**
+ * True if `candidateAncestorId` is `folderId` itself or one of its
+ * ancestors, walked via `parentFolderId` up to ROOT. Used to reject a move
+ * that would make a folder its own descendant — same walk shape as
+ * resolveAccess() in access.ts, minus the share lookup.
+ */
+async function isSelfOrDescendant(candidateAncestorId: string, folderId: string): Promise<boolean> {
+  let currentId: string | undefined = candidateAncestorId;
+  const visited = new Set<string>();
+
+  while (currentId && currentId !== ROOT && !visited.has(currentId)) {
+    if (currentId === folderId) return true;
+    visited.add(currentId);
+    const folder = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId: currentId } }));
+    if (!folder.Item) break;
+    currentId = folder.Item.parentFolderId;
+  }
+  return false;
+}
+
 async function updateFolder(
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ): Promise<APIGatewayProxyStructuredResultV2> {
   const folderId = event.pathParameters?.folderId;
   if (!folderId) return jsonResponse(400, { error: "folderId is required" });
 
-  let payload: { title?: string; date?: string; guestUploadEnabled?: boolean; coverThumbnail?: string };
+  let payload: {
+    title?: string;
+    date?: string;
+    guestUploadEnabled?: boolean;
+    coverThumbnail?: string;
+    parentFolderId?: string;
+  };
   try {
     payload = event.body ? JSON.parse(event.body) : {};
   } catch {
@@ -222,15 +248,33 @@ async function updateFolder(
   }
 
   const updates: Record<string, unknown> = {};
-  for (const key of ["title", "date", "guestUploadEnabled", "coverThumbnail"] as const) {
+  for (const key of ["title", "date", "guestUploadEnabled", "coverThumbnail", "parentFolderId"] as const) {
     if (payload[key] !== undefined) updates[key] = payload[key];
   }
   if (Object.keys(updates).length === 0) {
-    return jsonResponse(400, { error: "No updatable fields provided (title, date, guestUploadEnabled, coverThumbnail)" });
+    return jsonResponse(400, {
+      error: "No updatable fields provided (title, date, guestUploadEnabled, coverThumbnail, parentFolderId)",
+    });
   }
 
   const existing = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId } }));
   if (!existing.Item) return jsonResponse(404, { error: "Folder not found" });
+
+  if (payload.parentFolderId !== undefined && payload.parentFolderId !== existing.Item.parentFolderId) {
+    const newParentId = payload.parentFolderId;
+    if (newParentId === folderId) {
+      return jsonResponse(400, { error: "Cannot move a folder into itself" });
+    }
+    if (newParentId !== ROOT) {
+      const parent = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId: newParentId } }));
+      if (!parent.Item) {
+        return jsonResponse(400, { error: `parentFolderId ${newParentId} does not exist` });
+      }
+      if (await isSelfOrDescendant(newParentId, folderId)) {
+        return jsonResponse(409, { error: "Cannot move a folder into one of its own descendants" });
+      }
+    }
+  }
 
   const result = await ddb.send(
     new UpdateCommand({

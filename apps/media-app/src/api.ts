@@ -76,8 +76,10 @@ export const api = {
   renameFolder: (folderId: string, title: string) => request<Folder>("PATCH", `/folders/${folderId}`, { title }),
   updateFolder: (
     folderId: string,
-    body: Partial<Pick<Folder, "title" | "date" | "guestUploadEnabled" | "coverThumbnail">>
+    body: Partial<Pick<Folder, "title" | "date" | "guestUploadEnabled" | "coverThumbnail" | "parentFolderId">>
   ) => request<Folder>("PATCH", `/folders/${folderId}`, body),
+  moveFolder: (folderId: string, parentFolderId: string) =>
+    request<Folder>("PATCH", `/folders/${folderId}`, { parentFolderId }),
   deleteFolder: (folderId: string) => request<{ deleted: boolean }>("DELETE", `/folders/${folderId}`),
   listFolderMedia: (folderId: string, opts: { type: "photo" | "video"; cursor?: string; limit?: number }) => {
     const params = new URLSearchParams({ type: opts.type });

@@ -263,6 +263,14 @@ button.danger {
   border-bottom: 1px solid light-dark(#eee, #2a2b2e);
 }
 
+.move-picker {
+  display: block;
+}
+
+.move-picker .folder-list {
+  margin: 0.5rem 0;
+}
+
 .folder-name {
   flex: 1;
   text-align: left;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useState, useCallback } from "react";
 import { api, Folder, MediaItem, ApiError, Playlist } from "../api";
 import { Lightbox } from "./Lightbox";
 
@@ -184,6 +184,11 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [renameGuestUpload, setRenameGuestUpload] = useState(false);
+  const [movingFolder, setMovingFolder] = useState<Folder | null>(null);
+  const [movePath, setMovePath] = useState<Folder[]>([]);
+  const [moveOptions, setMoveOptions] = useState<Folder[]>([]);
+  const [moveLoading, setMoveLoading] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
@@ -317,6 +322,58 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
     }
   }
 
+  async function loadMoveOptions(parentId: string) {
+    setMoveLoading(true);
+    setMoveError(null);
+    try {
+      const { folders } = await api.listFolders(parentId);
+      setMoveOptions(folders);
+    } catch (err) {
+      setMoveError(err instanceof Error ? err.message : "Failed to load folders");
+    } finally {
+      setMoveLoading(false);
+    }
+  }
+
+  function handleStartMove(folder: Folder) {
+    setMovingFolder(folder);
+    setMovePath([]);
+    loadMoveOptions(ROOT);
+  }
+
+  function handleMoveCancel() {
+    setMovingFolder(null);
+    setMoveError(null);
+  }
+
+  function handleMoveHome() {
+    setMovePath([]);
+    loadMoveOptions(ROOT);
+  }
+
+  function handleMoveBreadcrumb(index: number) {
+    const newPath = movePath.slice(0, index + 1);
+    setMovePath(newPath);
+    loadMoveOptions(newPath[newPath.length - 1].folderId);
+  }
+
+  function handleMoveNavigate(folder: Folder) {
+    setMovePath([...movePath, folder]);
+    loadMoveOptions(folder.folderId);
+  }
+
+  async function handleMoveHere() {
+    if (!movingFolder) return;
+    const destinationId = movePath[movePath.length - 1]?.folderId ?? ROOT;
+    try {
+      await api.moveFolder(movingFolder.folderId, destinationId);
+      setMovingFolder(null);
+      load();
+    } catch (err) {
+      setMoveError(err instanceof Error ? err.message : "Failed to move folder");
+    }
+  }
+
   async function handleDownload(item: MediaItem) {
     try {
       const { url } = await api.downloadUrl(item.mediaId);
@@ -414,49 +471,92 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
 
       <ul className="folder-list">
         {folders.map((folder) => (
-          <li key={folder.folderId}>
-            {isOwner && renamingId === folder.folderId ? (
-              <>
-                <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus />
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={renameGuestUpload}
-                    onChange={(e) => setRenameGuestUpload(e.target.checked)}
-                  />{" "}
-                  Guests can upload here
-                </label>
-                <button onClick={() => handleRename(folder.folderId)}>Save</button>
-                <button className="link" onClick={() => setRenamingId(null)}>
+          <Fragment key={folder.folderId}>
+            <li>
+              {isOwner && renamingId === folder.folderId ? (
+                <>
+                  <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus />
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={renameGuestUpload}
+                      onChange={(e) => setRenameGuestUpload(e.target.checked)}
+                    />{" "}
+                    Guests can upload here
+                  </label>
+                  <button onClick={() => handleRename(folder.folderId)}>Save</button>
+                  <button className="link" onClick={() => setRenamingId(null)}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="link folder-name" onClick={() => setPath([...path, folder])}>
+                    📁 {folder.title}
+                    {folder.guestUploadEnabled && <span className="badge">guest upload</span>}
+                  </button>
+                  {isOwner && (
+                    <>
+                      <button
+                        className="link"
+                        onClick={() => {
+                          setRenamingId(folder.folderId);
+                          setRenameValue(folder.title);
+                          setRenameGuestUpload(folder.guestUploadEnabled);
+                        }}
+                      >
+                        Rename
+                      </button>
+                      <button className="link" onClick={() => handleStartMove(folder)}>
+                        Move
+                      </button>
+                      <button className="link danger" onClick={() => handleDelete(folder)}>
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </li>
+            {movingFolder?.folderId === folder.folderId && (
+              <li className="notify-dialog move-picker">
+                <p>
+                  Move "{movingFolder.title}" to:
+                </p>
+                <nav className="breadcrumbs">
+                  <button className="link" onClick={handleMoveHome}>
+                    Home
+                  </button>
+                  {movePath.map((f, i) => (
+                    <span key={f.folderId}>
+                      {" / "}
+                      <button className="link" onClick={() => handleMoveBreadcrumb(i)}>
+                        {f.title}
+                      </button>
+                    </span>
+                  ))}
+                </nav>
+                {moveError && <p className="error">{moveError}</p>}
+                {moveLoading && <p>Loading…</p>}
+                <ul className="folder-list">
+                  {moveOptions
+                    .filter((f) => f.folderId !== movingFolder.folderId)
+                    .map((f) => (
+                      <li key={f.folderId}>
+                        <button className="link folder-name" onClick={() => handleMoveNavigate(f)}>
+                          📁 {f.title}
+                        </button>
+                      </li>
+                    ))}
+                  {moveOptions.length === 0 && !moveLoading && <li className="empty">No sub-folders here.</li>}
+                </ul>
+                <button onClick={handleMoveHere}>Move here</button>
+                <button className="link" onClick={handleMoveCancel}>
                   Cancel
                 </button>
-              </>
-            ) : (
-              <>
-                <button className="link folder-name" onClick={() => setPath([...path, folder])}>
-                  📁 {folder.title}
-                  {folder.guestUploadEnabled && <span className="badge">guest upload</span>}
-                </button>
-                {isOwner && (
-                  <>
-                    <button
-                      className="link"
-                      onClick={() => {
-                        setRenamingId(folder.folderId);
-                        setRenameValue(folder.title);
-                        setRenameGuestUpload(folder.guestUploadEnabled);
-                      }}
-                    >
-                      Rename
-                    </button>
-                    <button className="link danger" onClick={() => handleDelete(folder)}>
-                      Delete
-                    </button>
-                  </>
-                )}
-              </>
+              </li>
             )}
-          </li>
+          </Fragment>
         ))}
         {folders.length === 0 && !loading && (
           <li className="empty">{isOwner ? "No sub-folders here yet." : "No folders shared with you here yet."}</li>
