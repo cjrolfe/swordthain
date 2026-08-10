@@ -8,8 +8,9 @@ import { Friends } from "./components/Friends";
 import { Activity } from "./components/Activity";
 import { Storage } from "./components/Storage";
 import { Playlists } from "./components/Playlists";
+import { UploadTool } from "./components/UploadTool";
 
-type Tab = "folders" | "playlists" | "permissions" | "friends" | "activity" | "storage";
+type Tab = "folders" | "playlists" | "permissions" | "friends" | "activity" | "storage" | "upload-tool";
 
 export function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
@@ -81,6 +82,9 @@ export function App() {
               <button className={tab === "storage" ? "active" : ""} onClick={() => setTab("storage")}>
                 Storage
               </button>
+              <button className={tab === "upload-tool" ? "active" : ""} onClick={() => setTab("upload-tool")}>
+                Upload Tool
+              </button>
             </>
           )}
         </nav>
@@ -91,6 +95,7 @@ export function App() {
           {owner && tab === "friends" && <Friends />}
           {owner && tab === "activity" && <Activity />}
           {owner && tab === "storage" && <Storage />}
+          {owner && tab === "upload-tool" && <UploadTool />}
         </main>
       </div>
     </div>

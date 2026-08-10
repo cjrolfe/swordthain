@@ -1,0 +1,21 @@
+{
+  "name": "swordthain-media-app-cli",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "swordthain-upload": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.687.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}
