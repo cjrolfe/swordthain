@@ -298,6 +298,44 @@ button.danger {
   margin: 0.25rem 0 0.75rem;
 }
 
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin: 0.5rem 0 1.25rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid light-dark(#eee, #2a2b2e);
+  border-radius: 6px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: light-dark(#888, #999);
+}
+
+.legend-swatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 2px;
+  flex: none;
+}
+
+.diagram-frame {
+  border: 1px solid light-dark(#eee, #2a2b2e);
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 0 0 1.5rem;
+  overflow-x: auto;
+}
+
+.diagram-frame svg {
+  display: block;
+  margin: 0 auto;
+}
+
 h4 {
   font-size: 1rem;
   margin: 1rem 0 0.25rem;

@@ -9,8 +9,17 @@ import { Activity } from "./components/Activity";
 import { Storage } from "./components/Storage";
 import { Playlists } from "./components/Playlists";
 import { UploadTool } from "./components/UploadTool";
+import { Architecture } from "./components/Architecture";
 
-type Tab = "folders" | "playlists" | "permissions" | "friends" | "activity" | "storage" | "upload-tool";
+type Tab =
+  | "folders"
+  | "playlists"
+  | "permissions"
+  | "friends"
+  | "activity"
+  | "storage"
+  | "upload-tool"
+  | "architecture";
 
 export function App() {
   const [session, setSession] = useState<Session | null>(() => loadSession());
@@ -85,6 +94,9 @@ export function App() {
               <button className={tab === "upload-tool" ? "active" : ""} onClick={() => setTab("upload-tool")}>
                 Upload Tool
               </button>
+              <button className={tab === "architecture" ? "active" : ""} onClick={() => setTab("architecture")}>
+                Architecture
+              </button>
             </>
           )}
         </nav>
@@ -96,6 +108,7 @@ export function App() {
           {owner && tab === "activity" && <Activity />}
           {owner && tab === "storage" && <Storage />}
           {owner && tab === "upload-tool" && <UploadTool />}
+          {owner && tab === "architecture" && <Architecture />}
         </main>
       </div>
     </div>
