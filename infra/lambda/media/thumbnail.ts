@@ -105,12 +105,15 @@ async function extractFrameWithFfmpeg(inputStream: Readable, fileName: string, t
   const ext = path.extname(fileName) || ".bin";
   const inputPath = `/tmp/${randomUUID()}${ext}`;
   const outputPath = `/tmp/${randomUUID()}.jpg`;
-  // Stream straight to disk rather than buffering the whole object in memory
-  // first — for a multi-hundred-MB video, holding it all in a JS Buffer
-  // alongside ffmpeg's own decode memory was enough to OOM the Lambda even
-  // at 1024MB (confirmed via CloudWatch on a real 490MB upload).
-  await pipeline(inputStream, fs.createWriteStream(inputPath));
   try {
+    // Stream straight to disk rather than buffering the whole object in
+    // memory first — for a multi-hundred-MB video, holding it all in a JS
+    // Buffer alongside ffmpeg's own decode memory was enough to OOM the
+    // Lambda even at 1024MB (confirmed via CloudWatch on a real 490MB
+    // upload). Inside the try/finally (not before it) so a failed download
+    // still gets cleaned up — otherwise a partial file leaks into /tmp on a
+    // reused execution environment and starves the next invocation too.
+    await pipeline(inputStream, fs.createWriteStream(inputPath));
     execFileSync("/opt/bin/ffmpeg", [
       "-y",
       "-i",

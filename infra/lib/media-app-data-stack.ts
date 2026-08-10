@@ -329,13 +329,18 @@ export class MediaAppDataStack extends Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.X86_64,
       entry: path.join(lambdaDir, "thumbnail.ts"),
-      // Sized for real-world video: a 490MB upload OOM'd at 1024MB/512MB
-      // ephemeral storage even after switching to a streamed (not buffered)
-      // S3 download — ffmpeg's own decode memory plus input+output both
-      // living on /tmp needs real headroom.
-      timeout: Duration.seconds(120),
+      // Sized for real-world video: the whole original is streamed to /tmp
+      // before ffmpeg grabs a single frame (see thumbnail.ts), so ephemeral
+      // storage has to cover the full file, not just decode memory — pushed
+      // to AWS's 10GiB ceiling after multi-GB CLI uploads (up to ~9.5GB seen
+      // in practice) blew past the previous 3GB and hit ENOSPC. That ceiling
+      // is still a real limit for anything larger; properly removing it
+      // means streaming a byte-range instead of the whole object, which is
+      // a bigger change than this fix. Timeout raised accordingly — download
+      // time for a multi-GB file dominates, not the ffmpeg step itself.
+      timeout: Duration.minutes(10),
       memorySize: 2048,
-      ephemeralStorageSize: Size.mebibytes(3072),
+      ephemeralStorageSize: Size.mebibytes(10240),
       layers: [sharpLayer, ffmpegLayer],
       environment: {
         MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
