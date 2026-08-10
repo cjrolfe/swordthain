@@ -119,15 +119,21 @@ Each entry in `sites.json` contains:
 ## AWS Deployment
 
 ### Deploy Frontend to S3
+Scoped per-directory, not a single top-level `sync --delete .` — the bucket also holds content the `create_company`/`create_project` Lambda writes straight to S3 at runtime (e.g. `<company-id>/index.html`), which never exists in this git checkout. A bucket-wide `--delete` sync would remove all of that (this exact thing happened once — see git history). `assets/sites.json` is excluded since it's Lambda-managed live state, not a static file.
+
 ```bash
 cd apps/playground
-aws s3 sync . s3://swordthain-demo-sites/ \
-  --exclude ".git/*" \
-  --exclude ".github/*" \
-  --exclude "lambda/*" \
-  --exclude "lambda.zip" \
-  --exclude "*.pyc" \
-  --exclude "__pycache__/*"
+aws s3 sync assets s3://swordthain-demo-sites/assets/ --delete --exclude "sites.json"
+aws s3 sync api-testing s3://swordthain-demo-sites/api-testing/ --delete
+aws s3 sync company-template s3://swordthain-demo-sites/company-template/ --delete
+aws s3 sync demos s3://swordthain-demo-sites/demos/ --delete
+aws s3 sync docs s3://swordthain-demo-sites/docs/ --delete
+aws s3 sync project-template s3://swordthain-demo-sites/project-template/ --delete
+aws s3 cp index.html s3://swordthain-demo-sites/index.html
+aws s3 cp favicon.svg s3://swordthain-demo-sites/favicon.svg
+aws s3 cp BACKLOG.md s3://swordthain-demo-sites/BACKLOG.md
+aws s3 cp CLAUDE.md s3://swordthain-demo-sites/CLAUDE.md
+aws s3 cp README.md s3://swordthain-demo-sites/README.md
 ```
 
 ### Deploy Lambda Function
