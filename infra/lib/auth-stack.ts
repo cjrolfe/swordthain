@@ -60,13 +60,16 @@ export class AuthStack extends Stack {
       values: ["v=spf1 include:amazonses.com -all"],
     });
 
-    // Monitoring-only to start — escalate to p=reject after reviewing a few
-    // weeks of aggregate reports, once confident no legitimate mail is
-    // being flagged.
+    // Enforced: mail that fails SPF/DKIM alignment is rejected outright,
+    // rather than just monitored. Escalated from an initial p=none straight
+    // to p=reject per explicit instruction, without the usual staged
+    // p=quarantine step or a monitoring period first — only legitimate
+    // sender is SES (already SPF-aligned via the record above), so the risk
+    // of a real message getting caught is low.
     new route53.TxtRecord(this, "DmarcRecord", {
       zone: hostedZone,
       recordName: `_dmarc.${props.domainName}`,
-      values: [`v=DMARC1; p=none; rua=mailto:dmarc-reports@${props.domainName}`],
+      values: [`v=DMARC1; p=reject; rua=mailto:dmarc-reports@${props.domainName}`],
     });
 
     // Certificates are issued via ACM for CloudFront — restrict issuance to
