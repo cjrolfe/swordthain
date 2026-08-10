@@ -151,6 +151,14 @@ export class PlaygroundStack extends Stack {
     const labsCsp = [
       "default-src 'self'",
       "script-src 'self' https://cdn.jsdelivr.net",
+      // Numerous inline style="..." attributes across these hand-written
+      // pages (e.g. index.html's card links) — out of scope for this pass
+      // (unlike script-src, migrating every inline style to a CSS class is
+      // a much larger, separate cleanup). Leaving style-src unset would
+      // fall back to default-src 'self', which blocks inline style
+      // attributes too and silently breaks layout — explicit and scoped to
+      // styles only, script-src/connect-src/img-src stay tight.
+      "style-src 'self' 'unsafe-inline'",
       "connect-src 'self' https://x7g9r0sdmc.execute-api.us-east-1.amazonaws.com",
       // Company logos are always the known S3 bucket, but each generated
       // company page's screenshot is scraped from that company's own real
