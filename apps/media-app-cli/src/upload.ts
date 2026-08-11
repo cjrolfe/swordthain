@@ -3,9 +3,17 @@ import { api } from "./api.js";
 import type { UploadTask } from "./mirror.js";
 import { loadMultipartState, saveMultipartState, clearMultipartState } from "./multipartState.js";
 
-// Same threshold as apps/media-app/src/components/FolderBrowser.tsx and the
-// server's presigned-PUT limit — S3's hard cap for a single PUT.
-const MULTIPART_THRESHOLD = 5 * 1024 * 1024 * 1024;
+// Deliberately well under S3's 5GB single-PUT cap (unlike the browser's
+// equivalent threshold in FolderBrowser.tsx, which uses XHR + a Blob and
+// doesn't have this problem): Node's built-in fetch() can't reliably send
+// a single in-memory Buffer body larger than ~2GiB (2^31-1 bytes) — it
+// fails at the socket-write layer with an EINVAL or a "File size is
+// greater than 2 GiB" error depending on Node version, confirmed via a
+// live repro against a real ~2.3GB file that failed with exactly this.
+// Files at or under this size use the single-PUT path below; anything
+// larger uses the multipart path, which sends ~50MB chunks and has no
+// such ceiling.
+const MULTIPART_THRESHOLD = 1.9 * 1024 * 1024 * 1024;
 
 export type UploadEvent =
   | { type: "upload-start"; task: UploadTask }
