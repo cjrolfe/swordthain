@@ -358,6 +358,17 @@ h4 {
 
 .media-grid figure {
   margin: 0;
+  position: relative;
+}
+
+.thumb-select {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .media-grid img,

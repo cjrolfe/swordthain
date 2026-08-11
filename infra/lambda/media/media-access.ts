@@ -1,7 +1,11 @@
-import type { APIGatewayProxyHandlerV2WithJWTAuthorizer, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import type {
+  APIGatewayProxyEventV2WithJWTAuthorizer,
+  APIGatewayProxyHandlerV2WithJWTAuthorizer,
+  APIGatewayProxyStructuredResultV2,
+} from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { S3Client, GetObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { isOwner } from "./authz";
@@ -23,6 +27,10 @@ const URL_EXPIRY_SECONDS = 300;
 export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) => {
   const mediaId = event.pathParameters?.mediaId;
   if (!mediaId) return jsonResponse(400, { error: "mediaId is required" });
+
+  if (event.routeKey === "DELETE /media/{mediaId}") {
+    return deleteMedia(event, mediaId);
+  }
 
   const action = event.routeKey === "GET /media/{mediaId}/download-url" ? "download" : "view";
 
@@ -67,3 +75,25 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
 
   return jsonResponse(200, { url, expiresIn: URL_EXPIRY_SECONDS });
 };
+
+async function deleteMedia(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  mediaId: string
+): Promise<APIGatewayProxyStructuredResultV2> {
+  const owner = isOwner(event.requestContext.authorizer.jwt.claims);
+  if (!owner) return jsonResponse(403, { error: "Owner access required" });
+
+  const media = await ddb.send(new GetCommand({ TableName: MEDIA_TABLE_NAME, Key: { mediaId } }));
+  if (!media.Item) return jsonResponse(404, { error: "Media not found" });
+
+  await s3.send(
+    new DeleteObjectsCommand({
+      Bucket: MEDIA_BUCKET_NAME,
+      Delete: { Objects: [{ Key: media.Item.s3Key }, { Key: media.Item.thumbnailKey }] },
+    })
+  );
+
+  await ddb.send(new DeleteCommand({ TableName: MEDIA_TABLE_NAME, Key: { mediaId } }));
+
+  return jsonResponse(200, { mediaId, deleted: true });
+}

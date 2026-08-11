@@ -466,7 +466,9 @@ export class MediaAppDataStack extends Stack {
     this.foldersTable.grantReadData(mediaAccessFn);
     this.folderSharesTable.grantReadData(mediaAccessFn);
     this.mediaItemsTable.grantReadData(mediaAccessFn);
+    this.mediaItemsTable.grantWriteData(mediaAccessFn);
     this.mediaBucket.grantRead(mediaAccessFn);
+    this.mediaBucket.grantDelete(mediaAccessFn);
     this.activityLogTable.grantWriteData(mediaAccessFn);
 
     // --- Activity dashboard (read side of ActivityLog — MediaAccessFn is the write side) ---
@@ -765,6 +767,12 @@ export class MediaAppDataStack extends Stack {
     httpApi.addRoutes({
       path: "/media/{mediaId}/download-url",
       methods: [apigwv2.HttpMethod.GET],
+      integration: mediaAccessIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
+      path: "/media/{mediaId}",
+      methods: [apigwv2.HttpMethod.DELETE],
       integration: mediaAccessIntegration,
       authorizer,
     });

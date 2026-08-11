@@ -131,6 +131,7 @@ export const api = {
   viewUrl: (mediaId: string) => request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/view-url`),
   downloadUrl: (mediaId: string) =>
     request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/download-url`),
+  deleteMedia: (mediaId: string) => request<{ deleted: boolean }>("DELETE", `/media/${mediaId}`),
 
   activity: (filter: { folderId?: string; userId?: string }) => {
     const params = new URLSearchParams();

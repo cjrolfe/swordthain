@@ -141,10 +141,21 @@ function renderFigure(
   onOpen: (item: MediaItem) => void,
   onDownload: (item: MediaItem) => void,
   canDownload: boolean,
-  addToPlaylist?: { label: string; onClick: () => void }
+  addToPlaylist?: { label: string; onClick: () => void },
+  onDelete?: (item: MediaItem) => void,
+  selection?: { checked: boolean; onToggle: () => void }
 ) {
   return (
     <figure key={item.mediaId}>
+      {selection && (
+        <input
+          type="checkbox"
+          className="thumb-select"
+          checked={selection.checked}
+          onChange={selection.onToggle}
+          aria-label={`Select ${item.fileName}`}
+        />
+      )}
       <button
         className={`thumb-button ${item.type === "video" ? "thumb-video" : "thumb-photo"}`}
         onClick={() => onOpen(item)}
@@ -164,6 +175,11 @@ function renderFigure(
       {addToPlaylist && (
         <button className="link" onClick={addToPlaylist.onClick}>
           {addToPlaylist.label}
+        </button>
+      )}
+      {onDelete && (
+        <button className="link danger" onClick={() => onDelete(item)}>
+          Delete
         </button>
       )}
     </figure>
@@ -189,6 +205,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [moveOptions, setMoveOptions] = useState<Folder[]>([]);
   const [moveLoading, setMoveLoading] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
@@ -236,6 +253,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
 
   useEffect(() => {
     setUploads([]);
+    setSelectedPhotoIds(new Set());
   }, [currentFolder?.folderId]);
 
   useEffect(() => {
@@ -384,6 +402,36 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to download");
     }
+  }
+
+  async function handleDeleteMedia(item: MediaItem) {
+    if (!confirm(`Delete "${item.fileName}"? This can't be undone.`)) return;
+    try {
+      await api.deleteMedia(item.mediaId);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
+    }
+  }
+
+  function handleTogglePhotoSelect(mediaId: string) {
+    setSelectedPhotoIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(mediaId)) next.delete(mediaId);
+      else next.add(mediaId);
+      return next;
+    });
+  }
+
+  async function handleBulkDeleteSelected() {
+    const ids = Array.from(selectedPhotoIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Delete ${ids.length} selected photo${ids.length === 1 ? "" : "s"}? This can't be undone.`)) return;
+    const results = await Promise.allSettled(ids.map((id) => api.deleteMedia(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed > 0) setError(`Failed to delete ${failed} of ${ids.length} selected photos`);
+    setSelectedPhotoIds(new Set());
+    load();
   }
 
   async function handleUpload(fileList: FileList | null) {
@@ -632,7 +680,8 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                           label: justAddedId === item.mediaId ? "Added ✓" : "+ Playlist",
                           onClick: () => handleAddToPlaylist(item),
                         }
-                      : undefined
+                      : undefined,
+                    isOwner ? handleDeleteMedia : undefined
                   )
                 )}
               </div>
@@ -647,8 +696,31 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
           {photos.length > 0 && (
             <>
               <h4>Photos</h4>
+              {isOwner && (
+                <div className="inline-form">
+                  <button
+                    className="link danger"
+                    disabled={selectedPhotoIds.size === 0}
+                    onClick={handleBulkDeleteSelected}
+                  >
+                    Delete selected ({selectedPhotoIds.size})
+                  </button>
+                </div>
+              )}
               <div className="media-grid">
-                {photos.map((item) => renderFigure(item, setLightboxItem, handleDownload, canDownload))}
+                {photos.map((item) =>
+                  renderFigure(
+                    item,
+                    setLightboxItem,
+                    handleDownload,
+                    canDownload,
+                    undefined,
+                    isOwner ? handleDeleteMedia : undefined,
+                    isOwner
+                      ? { checked: selectedPhotoIds.has(item.mediaId), onToggle: () => handleTogglePhotoSelect(item.mediaId) }
+                      : undefined
+                  )
+                )}
               </div>
               {photosCursor && (
                 <button className="link" disabled={loadingMorePhotos} onClick={loadMorePhotos}>
