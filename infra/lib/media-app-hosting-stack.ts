@@ -136,7 +136,12 @@ export class MediaAppHostingStack extends Stack {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
       "media-src 'self' https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
-      "connect-src 'self' https://ox8boap6v6.execute-api.eu-west-1.amazonaws.com https://cognito-idp.us-east-1.amazonaws.com",
+      // The media bucket is also needed here (not just img-src/media-src):
+      // uploads PUT directly to S3 via a presigned URL from the browser's
+      // own XHR/fetch calls (FolderBrowser.tsx's single-PUT and multipart
+      // paths), which connect-src governs — img-src/media-src only cover
+      // passive <img>/<video> loads, not script-initiated requests.
+      "connect-src 'self' https://ox8boap6v6.execute-api.eu-west-1.amazonaws.com https://cognito-idp.us-east-1.amazonaws.com https://swordthain-media-584000479246.s3.eu-west-1.amazonaws.com",
       "frame-ancestors 'none'",
     ].join("; ");
 
