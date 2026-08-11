@@ -107,6 +107,7 @@ async function listFolders(
     })
   );
   const children = result.Items ?? [];
+  children.sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" }));
 
   if (owner) {
     return jsonResponse(200, { folders: children });
