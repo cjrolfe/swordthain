@@ -772,7 +772,7 @@ export class MediaAppDataStack extends Stack {
     });
     httpApi.addRoutes({
       path: "/media/{mediaId}",
-      methods: [apigwv2.HttpMethod.DELETE],
+      methods: [apigwv2.HttpMethod.DELETE, apigwv2.HttpMethod.PATCH],
       integration: mediaAccessIntegration,
       authorizer,
     });

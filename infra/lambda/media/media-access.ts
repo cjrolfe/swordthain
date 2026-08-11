@@ -4,7 +4,7 @@ import type {
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { S3Client, GetObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
@@ -30,6 +30,9 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
 
   if (event.routeKey === "DELETE /media/{mediaId}") {
     return deleteMedia(event, mediaId);
+  }
+  if (event.routeKey === "PATCH /media/{mediaId}") {
+    return updateMedia(event, mediaId);
   }
 
   const action = event.routeKey === "GET /media/{mediaId}/download-url" ? "download" : "view";
@@ -96,4 +99,44 @@ async function deleteMedia(
   await ddb.send(new DeleteCommand({ TableName: MEDIA_TABLE_NAME, Key: { mediaId } }));
 
   return jsonResponse(200, { mediaId, deleted: true });
+}
+
+const DESCRIPTION_MAX_LENGTH = 140;
+
+async function updateMedia(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  mediaId: string
+): Promise<APIGatewayProxyStructuredResultV2> {
+  const owner = isOwner(event.requestContext.authorizer.jwt.claims);
+  if (!owner) return jsonResponse(403, { error: "Owner access required" });
+
+  let payload: { description?: string };
+  try {
+    payload = event.body ? JSON.parse(event.body) : {};
+  } catch {
+    return jsonResponse(400, { error: "Invalid JSON body" });
+  }
+
+  if (typeof payload.description !== "string") {
+    return jsonResponse(400, { error: "description is required" });
+  }
+  const description = payload.description.trim();
+  if (description.length > DESCRIPTION_MAX_LENGTH) {
+    return jsonResponse(400, { error: `description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer` });
+  }
+
+  const media = await ddb.send(new GetCommand({ TableName: MEDIA_TABLE_NAME, Key: { mediaId } }));
+  if (!media.Item) return jsonResponse(404, { error: "Media not found" });
+
+  const result = await ddb.send(
+    new UpdateCommand({
+      TableName: MEDIA_TABLE_NAME,
+      Key: { mediaId },
+      UpdateExpression: "SET description = :d",
+      ExpressionAttributeValues: { ":d": description },
+      ReturnValues: "ALL_NEW",
+    })
+  );
+
+  return jsonResponse(200, result.Attributes);
 }

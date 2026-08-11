@@ -136,15 +136,29 @@ async function uploadMultipart(
   localStorage.removeItem(storageKey);
 }
 
+interface FigureOptions {
+  addToPlaylist?: { label: string; onClick: () => void };
+  onDelete?: (item: MediaItem) => void;
+  selection?: { checked: boolean; onToggle: () => void };
+  editDescription?: {
+    editing: boolean;
+    value: string;
+    onValueChange: (value: string) => void;
+    onStart: () => void;
+    onSubmit: () => void;
+    onCancel: () => void;
+  };
+}
+
 function renderFigure(
   item: MediaItem,
   onOpen: (item: MediaItem) => void,
   onDownload: (item: MediaItem) => void,
   canDownload: boolean,
-  addToPlaylist?: { label: string; onClick: () => void },
-  onDelete?: (item: MediaItem) => void,
-  selection?: { checked: boolean; onToggle: () => void }
+  options?: FigureOptions
 ) {
+  const { addToPlaylist, onDelete, selection, editDescription } = options ?? {};
+  const displayName = item.description || item.fileName;
   return (
     <figure key={item.mediaId}>
       {selection && (
@@ -153,7 +167,7 @@ function renderFigure(
           className="thumb-select"
           checked={selection.checked}
           onChange={selection.onToggle}
-          aria-label={`Select ${item.fileName}`}
+          aria-label={`Select ${displayName}`}
         />
       )}
       <button
@@ -161,26 +175,48 @@ function renderFigure(
         onClick={() => onOpen(item)}
       >
         {item.thumbnailUrl ? (
-          <img src={item.thumbnailUrl} alt={item.fileName} loading="lazy" />
+          <img src={item.thumbnailUrl} alt={displayName} loading="lazy" />
         ) : (
           <div className="thumb-placeholder">{item.type === "video" ? "🎬" : "🖼️"}</div>
         )}
       </button>
-      <figcaption>{item.fileName}</figcaption>
-      {canDownload && (
-        <button className="link" onClick={() => onDownload(item)}>
-          Download
-        </button>
-      )}
-      {addToPlaylist && (
-        <button className="link" onClick={addToPlaylist.onClick}>
-          {addToPlaylist.label}
-        </button>
-      )}
-      {onDelete && (
-        <button className="link danger" onClick={() => onDelete(item)}>
-          Delete
-        </button>
+      {editDescription?.editing ? (
+        <>
+          <input
+            value={editDescription.value}
+            onChange={(e) => editDescription.onValueChange(e.target.value)}
+            placeholder="Short description"
+            autoFocus
+          />
+          <button onClick={editDescription.onSubmit}>Save</button>
+          <button className="link" onClick={editDescription.onCancel}>
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <figcaption>{displayName}</figcaption>
+          {canDownload && (
+            <button className="link" onClick={() => onDownload(item)}>
+              Download
+            </button>
+          )}
+          {addToPlaylist && (
+            <button className="link" onClick={addToPlaylist.onClick}>
+              {addToPlaylist.label}
+            </button>
+          )}
+          {editDescription && (
+            <button className="link" onClick={editDescription.onStart}>
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button className="link danger" onClick={() => onDelete(item)}>
+              Delete
+            </button>
+          )}
+        </>
       )}
     </figure>
   );
@@ -206,6 +242,8 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [moveLoading, setMoveLoading] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set());
+  const [editingDescriptionId, setEditingDescriptionId] = useState<string | null>(null);
+  const [descriptionValue, setDescriptionValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
@@ -254,6 +292,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   useEffect(() => {
     setUploads([]);
     setSelectedPhotoIds(new Set());
+    setEditingDescriptionId(null);
   }, [currentFolder?.folderId]);
 
   useEffect(() => {
@@ -421,6 +460,25 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       else next.add(mediaId);
       return next;
     });
+  }
+
+  function handleStartEditDescription(item: MediaItem) {
+    setEditingDescriptionId(item.mediaId);
+    setDescriptionValue(item.description ?? "");
+  }
+
+  function handleCancelEditDescription() {
+    setEditingDescriptionId(null);
+  }
+
+  async function handleSubmitDescription(mediaId: string) {
+    try {
+      await api.updateMediaDescription(mediaId, descriptionValue.trim());
+      setEditingDescriptionId(null);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update description");
+    }
   }
 
   async function handleBulkDeleteSelected() {
@@ -670,19 +728,25 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               )}
               <div className="media-grid">
                 {videos.map((item) =>
-                  renderFigure(
-                    item,
-                    setLightboxItem,
-                    handleDownload,
-                    canDownload,
-                    selectedPlaylistId
+                  renderFigure(item, setLightboxItem, handleDownload, canDownload, {
+                    addToPlaylist: selectedPlaylistId
                       ? {
                           label: justAddedId === item.mediaId ? "Added ✓" : "+ Playlist",
                           onClick: () => handleAddToPlaylist(item),
                         }
                       : undefined,
-                    isOwner ? handleDeleteMedia : undefined
-                  )
+                    onDelete: isOwner ? handleDeleteMedia : undefined,
+                    editDescription: isOwner
+                      ? {
+                          editing: editingDescriptionId === item.mediaId,
+                          value: descriptionValue,
+                          onValueChange: setDescriptionValue,
+                          onStart: () => handleStartEditDescription(item),
+                          onSubmit: () => handleSubmitDescription(item.mediaId),
+                          onCancel: handleCancelEditDescription,
+                        }
+                      : undefined,
+                  })
                 )}
               </div>
               {videosCursor && (
@@ -709,17 +773,22 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               )}
               <div className="media-grid">
                 {photos.map((item) =>
-                  renderFigure(
-                    item,
-                    setLightboxItem,
-                    handleDownload,
-                    canDownload,
-                    undefined,
-                    isOwner ? handleDeleteMedia : undefined,
-                    isOwner
+                  renderFigure(item, setLightboxItem, handleDownload, canDownload, {
+                    onDelete: isOwner ? handleDeleteMedia : undefined,
+                    selection: isOwner
                       ? { checked: selectedPhotoIds.has(item.mediaId), onToggle: () => handleTogglePhotoSelect(item.mediaId) }
-                      : undefined
-                  )
+                      : undefined,
+                    editDescription: isOwner
+                      ? {
+                          editing: editingDescriptionId === item.mediaId,
+                          value: descriptionValue,
+                          onValueChange: setDescriptionValue,
+                          onStart: () => handleStartEditDescription(item),
+                          onSubmit: () => handleSubmitDescription(item.mediaId),
+                          onCancel: handleCancelEditDescription,
+                        }
+                      : undefined,
+                  })
                 )}
               </div>
               {photosCursor && (

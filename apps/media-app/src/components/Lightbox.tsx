@@ -36,7 +36,7 @@ export function Lightbox({ item, onClose }: { item: MediaItem; onClose: () => vo
         </button>
         {error && <p className="error">{error}</p>}
         {!error && !url && <p>Loading…</p>}
-        {url && item.type === "photo" && <img src={url} alt={item.fileName} />}
+        {url && item.type === "photo" && <img src={url} alt={item.description || item.fileName} />}
         {url && item.type === "video" && (
           // Progressive playback via a direct presigned URL — browsers handle
           // seeking via HTTP Range requests natively. Adaptive-bitrate HLS
@@ -44,6 +44,7 @@ export function Lightbox({ item, onClose }: { item: MediaItem; onClose: () => vo
           // presigned S3 URLs — see infra/README.md).
           <video src={url} controls autoPlay />
         )}
+        {url && <p className="lightbox-caption">{item.description || item.fileName}</p>}
       </div>
     </div>
   );

@@ -291,6 +291,7 @@ async function listPlaylistItems(
         mediaId: item.mediaId,
         addedAt: item.addedAt,
         fileName: media.Item.fileName as string,
+        description: media.Item.description as string | undefined,
         folderId: media.Item.folderId as string,
         thumbnailUrl: media.Item.thumbnailKey
           ? await getSignedUrl(s3, new GetObjectCommand({ Bucket: MEDIA_BUCKET_NAME, Key: media.Item.thumbnailKey }), {

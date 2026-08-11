@@ -40,6 +40,8 @@ export interface MediaItem {
   folderId: string;
   type: "photo" | "video";
   fileName: string;
+  /** Owner-set short label shown instead of fileName wherever media is displayed. */
+  description?: string;
   thumbnailUrl: string | null;
   uploadedAt: string;
 }
@@ -132,6 +134,8 @@ export const api = {
   downloadUrl: (mediaId: string) =>
     request<{ url: string; expiresIn: number }>("GET", `/media/${mediaId}/download-url`),
   deleteMedia: (mediaId: string) => request<{ deleted: boolean }>("DELETE", `/media/${mediaId}`),
+  updateMediaDescription: (mediaId: string, description: string) =>
+    request<MediaItem>("PATCH", `/media/${mediaId}`, { description }),
 
   activity: (filter: { folderId?: string; userId?: string }) => {
     const params = new URLSearchParams();
@@ -187,6 +191,7 @@ export interface PlaylistItem {
   mediaId: string;
   addedAt: string;
   fileName: string | null;
+  description?: string;
   folderId: string | null;
   thumbnailUrl: string | null;
   /** False if the underlying media record no longer exists. */

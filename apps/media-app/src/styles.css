@@ -424,6 +424,13 @@ h4 {
   display: block;
 }
 
+.lightbox-caption {
+  color: #fff;
+  text-align: center;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
 .lightbox-close {
   position: absolute;
   top: -2.5rem;

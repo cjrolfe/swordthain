@@ -32,7 +32,7 @@ export function PlaylistPlayer({
         if (cancelled) return;
         // A single bad item (revoked access, deleted media, expired link)
         // skips to the next one rather than halting the whole player.
-        setNotice(`"${current.fileName ?? "This clip"}" is no longer available — skipping`);
+        setNotice(`"${current.description || current.fileName || "This clip"}" is no longer available — skipping`);
         setIndex((i) => i + 1);
       });
     return () => {
@@ -73,7 +73,7 @@ export function PlaylistPlayer({
           <span className="badge">{playlistName}</span>
           {!finished && (
             <span className="badge">
-              {index + 1} of {items.length} — {current?.fileName ?? "…"}
+              {index + 1} of {items.length} — {current?.description || current?.fileName || "…"}
             </span>
           )}
         </div>
@@ -97,7 +97,7 @@ export function PlaylistPlayer({
             disablePictureInPicture
             onEnded={() => setIndex((i) => i + 1)}
             onError={() => {
-              setNotice(`"${current!.fileName ?? "This clip"}" failed to play — skipping`);
+              setNotice(`"${current!.description || current!.fileName || "This clip"}" failed to play — skipping`);
               setIndex((i) => i + 1);
             }}
           />

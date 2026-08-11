@@ -165,7 +165,7 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
                     {item.thumbnailUrl && (
                       <img src={item.thumbnailUrl} alt="" className="playlist-thumb" />
                     )}{" "}
-                    {item.available ? item.fileName : <em>Removed from the library</em>}
+                    {item.available ? item.description || item.fileName : <em>Removed from the library</em>}
                     {item.available && !item.accessible && (
                       <span className="badge">you no longer have access</span>
                     )}
