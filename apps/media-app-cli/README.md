@@ -54,5 +54,5 @@ Supported file types: JPEG, PNG, HEIC/HEIF, MP4, MOV, M4V — matching the web a
 ## Notes
 
 - Folder matching is exact and case-sensitive. If a local folder name matches more than one existing remote folder under the same parent, the run stops and asks you to dedupe them in the web app first, rather than guessing.
-- Files over 5GB use the same resumable multipart upload as the browser — if the tool is interrupted partway through a large file, re-running it picks up from the last completed part instead of starting over.
+- Files over 1.9GB use resumable multipart upload — if the tool is interrupted partway through a large file, re-running it picks up from the last completed part instead of starting over. This threshold is lower than the browser's (5GB): Node's built-in `fetch()` can't reliably send a single in-memory buffer body over ~2GiB, so anything past 1.9GB is routed through multipart here specifically to stay clear of that ceiling (see `src/upload.ts`'s `MULTIPART_THRESHOLD` comment).
 - A failed file is logged and skipped; it doesn't stop the rest of the run. The tool exits with a non-zero status if anything failed, so it's safe to use in a script.

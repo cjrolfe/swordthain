@@ -33,3 +33,13 @@ Both apps share the same account-level resources (Cognito pool, the cross-subdom
 ## A recurring gotcha worth knowing before touching auth code
 
 API Gateway's HTTP API JWT authorizer serializes Cognito's `cognito:groups` claim as a bracket-wrapped **string** (`"[Owner]"`), not a real array — despite `@types/aws-lambda` allowing `string[]` for that field. This bit us once already (see `infra/lambda/media/authz.ts`'s comment and `apps/media-app/README.md`): a hand-crafted Lambda test event using a real array "confirmed" the wrong assumption, and every Owner-only endpoint silently 403'd for real requests until it was caught by testing against the actual deployed API. Don't trust a claims-parsing assumption that's only been tested via a synthetic invoke payload — verify it through the real authorizer.
+
+## After every change — check documentation stays in sync
+
+Docs have gone stale within the same session that produced a feature more than once. Before considering any change done, check whether it needs updates to:
+
+- The relevant app's `README.md`/`CLAUDE.md`/`BACKLOG.md` (features, routes, gotchas — whatever actually changed).
+- The **"Swordthain Backlog" Apple Note** — a synced summary of `apps/media-app/BACKLOG.md` and `apps/playground/BACKLOG.md`. Update it alongside those files, not separately, so it doesn't drift from them.
+- `infra/docs/architecture-diagram.html` and its duplicate, the `DIAGRAMS` const in `apps/media-app/src/components/Architecture.tsx` — the two are kept in sync with each other. Needs an update if the change adds/removes a route, Lambda, table, GSI, or stack.
+
+Not every change needs all three — a CSS tweak needs none of them, a new API route needs at least the relevant README and probably the architecture diagram. Use judgment, but *check* rather than assume no doc changes are needed.

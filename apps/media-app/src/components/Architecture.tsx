@@ -79,7 +79,7 @@ flowchart LR
   folders["FoldersFn"]:::compute
   shares["SharesFn"]:::compute
   invites["InvitesFn"]:::compute
-  access["MediaAccessFn<br/>view/download URLs"]:::compute
+  access["MediaAccessFn<br/>view/download URLs<br/>delete · edit description"]:::compute
   activity["ActivityFn"]:::compute
   playlists["PlaylistsFn"]:::compute
   stats["StatsFn"]:::compute
@@ -98,7 +98,7 @@ flowchart LR
   api -->|"/folders*"| folders
   api -->|"/folders/{id}/shares<br/>/admin/permissions-matrix<br/>/admin/notify-shares"| shares
   api -->|"/admin/invites*"| invites
-  api -->|"/media/{id}/view-url<br/>/media/{id}/download-url"| access
+  api -->|"/media/{id}/view-url<br/>/media/{id}/download-url<br/>DELETE·PATCH /media/{id}"| access
   api -->|"/admin/activity"| activity
   api -->|"/playlists*"| playlists
   api -->|"/admin/stats"| stats
