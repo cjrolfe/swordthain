@@ -174,6 +174,17 @@ export class CiStack extends Stack {
         ],
       })
     );
+    // scenarios/playlists.ts inserts/removes a synthetic MediaItems row
+    // directly (src/db.ts) rather than a real video upload — see that
+    // file's comment for why. eu-west-1 explicitly: MediaItems lives in
+    // the media-app data plane's region, not this stack's (us-east-1) —
+    // same cross-region-by-literal-ARN pattern used elsewhere in infra/lib.
+    regressionTestRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["dynamodb:PutItem", "dynamodb:DeleteItem"],
+        resources: [`arn:aws:dynamodb:eu-west-1:${this.account}:table/swordthain-media-items`],
+      })
+    );
 
     new CfnOutput(this, "PlaygroundCiRoleArn", { value: playgroundRole.roleArn });
     new CfnOutput(this, "MediaAppCiRoleArn", { value: mediaAppRole.roleArn });
