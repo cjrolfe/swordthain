@@ -1,0 +1,23 @@
+{
+  "name": "swordthain-a11y-tests",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.687.0",
+    "@aws-sdk/client-dynamodb": "^3.687.0",
+    "@aws-sdk/lib-dynamodb": "^3.687.0",
+    "@aws-sdk/client-ssm": "^3.687.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.48.2",
+    "@types/node": "^20.16.11",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

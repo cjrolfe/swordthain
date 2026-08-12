@@ -168,11 +168,13 @@ flowchart LR
   mediaRole["MediaAppCiRole<br/>S3 + CloudFront invalidate"]:::ci
   pgRole["PlaygroundCiRole<br/>S3 + Lambda + CloudFront invalidate"]:::ci
   regressionRole["RegressionTestCiRole<br/>SSM + DynamoDB (media-items)"]:::ci
+  a11yRole["A11yTestCiRole<br/>SSM + DynamoDB (media-items)"]:::ci
 
   cdkStacks["5 CDK stacks<br/>us-east-1 + eu-west-1"]:::compute
   mediaSite["media-app site bucket<br/>+ CloudFront"]:::compute
   pgSite["playground site bucket<br/>+ automation Lambda<br/>+ CloudFront"]:::compute
   regressionSuite["infra/regression-tests<br/>scenario suite"]:::compute
+  a11ySuite["infra/a11y-tests<br/>Playwright + axe-core"]:::compute
 
   gh -->|"infra/**"| infraRole --> cdkStacks
   gh -->|"apps/media-app/**"| mediaRole --> mediaSite
@@ -180,10 +182,14 @@ flowchart LR
   infraRole -. "workflow_run: success" .-> regressionRole
   mediaRole -. "workflow_run: success" .-> regressionRole
   regressionRole --> regressionSuite
+  infraRole -. "workflow_run: success" .-> a11yRole
+  mediaRole -. "workflow_run: success" .-> a11yRole
+  a11yRole --> a11ySuite
   oidc -. trust .-> infraRole
   oidc -. trust .-> mediaRole
   oidc -. trust .-> pgRole
   oidc -. trust .-> regressionRole
+  oidc -. trust .-> a11yRole
 `,
 } as const;
 
@@ -263,10 +269,10 @@ export function Architecture() {
 
       <h4>CI/CD — deploy topology</h4>
       <p className="hint">
-        Four independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no
-        long-lived AWS keys stored anywhere. Three deploy on a path-filtered push to <code>main</code>; the fourth
-        (the regression-test suite) runs afterward, triggered by the deploy workflows succeeding rather than by a
-        path.
+        Five independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no
+        long-lived AWS keys stored anywhere. Three deploy on a path-filtered push to <code>main</code>; the other
+        two (the regression-test and accessibility-test suites) run afterward, triggered by the deploy workflows
+        succeeding rather than by a path.
       </p>
       <Diagram diagramKey="cicd" svg={svgs.cicd ?? null} />
     </div>

@@ -186,9 +186,36 @@ export class CiStack extends Stack {
       })
     );
 
+    // --- infra/a11y-tests: same fixed-OTP sign-in as the regression suite ---
+    // above. Also needs the same narrow synthetic-media-item grant that
+    // role has, for the same reason (tests/modal.spec.ts's Lightbox/
+    // PlaylistPlayer focus-trap check needs a real openable item, and
+    // there's no guarantee real media exists in the CI Test folder at scan
+    // time) — see infra/a11y-tests/src/db.ts.
+    const a11yTestRole = new iam.Role(this, "A11yTestCiRole", {
+      roleName: "swordthain-a11y-test-ci",
+      assumedBy: oidcPrincipal,
+      description: "GitHub Actions role for the post-deploy accessibility test suite",
+    });
+    a11yTestRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["ssm:GetParameter"],
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/swordthain/regression-test/otp-code`,
+        ],
+      })
+    );
+    a11yTestRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["dynamodb:PutItem", "dynamodb:DeleteItem"],
+        resources: [`arn:aws:dynamodb:eu-west-1:${this.account}:table/swordthain-media-items`],
+      })
+    );
+
     new CfnOutput(this, "PlaygroundCiRoleArn", { value: playgroundRole.roleArn });
     new CfnOutput(this, "MediaAppCiRoleArn", { value: mediaAppRole.roleArn });
     new CfnOutput(this, "InfraCiRoleArn", { value: infraRole.roleArn });
     new CfnOutput(this, "RegressionTestCiRoleArn", { value: regressionTestRole.roleArn });
+    new CfnOutput(this, "A11yTestCiRoleArn", { value: a11yTestRole.roleArn });
   }
 }
