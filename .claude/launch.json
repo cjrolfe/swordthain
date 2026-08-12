@@ -5,7 +5,8 @@
       "name": "media-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "apps/media-app"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
     },
     {
       "name": "infra-docs",

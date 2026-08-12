@@ -385,7 +385,8 @@ h4 {
 }
 
 .media-grid figcaption {
-  font-size: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

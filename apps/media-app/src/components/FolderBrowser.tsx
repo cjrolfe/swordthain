@@ -291,6 +291,18 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   }, [load]);
 
   useEffect(() => {
+    function refresh() {
+      if (document.visibilityState === "visible") load();
+    }
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [load]);
+
+  useEffect(() => {
     setUploads([]);
     setSelectedPhotoIds(new Set());
     setEditingDescriptionId(null);
@@ -746,13 +758,13 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
               <h4>Videos</h4>
               {playlists.length > 0 && (
                 <div className="inline-form">
-                  <label htmlFor="add-to-playlist-select">Add videos to</label>
+                  <label htmlFor="add-to-playlist-select">Add a video to a playlist:</label>
                   <select
                     id="add-to-playlist-select"
                     value={selectedPlaylistId}
                     onChange={(e) => setSelectedPlaylistId(e.target.value)}
                   >
-                    <option value="">— choose a playlist —</option>
+                    <option value="">Choose a playlist…</option>
                     {playlists.map((p) => (
                       <option key={p.playlistId} value={p.playlistId}>
                         {p.name}
