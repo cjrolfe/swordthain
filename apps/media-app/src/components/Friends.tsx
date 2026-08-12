@@ -115,8 +115,8 @@ export function Friends() {
           {busy ? "Sending…" : "Send invite"}
         </button>
       </form>
-      {error && <p className="error">{error}</p>}
-      {success && <p className="success">{success}</p>}
+      {error && <p className="error" role="status">{error}</p>}
+      {success && <p className="success" role="status">{success}</p>}
 
       {previewHtml && (
         <>

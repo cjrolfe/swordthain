@@ -54,6 +54,7 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
             <input
               id="email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -73,6 +74,7 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
               inputMode="numeric"
               pattern="[0-9]{6}"
               maxLength={6}
+              autoComplete="one-time-code"
               required
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -86,7 +88,7 @@ export function Login({ onLogin }: { onLogin: (session: Session) => void }) {
             </button>
           </form>
         )}
-        {error && <p className="error">{error}</p>}
+        {error && <p className="error" role="status">{error}</p>}
       </div>
     </div>
   );

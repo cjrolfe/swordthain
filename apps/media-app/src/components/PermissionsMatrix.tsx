@@ -32,7 +32,7 @@ export function PermissionsMatrix() {
     load();
   }, [load]);
 
-  if (error) return <p className="error">{error}</p>;
+  if (error) return <p className="error" role="status">{error}</p>;
   if (!data) return <p>Loading…</p>;
 
   const selectedFriend = data.friends.find((f) => f.userId === selectedUserId) ?? null;
@@ -150,6 +150,7 @@ export function PermissionsMatrix() {
                   <select
                     value={share.permission}
                     disabled={busy}
+                    aria-label={`Change access to "${folder.title}" for ${selectedFriend.email}`}
                     onChange={(e) => handleChangePermission(folder.folderId, e.target.value as Permission)}
                   >
                     {PERMISSIONS.map((p) => (
@@ -199,7 +200,14 @@ export function PermissionsMatrix() {
 
             {availableFolders.length > 0 && (
               <div className="inline-form">
-                <select value={addFolderId} onChange={(e) => setAddFolderId(e.target.value)}>
+                <label htmlFor="add-folder-select" className="visually-hidden">
+                  Folder to share with {selectedFriend.email}
+                </label>
+                <select
+                  id="add-folder-select"
+                  value={addFolderId}
+                  onChange={(e) => setAddFolderId(e.target.value)}
+                >
                   <option value="">— choose a folder —</option>
                   {availableFolders.map((f) => (
                     <option key={f.folderId} value={f.folderId}>
@@ -207,7 +215,14 @@ export function PermissionsMatrix() {
                     </option>
                   ))}
                 </select>
-                <select value={addPermission} onChange={(e) => setAddPermission(e.target.value as Permission)}>
+                <label htmlFor="add-permission-select" className="visually-hidden">
+                  Permission level
+                </label>
+                <select
+                  id="add-permission-select"
+                  value={addPermission}
+                  onChange={(e) => setAddPermission(e.target.value as Permission)}
+                >
                   {PERMISSIONS.map((p) => (
                     <option key={p} value={p}>
                       {p}

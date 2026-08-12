@@ -103,11 +103,19 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
     <div>
       <h3>{isOwner ? "New playlist" : "Create a playlist"}</h3>
       <form onSubmit={handleCreate} className="inline-form">
-        <input placeholder="Playlist name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+        <label htmlFor="new-playlist-name" className="visually-hidden">
+          Playlist name
+        </label>
+        <input
+          id="new-playlist-name"
+          placeholder="Playlist name"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+        />
         <button type="submit">Create</button>
       </form>
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error" role="status">{error}</p>}
       {loading && <p>Loading…</p>}
 
       <ul className="folder-list">
@@ -115,7 +123,15 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
           <li key={playlist.playlistId}>
             {renamingId === playlist.playlistId ? (
               <>
-                <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus />
+                <label htmlFor={`rename-playlist-${playlist.playlistId}`} className="visually-hidden">
+                  Rename "{playlist.name}"
+                </label>
+                <input
+                  id={`rename-playlist-${playlist.playlistId}`}
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  autoFocus
+                />
                 <button onClick={() => handleRename(playlist.playlistId)}>Save</button>
                 <button className="link" onClick={() => setRenamingId(null)}>
                   Cancel
@@ -151,7 +167,7 @@ export function Playlists({ isOwner }: { isOwner: boolean }) {
       {openPlaylist && (
         <>
           <h3>"{openPlaylist.name}"</h3>
-          {itemsError && <p className="error">{itemsError}</p>}
+          {itemsError && <p className="error" role="status">{itemsError}</p>}
           {!items && !itemsError && <p>Loading…</p>}
 
           {items && items.length > 0 && (

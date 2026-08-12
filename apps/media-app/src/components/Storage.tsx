@@ -27,7 +27,7 @@ export function Storage() {
   }, []);
 
   if (loading) return <p>Loading…</p>;
-  if (error) return <p className="error">{error}</p>;
+  if (error) return <p className="error" role="status">{error}</p>;
   if (!stats) return null;
 
   const { storage, security, itemCounts, lambdaErrors, ses } = stats;
@@ -86,7 +86,7 @@ export function Storage() {
           <tbody>
             {Object.entries(itemCounts).map(([key, count]) => (
               <tr key={key}>
-                <td>{ITEM_COUNT_LABELS[key] ?? key}</td>
+                <th scope="row">{ITEM_COUNT_LABELS[key] ?? key}</th>
                 <td>{count.toLocaleString()}</td>
               </tr>
             ))}
@@ -100,7 +100,7 @@ export function Storage() {
           <tbody>
             {lambdaErrors.map((fn) => (
               <tr key={fn.label}>
-                <td>{fn.label}</td>
+                <th scope="row">{fn.label}</th>
                 <td>
                   {fn.errorsLast7Days}
                   {fn.errorsLast7Days > 0 && <span className="badge badge-warn">check logs</span>}
@@ -116,19 +116,19 @@ export function Storage() {
         <table className="matrix">
           <tbody>
             <tr>
-              <td>WAF blocked requests</td>
+              <th scope="row">WAF blocked requests</th>
               <td>{security.wafBlockedRequests.toLocaleString()}</td>
             </tr>
             <tr>
-              <td>API 4xx errors</td>
+              <th scope="row">API 4xx errors</th>
               <td>{security.api4xxErrors.toLocaleString()}</td>
             </tr>
             <tr>
-              <td>API 5xx errors</td>
+              <th scope="row">API 5xx errors</th>
               <td>{security.api5xxErrors.toLocaleString()}</td>
             </tr>
             <tr>
-              <td>API throttled requests</td>
+              <th scope="row">API throttled requests</th>
               <td>
                 {security.apiThrottleCount.toLocaleString()}
                 {security.apiThrottleCount > 0 && <span className="badge badge-warn">check logs</span>}
@@ -148,7 +148,7 @@ export function Storage() {
           <table className="matrix">
             <tbody>
               <tr>
-                <td>Status</td>
+                <th scope="row">Status</th>
                 <td>
                   {ses.productionAccessEnabled ? "Production" : "Sandbox"}
                   <span className={`badge ${ses.productionAccessEnabled ? "" : "badge-warn"}`}>
@@ -157,7 +157,7 @@ export function Storage() {
                 </td>
               </tr>
               <tr>
-                <td>Sent, last 24h</td>
+                <th scope="row">Sent, last 24h</th>
                 <td>
                   {ses.sentLast24Hours.toLocaleString()} / {ses.max24HourSend.toLocaleString()}
                 </td>

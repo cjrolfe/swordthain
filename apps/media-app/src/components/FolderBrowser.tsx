@@ -173,6 +173,7 @@ function renderFigure(
       <button
         className={`thumb-button ${item.type === "video" ? "thumb-video" : "thumb-photo"}`}
         onClick={() => onOpen(item)}
+        aria-label={item.thumbnailUrl ? undefined : displayName}
       >
         {item.thumbnailUrl ? (
           <img src={item.thumbnailUrl} alt={displayName} loading="lazy" />
@@ -182,7 +183,11 @@ function renderFigure(
       </button>
       {editDescription?.editing ? (
         <>
+          <label htmlFor={`description-${item.mediaId}`} className="visually-hidden">
+            Description for {displayName}
+          </label>
           <input
+            id={`description-${item.mediaId}`}
             value={editDescription.value}
             onChange={(e) => editDescription.onValueChange(e.target.value)}
             placeholder="Short description"
@@ -600,12 +605,16 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
         </>
       )}
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error" role="status">{error}</p>}
       {loading && <p>Loading…</p>}
 
       {isOwner && (
         <form onSubmit={handleCreate} className="inline-form">
+          <label htmlFor="new-folder-title" className="visually-hidden">
+            New folder title
+          </label>
           <input
+            id="new-folder-title"
             placeholder="New folder title"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
@@ -628,7 +637,15 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
             <li>
               {isOwner && renamingId === folder.folderId ? (
                 <>
-                  <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} autoFocus />
+                  <label htmlFor={`rename-folder-${folder.folderId}`} className="visually-hidden">
+                    Rename "{folder.title}"
+                  </label>
+                  <input
+                    id={`rename-folder-${folder.folderId}`}
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    autoFocus
+                  />
                   <label>
                     <input
                       type="checkbox"
@@ -689,7 +706,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                     </span>
                   ))}
                 </nav>
-                {moveError && <p className="error">{moveError}</p>}
+                {moveError && <p className="error" role="status">{moveError}</p>}
                 {moveLoading && <p>Loading…</p>}
                 <ul className="folder-list">
                   {moveOptions
@@ -728,6 +745,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                 type="file"
                 multiple
                 accept="image/jpeg,image/png,image/heic,image/heif,video/mp4,video/quicktime,.m4v,video/x-m4v"
+                aria-label={`Upload photos or videos to ${currentFolder.title}`}
                 onChange={(e) => {
                   handleUpload(e.target.files);
                   e.target.value = "";
@@ -741,7 +759,10 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                 <li key={i}>
                   {u.name} — {u.status}
                   {u.message && (
-                    <span className={u.status === "error" ? "error" : "hint"}> ({u.message})</span>
+                    <span className={u.status === "error" ? "error" : "hint"} role="status">
+                      {" "}
+                      ({u.message})
+                    </span>
                   )}
                   {u.cancel && u.status === "uploading" && (
                     <button className="link danger" onClick={u.cancel}>

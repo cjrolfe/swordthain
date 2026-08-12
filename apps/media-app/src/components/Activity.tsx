@@ -56,7 +56,7 @@ export function Activity() {
   return (
     <div>
       <div className="inline-form">
-        <select value={folderId} onChange={(e) => setFolderId(e.target.value)}>
+        <select value={folderId} onChange={(e) => setFolderId(e.target.value)} aria-label="Filter by folder">
           <option value="">— any folder —</option>
           {folders.map((f) => (
             <option key={f.folderId} value={f.folderId}>
@@ -64,7 +64,7 @@ export function Activity() {
             </option>
           ))}
         </select>
-        <select value={userId} onChange={(e) => setUserId(e.target.value)}>
+        <select value={userId} onChange={(e) => setUserId(e.target.value)} aria-label="Filter by friend">
           <option value="">— any friend —</option>
           {friends.map((f) => (
             <option key={f.userId} value={f.userId}>
@@ -77,7 +77,7 @@ export function Activity() {
         </button>
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error" role="status">{error}</p>}
       {loading && <p>Loading…</p>}
       {!folderId && !userId && !loading && <p className="empty">Pick a folder and/or a friend to see activity.</p>}
       {entries && entries.length === 0 && !loading && <p className="empty">No activity found.</p>}
