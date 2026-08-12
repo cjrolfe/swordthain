@@ -14,6 +14,10 @@ Deferred features, known limitations, and settled decisions that don't need re-l
 - **WAF bot-control in front of `MediaHttpApi`** — AWS WAFv2 cannot attach to API Gateway HTTP APIs (v2) at all, only REST APIs (v1), CloudFront, ALB, etc. Needs either a REST API migration or CloudFront in front of the API — bigger moves than a standalone fix.
 - **`robots.txt`** as an actually-served static file for `swordthain.com`.
 
+## Known content issues
+
+- **`Paris.mp4` won't display in the browser** (found 12 Aug 2026) — encoded with the old MPEG-4 Part 2 codec (`mpeg4`/`mp4v`), which no browser's `<video>` element can decode. Audio plays fine (AAC track, supported); the picture never renders (`videoWidth`/`videoHeight` stay `0`). Confirmed via `ffprobe` against the real file. Scanned every other video in the library (28 of 29) the same way — all are `h264` and play normally; this is a one-off, not a systemic problem. Fix has to happen at the file level (the app can't transcode on the fly): re-export/re-encode to H.264 (e.g. QuickTime's "Export As" or HandBrake) and re-upload — not something to build a feature around for one file.
+
 ## Settled decisions (recorded, not open questions)
 
 - **No Glacier/Deep Archive tiering.** Evaluated at ~2TB scale; the extra saving over what Intelligent-Tiering's automatic tiers already capture is small (~$15–18/month) relative to the multi-hour restore delay and new product surface it would need (restore-initiate endpoint, "warming up" UI state). Revisit only if the library grows into the tens of TB.
