@@ -170,7 +170,7 @@ export class MediaAppHostingStack extends Stack {
       },
       customHeadersBehavior: {
         customHeaders: [
-          { header: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), fullscreen=()", override: true },
+          { header: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), fullscreen=(self)", override: true },
           { header: "Server", value: "cloudfront", override: true },
         ],
       },
