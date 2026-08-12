@@ -95,6 +95,17 @@ body {
   letter-spacing: 0.02em;
 }
 
+/* Form controls keep their own light-dark() background (not the page's
+   dark photo), so they need the generic light-dark() text color too —
+   otherwise they'd inherit .member-theme's near-white #f0ece4, which is
+   close to invisible against a white input in light color-scheme. */
+.member-theme input,
+.member-theme select,
+.member-theme textarea {
+  color: light-dark(#1a1a1a, #eaeaea);
+  text-shadow: none;
+}
+
 .member-theme .empty,
 .member-theme .hint {
   color: #cfcac2;
@@ -422,6 +433,26 @@ h4 {
   align-items: center;
   justify-content: center;
   z-index: 100;
+  /* Plain text (Loading…, notices) inherits this — the theme's own
+     light-dark() body color would be near-black in light mode, invisible
+     against this near-black backdrop regardless of page theme. */
+  color: #fff;
+}
+
+.lightbox-backdrop .error {
+  color: #ff8a80;
+}
+
+.lightbox-backdrop .empty,
+.lightbox-backdrop .hint {
+  color: #ccc;
+}
+
+/* .badge keeps its own light-dark() background regardless of the dark
+   backdrop behind it, so (unlike plain text) it needs its normal paired
+   text color back, not the backdrop's forced white. */
+.lightbox-backdrop .badge {
+  color: light-dark(#1a1a1a, #eaeaea);
 }
 
 .lightbox-content {
