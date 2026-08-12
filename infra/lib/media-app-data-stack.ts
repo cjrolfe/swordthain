@@ -671,6 +671,12 @@ export class MediaAppDataStack extends Stack {
       authorizer,
     });
     httpApi.addRoutes({
+      path: "/folders/shared-with-me",
+      methods: [apigwv2.HttpMethod.GET],
+      integration: foldersIntegration,
+      authorizer,
+    });
+    httpApi.addRoutes({
       path: "/folders/{folderId}",
       methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PATCH, apigwv2.HttpMethod.DELETE],
       integration: foldersIntegration,

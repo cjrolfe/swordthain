@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState, useCallback } from "react";
-import { api, Folder, MediaItem, ApiError, Playlist } from "../api";
+import { api, Folder, MediaItem, ApiError, Playlist, SharedFolder } from "../api";
 import { Lightbox } from "./Lightbox";
 
 const ROOT = "ROOT";
@@ -251,6 +251,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
   const [justAddedId, setJustAddedId] = useState<string | null>(null);
+  const [sharedWithMe, setSharedWithMe] = useState<SharedFolder[]>([]);
 
   const currentFolder = path[path.length - 1] ?? null;
   const currentParentId = currentFolder?.folderId ?? ROOT;
@@ -301,6 +302,22 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       .then(({ playlists }) => setPlaylists(playlists))
       .catch(() => {}); // non-fatal — the "add to playlist" picker just won't have options yet
   }, []);
+
+  useEffect(() => {
+    if (isOwner) return;
+    api
+      .listSharedWithMe()
+      .then(({ shared }) => setSharedWithMe(shared))
+      .catch(() => {}); // non-fatal — the section just won't show
+  }, [isOwner]);
+
+  function handleOpenSharedFolder(shared: SharedFolder) {
+    // Single-entry breadcrumb landing directly on the target folder —
+    // deliberately not a multi-level path through its (inaccessible)
+    // ancestors, since navigating into e.g. "2009" itself would 404 on
+    // listFolderMedia (no access to that folder's own content).
+    setPath([shared.folder]);
+  }
 
   async function handleAddToPlaylist(item: MediaItem) {
     if (!selectedPlaylistId) return;
@@ -552,6 +569,24 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
           </span>
         ))}
       </nav>
+
+      {!isOwner && path.length === 0 && sharedWithMe.length > 0 && (
+        <>
+          <h3>Shared with me</h3>
+          <ul className="folder-list">
+            {sharedWithMe.map((shared) => (
+              <li key={shared.folder.folderId}>
+                <button className="link folder-name" onClick={() => handleOpenSharedFolder(shared)}>
+                  📁 {shared.folder.title}
+                </button>
+                {shared.path.length > 0 && (
+                  <span className="hint">in {shared.path.map((p) => p.title).join(" / ")}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {error && <p className="error">{error}</p>}
       {loading && <p>Loading…</p>}

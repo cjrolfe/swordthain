@@ -41,6 +41,8 @@ export const handler: APIGatewayProxyHandlerV2WithJWTAuthorizer = async (event) 
       return createFolder(event);
     case "GET /folders":
       return listFolders(event, owner, userId);
+    case "GET /folders/shared-with-me":
+      return listSharedWithMe(userId);
     case "GET /folders/{folderId}":
       return getFolder(event, owner, userId);
     case "GET /folders/{folderId}/media":
@@ -127,6 +129,51 @@ async function listFolders(
       .filter((v) => v.access !== null)
       .map((v) => ({ ...v.folder, myPermission: v.access!.permission })),
   });
+}
+
+/**
+ * Explicit shares only, regardless of nesting depth — a folder reachable
+ * via an ancestor's share already shows up through normal listFolders
+ * browsing, so it doesn't need to appear here too. This exists because a
+ * folder nested under an unshared parent (e.g. moved under a new "2009"
+ * organizational folder) is otherwise invisible: listFolders only reveals
+ * a child if *that child itself* resolves as accessible, and access never
+ * cascades upward to reveal the path leading to a deeper share.
+ */
+async function listSharedWithMe(userId: string): Promise<APIGatewayProxyStructuredResultV2> {
+  const shares = await ddb.send(
+    new QueryCommand({
+      TableName: FOLDER_SHARES_TABLE_NAME,
+      IndexName: "byUser",
+      KeyConditionExpression: "userId = :u",
+      ExpressionAttributeValues: { ":u": userId },
+    })
+  );
+
+  const shared = await Promise.all(
+    (shares.Items ?? []).map(async (share) => {
+      const folder = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId: share.folderId } }));
+      if (!folder.Item) return null; // stale share on a since-deleted folder
+
+      // Ancestor titles are for display only ("Paris — in 2009") — not
+      // access-checked, since the Member has no permission on these
+      // folders themselves, only on the target folder below them.
+      const path: { folderId: string; title: string }[] = [];
+      let currentId: string | undefined = folder.Item.parentFolderId;
+      const visited = new Set<string>();
+      while (currentId && currentId !== ROOT && !visited.has(currentId)) {
+        visited.add(currentId);
+        const ancestor = await ddb.send(new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId: currentId } }));
+        if (!ancestor.Item) break;
+        path.unshift({ folderId: currentId, title: ancestor.Item.title });
+        currentId = ancestor.Item.parentFolderId;
+      }
+
+      return { folder: { ...folder.Item, myPermission: share.permission }, path };
+    })
+  );
+
+  return jsonResponse(200, { shared: shared.filter((s) => s !== null) });
 }
 
 async function getFolder(

@@ -35,6 +35,12 @@ export interface Folder {
   myPermission?: Permission;
 }
 
+export interface SharedFolder {
+  folder: Folder;
+  /** Ancestor titles for display context only (e.g. "in 2009") — these folders aren't independently browsable. */
+  path: { folderId: string; title: string }[];
+}
+
 export interface MediaItem {
   mediaId: string;
   folderId: string;
@@ -72,6 +78,7 @@ export interface PermissionsMatrix {
 export const api = {
   listFolders: (parentId?: string) =>
     request<{ folders: Folder[] }>("GET", `/folders${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ""}`),
+  listSharedWithMe: () => request<{ shared: SharedFolder[] }>("GET", "/folders/shared-with-me"),
   getFolder: (folderId: string) => request<Folder>("GET", `/folders/${folderId}`),
   createFolder: (body: { title: string; parentFolderId?: string; date?: string; guestUploadEnabled?: boolean }) =>
     request<Folder>("POST", "/folders", body),
