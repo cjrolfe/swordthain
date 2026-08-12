@@ -9,7 +9,9 @@ npm install
 npm test
 ```
 
-Needs AWS credentials that can `ssm:GetParameter` on `/swordthain/regression-test/otp-code` (that's the only AWS permission required — everything else is a plain HTTPS call, same as any real client). Locally, ambient credentials with broader access work fine. In CI, `swordthain-regression-test-ci` (`infra/lib/ci-stack.ts`) is scoped to exactly that one parameter.
+Needs AWS credentials for two things: `ssm:GetParameter` on `/swordthain/regression-test/otp-code` (the fixed sign-in code), and `dynamodb:PutItem`/`DeleteItem` on `swordthain-media-items` (the `playlists` scenario's synthetic video fixture — see `src/db.ts`). Everything else is a plain HTTPS call, same as any real client. Locally, ambient credentials with broader access work fine. In CI, `swordthain-regression-test-ci` (`infra/lib/ci-stack.ts`) is scoped to exactly those two things and nothing else.
+
+The DynamoDB grant wasn't there on the first real CI run — it worked locally (ambient AWS CLI credentials have broader access than the CI role, which masked the gap) but failed in CI with an honest `AccessDeniedException` on the very first attempt. Left here as a reminder that "works on my machine" isn't proof for anything touching IAM — the real CI role is the only trustworthy check.
 
 Run a subset while iterating on one area:
 

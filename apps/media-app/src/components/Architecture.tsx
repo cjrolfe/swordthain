@@ -167,17 +167,23 @@ flowchart LR
   infraRole["InfraCiRole<br/>assumes CDK bootstrap roles"]:::ci
   mediaRole["MediaAppCiRole<br/>S3 + CloudFront invalidate"]:::ci
   pgRole["PlaygroundCiRole<br/>S3 + Lambda + CloudFront invalidate"]:::ci
+  regressionRole["RegressionTestCiRole<br/>SSM + DynamoDB (media-items)"]:::ci
 
   cdkStacks["5 CDK stacks<br/>us-east-1 + eu-west-1"]:::compute
   mediaSite["media-app site bucket<br/>+ CloudFront"]:::compute
   pgSite["playground site bucket<br/>+ automation Lambda<br/>+ CloudFront"]:::compute
+  regressionSuite["infra/regression-tests<br/>scenario suite"]:::compute
 
   gh -->|"infra/**"| infraRole --> cdkStacks
   gh -->|"apps/media-app/**"| mediaRole --> mediaSite
   gh -->|"apps/playground/**"| pgRole --> pgSite
+  infraRole -. "workflow_run: success" .-> regressionRole
+  mediaRole -. "workflow_run: success" .-> regressionRole
+  regressionRole --> regressionSuite
   oidc -. trust .-> infraRole
   oidc -. trust .-> mediaRole
   oidc -. trust .-> pgRole
+  oidc -. trust .-> regressionRole
 `,
 } as const;
 
@@ -257,8 +263,10 @@ export function Architecture() {
 
       <h4>CI/CD — deploy topology</h4>
       <p className="hint">
-        Three independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no
-        long-lived AWS keys stored anywhere.
+        Four independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no
+        long-lived AWS keys stored anywhere. Three deploy on a path-filtered push to <code>main</code>; the fourth
+        (the regression-test suite) runs afterward, triggered by the deploy workflows succeeding rather than by a
+        path.
       </p>
       <Diagram diagramKey="cicd" svg={svgs.cicd ?? null} />
     </div>

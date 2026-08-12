@@ -22,6 +22,10 @@ Both apps share the same AWS account and some resources at the account level:
 
 Each app deploys its own CDK stack independently; shared resources in `infra/` are provisioned separately so they don't couple the two apps' deploys together.
 
+## Automated regression tests run after every deploy
+
+`infra/regression-tests` signs in as a dedicated, Owner-privileged test account (fixed OTP, zero human interaction — see its README for how) and exercises real CRUD flows against the live `apps/media-app` API, cleaning up everything it creates inside one "CI Test" folder. `.github/workflows/regression-test.yml` runs it automatically after `deploy-infra.yml`/`deploy-media-app.yml` succeed. Run it yourself after any change — `npm test` in that directory, no OTP needed — and add or extend a scenario in `src/scenarios/` for whatever the change was, so it stays covered going forward. It doesn't cover `apps/playground`/`labs.swordthain.com` or anything only a real browser would catch (e.g. a CSP misconfiguration) — the manual checks below still matter for those.
+
 ## Verify everything after any deployment
 
 Both apps share the same account-level resources (Cognito pool, the cross-subdomain `swordthain_session` cookie, Route 53, CloudFront), so a change to one can silently break the other. After deploying anything — even a change that looks scoped to one app — re-check end to end rather than just the piece that changed:
@@ -41,5 +45,6 @@ Docs have gone stale within the same session that produced a feature more than o
 - The relevant app's `README.md`/`CLAUDE.md`/`BACKLOG.md` (features, routes, gotchas — whatever actually changed).
 - The **"Swordthain Backlog" Apple Note** — a synced summary of `apps/media-app/BACKLOG.md` and `apps/playground/BACKLOG.md`. Update it alongside those files, not separately, so it doesn't drift from them.
 - `infra/docs/architecture-diagram.html` and its duplicate, the `DIAGRAMS` const in `apps/media-app/src/components/Architecture.tsx` — the two are kept in sync with each other. Needs an update if the change adds/removes a route, Lambda, table, GSI, or stack.
+- `infra/regression-tests/src/scenarios/` — a new or changed feature usually wants a new scenario or an extension of an existing one, so the automated suite actually covers it going forward instead of just today's manual verification.
 
 Not every change needs all three — a CSS tweak needs none of them, a new API route needs at least the relevant README and probably the architecture diagram. Use judgment, but *check* rather than assume no doc changes are needed.

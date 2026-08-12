@@ -423,7 +423,7 @@ sequenceDiagram
   <section class="diagram-block">
     <p class="section-num">04</p>
     <h2>CI/CD — deploy topology</h2>
-    <p class="diagram-caption">Three independently-scoped GitHub Actions pipelines, gated by path filters, each assuming a purpose-built IAM role via OIDC — no long-lived AWS keys stored anywhere. A playground-only change cannot touch infra permissions, and vice versa.</p>
+    <p class="diagram-caption">Four independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no long-lived AWS keys stored anywhere. A playground-only change cannot touch infra permissions, and vice versa. Three deploy on a path-filtered push to <code>main</code>; the fourth (the regression-test suite) is triggered by the deploy workflows succeeding, not by a path.</p>
     <div class="diagram-frame"><pre class="mermaid">
 flowchart LR
   classDef ci fill:#4c8f5822,stroke:#4c8f58,color:#4c8f58,stroke-width:1.5px
@@ -435,17 +435,23 @@ flowchart LR
   infraRole["InfraCiRole<br/>assumes CDK bootstrap roles"]:::ci
   mediaRole["MediaAppCiRole<br/>S3 + CloudFront invalidate"]:::ci
   pgRole["PlaygroundCiRole<br/>S3 + Lambda + CloudFront invalidate"]:::ci
+  regressionRole["RegressionTestCiRole<br/>SSM + DynamoDB (media-items)"]:::ci
 
   cdkStacks["5 CDK stacks<br/>us-east-1 + eu-west-1"]:::compute
   mediaSite["media-app site bucket<br/>+ CloudFront"]:::compute
   pgSite["playground site bucket<br/>+ automation Lambda<br/>+ CloudFront"]:::compute
+  regressionSuite["infra/regression-tests<br/>scenario suite"]:::compute
 
   gh -->|"infra/**"| infraRole --> cdkStacks
   gh -->|"apps/media-app/**"| mediaRole --> mediaSite
   gh -->|"apps/playground/**"| pgRole --> pgSite
+  infraRole -. "workflow_run: success" .-> regressionRole
+  mediaRole -. "workflow_run: success" .-> regressionRole
+  regressionRole --> regressionSuite
   oidc -. trust .-> infraRole
   oidc -. trust .-> mediaRole
   oidc -. trust .-> pgRole
+  oidc -. trust .-> regressionRole
     </pre></div>
     <div class="note"><strong>Playground's sync is scoped per-subdirectory</strong> (not a single bucket-wide sync), so the deploy can never delete company/project pages the automation Lambda writes straight to S3 at runtime — those pages exist only in the bucket, never in this git checkout.</div>
   </section>
