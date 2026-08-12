@@ -97,12 +97,23 @@ export class AuthStack extends Stack {
       entry: path.join(lambdaDir, "define-auth-challenge.ts"),
     });
 
+    // Lets the regression-test suite (infra/regression-tests) sign in with
+    // a known, fixed code instead of a human reading an emailed one — see
+    // create-auth-challenge.ts's isTestAccount branch. The parameter value
+    // itself is populated out-of-band via `aws ssm put-parameter`, never
+    // committed, matching the convention already used by
+    // infra/lambda/playground/api-testing-proxy.ts.
+    const regressionTestEmail = "ci-test@swordthain.com";
+    const regressionTestOtpParam = "/swordthain/regression-test/otp-code";
+
     const createAuthChallengeFn = new NodejsFunction(this, "CreateAuthChallengeFn", {
       ...nodeJsFunctionProps,
       entry: path.join(lambdaDir, "create-auth-challenge.ts"),
       environment: {
         OTP_TABLE_NAME: otpTable.tableName,
         SES_FROM_ADDRESS: this.sesFromAddress,
+        REGRESSION_TEST_EMAIL: regressionTestEmail,
+        REGRESSION_TEST_OTP_PARAM: regressionTestOtpParam,
       },
     });
     otpTable.grantWriteData(createAuthChallengeFn);
@@ -110,6 +121,12 @@ export class AuthStack extends Stack {
       new iam.PolicyStatement({
         actions: ["ses:SendEmail"],
         resources: [this.sesIdentity.emailIdentityArn],
+      })
+    );
+    createAuthChallengeFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ssm:GetParameter"],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter${regressionTestOtpParam}`],
       })
     );
 

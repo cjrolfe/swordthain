@@ -3,17 +3,35 @@ import { randomInt, createHash } from "node:crypto";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
+import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const ses = new SESv2Client({});
+const ssm = new SSMClient({});
 
 const OTP_TABLE_NAME = process.env.OTP_TABLE_NAME!;
 const SES_FROM_ADDRESS = process.env.SES_FROM_ADDRESS!;
+const REGRESSION_TEST_EMAIL = process.env.REGRESSION_TEST_EMAIL;
+const REGRESSION_TEST_OTP_PARAM = process.env.REGRESSION_TEST_OTP_PARAM;
 const OTP_TTL_SECONDS = 5 * 60;
 
 const hashCode = (code: string) => createHash("sha256").update(code).digest("hex");
 
 const generateCode = () => randomInt(0, 1_000_000).toString().padStart(6, "0");
+
+// Cached across warm invocations, same pattern as
+// infra/lambda/playground/api-testing-proxy.ts.
+let cachedTestOtp: string | undefined;
+
+/** Fixed code for the one designated regression-test account — lets the test suite sign in with zero human interaction. */
+async function getTestOtp(): Promise<string> {
+  if (cachedTestOtp) return cachedTestOtp;
+  const result = await ssm.send(new GetParameterCommand({ Name: REGRESSION_TEST_OTP_PARAM!, WithDecryption: true }));
+  const value = result.Parameter?.Value;
+  if (!value) throw new Error(`SSM parameter ${REGRESSION_TEST_OTP_PARAM} has no value`);
+  cachedTestOtp = value;
+  return value;
+}
 
 export const handler: CreateAuthChallengeTriggerHandler = async (event) => {
   // For a nonexistent user, Cognito's preventUserExistenceErrors setting still
@@ -27,7 +45,13 @@ export const handler: CreateAuthChallengeTriggerHandler = async (event) => {
   const isFreshChallenge = event.request.session.length === 0;
 
   if (isFreshChallenge && realEmail) {
-    const code = generateCode();
+    // The regression-test suite needs a code it already knows, not one it
+    // has to read out of an inbox — every other account still gets a real
+    // random code. Never emailed: nothing would be monitoring that inbox,
+    // and there's no reason to risk a bounce against the domain's SES
+    // sending reputation on every CI run.
+    const isTestAccount = REGRESSION_TEST_EMAIL !== undefined && email === REGRESSION_TEST_EMAIL;
+    const code = isTestAccount ? await getTestOtp() : generateCode();
     const expiresAt = Math.floor(Date.now() / 1000) + OTP_TTL_SECONDS;
 
     await ddb.send(
@@ -42,22 +66,24 @@ export const handler: CreateAuthChallengeTriggerHandler = async (event) => {
       })
     );
 
-    await ses.send(
-      new SendEmailCommand({
-        FromEmailAddress: SES_FROM_ADDRESS,
-        Destination: { ToAddresses: [email] },
-        Content: {
-          Simple: {
-            Subject: { Data: "Your Swordthain sign-in code" },
-            Body: {
-              Text: {
-                Data: `Your sign-in code is ${code}. It expires in 5 minutes.\n\nIf you didn't request this, you can ignore this email.`,
+    if (!isTestAccount) {
+      await ses.send(
+        new SendEmailCommand({
+          FromEmailAddress: SES_FROM_ADDRESS,
+          Destination: { ToAddresses: [email] },
+          Content: {
+            Simple: {
+              Subject: { Data: "Your Swordthain sign-in code" },
+              Body: {
+                Text: {
+                  Data: `Your sign-in code is ${code}. It expires in 5 minutes.\n\nIf you didn't request this, you can ignore this email.`,
+                },
               },
             },
           },
-        },
-      })
-    );
+        })
+      );
+    }
   }
 
   // Never expose the code (or its hash) to the client-visible challenge params.

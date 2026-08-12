@@ -156,8 +156,28 @@ export class CiStack extends Stack {
       })
     );
 
+    // --- infra/regression-tests: only needs to read the fixed test-account ---
+    // OTP so it can sign in with zero human interaction. No S3/Lambda/
+    // CloudFront access at all — everything else it does is a plain HTTPS
+    // call to Cognito's public API and the app's own API Gateway, same as
+    // any real client.
+    const regressionTestRole = new iam.Role(this, "RegressionTestCiRole", {
+      roleName: "swordthain-regression-test-ci",
+      assumedBy: oidcPrincipal,
+      description: "GitHub Actions role for the post-deploy regression-test suite",
+    });
+    regressionTestRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["ssm:GetParameter"],
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/swordthain/regression-test/otp-code`,
+        ],
+      })
+    );
+
     new CfnOutput(this, "PlaygroundCiRoleArn", { value: playgroundRole.roleArn });
     new CfnOutput(this, "MediaAppCiRoleArn", { value: mediaAppRole.roleArn });
     new CfnOutput(this, "InfraCiRoleArn", { value: infraRole.roleArn });
+    new CfnOutput(this, "RegressionTestCiRoleArn", { value: regressionTestRole.roleArn });
   }
 }
