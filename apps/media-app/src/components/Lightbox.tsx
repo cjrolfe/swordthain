@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { api, MediaItem } from "../api";
+import { Dialog } from "./Dialog";
 
 export function Lightbox({ item, onClose }: { item: MediaItem; onClose: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const displayName = item.description || item.fileName;
 
   useEffect(() => {
     let cancelled = false;
@@ -20,32 +22,24 @@ export function Lightbox({ item, onClose }: { item: MediaItem; onClose: () => vo
     };
   }, [item.mediaId]);
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div className="lightbox-backdrop" onClick={onClose}>
-      <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-        <button className="lightbox-close" onClick={onClose}>
-          ✕
-        </button>
-        {error && <p className="error">{error}</p>}
-        {!error && !url && <p>Loading…</p>}
-        {url && item.type === "photo" && <img src={url} alt={item.description || item.fileName} />}
-        {url && item.type === "video" && (
-          // Progressive playback via a direct presigned URL — browsers handle
-          // seeking via HTTP Range requests natively. Adaptive-bitrate HLS
-          // is a later phase (needs CloudFront + signed cookies, not just
-          // presigned S3 URLs — see infra/README.md).
-          <video src={url} controls autoPlay />
-        )}
-        {url && <p className="lightbox-caption">{item.description || item.fileName}</p>}
-      </div>
-    </div>
+    <Dialog onClose={onClose} labelledBy="lightbox-title">
+      <button className="lightbox-close" onClick={onClose} aria-label="Close">
+        ✕
+      </button>
+      {error && <p className="error" role="status">{error}</p>}
+      {!error && !url && <p>Loading…</p>}
+      {url && item.type === "photo" && <img src={url} alt={displayName} />}
+      {url && item.type === "video" && (
+        // Progressive playback via a direct presigned URL — browsers handle
+        // seeking via HTTP Range requests natively. Adaptive-bitrate HLS
+        // is a later phase (needs CloudFront + signed cookies, not just
+        // presigned S3 URLs — see infra/README.md).
+        <video src={url} controls autoPlay />
+      )}
+      <p id="lightbox-title" className="lightbox-caption">
+        {displayName}
+      </p>
+    </Dialog>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, PlaylistItem } from "../api";
+import { Dialog } from "./Dialog";
 
 export function PlaylistPlayer({
   playlistName,
@@ -41,14 +42,6 @@ export function PlaylistPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   function skip() {
     setUrl(null);
     setNotice(null);
@@ -63,55 +56,55 @@ export function PlaylistPlayer({
   }
 
   return (
-    <div className="lightbox-backdrop" onClick={onClose}>
-      <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-        <button className="lightbox-close" onClick={onClose}>
-          ✕
-        </button>
+    <Dialog onClose={onClose} labelledBy="playlist-player-title">
+      <button className="lightbox-close" onClick={onClose} aria-label="Close">
+        ✕
+      </button>
 
-        <div className="playlist-player-chrome">
-          <span className="badge">{playlistName}</span>
-          {!finished && (
-            <span className="badge">
-              {index + 1} of {items.length} — {current?.description || current?.fileName || "…"}
-            </span>
-          )}
-        </div>
-        {notice && <p className="hint">{notice}</p>}
-
-        {finished && <p className="empty">Nothing left to play in this playlist.</p>}
-
-        {!finished && !url && !notice && <p>Loading…</p>}
-
-        {!finished && url && (
-          // Same progressive-playback mechanism as Lightbox — view-url only,
-          // never download-url. controlsList is a UI nicety, not a security
-          // control: the real guarantee is that this component never calls
-          // api.downloadUrl and never renders a download link anywhere.
-          <video
-            key={current!.mediaId}
-            src={url}
-            controls
-            autoPlay
-            controlsList="nodownload"
-            disablePictureInPicture
-            onEnded={() => setIndex((i) => i + 1)}
-            onError={() => {
-              setNotice(`"${current!.description || current!.fileName || "This clip"}" failed to play — skipping`);
-              setIndex((i) => i + 1);
-            }}
-          />
+      <div className="playlist-player-chrome">
+        <span id="playlist-player-title" className="badge">
+          {playlistName}
+        </span>
+        {!finished && (
+          <span className="badge">
+            {index + 1} of {items.length} — {current?.description || current?.fileName || "…"}
+          </span>
         )}
-
-        <div className="playlist-player-controls">
-          <button onClick={previous} disabled={index === 0}>
-            Previous
-          </button>
-          <button onClick={skip} disabled={finished}>
-            Skip
-          </button>
-        </div>
       </div>
-    </div>
+      {notice && <p className="hint" role="status">{notice}</p>}
+
+      {finished && <p className="empty">Nothing left to play in this playlist.</p>}
+
+      {!finished && !url && !notice && <p>Loading…</p>}
+
+      {!finished && url && (
+        // Same progressive-playback mechanism as Lightbox — view-url only,
+        // never download-url. controlsList is a UI nicety, not a security
+        // control: the real guarantee is that this component never calls
+        // api.downloadUrl and never renders a download link anywhere.
+        <video
+          key={current!.mediaId}
+          src={url}
+          controls
+          autoPlay
+          controlsList="nodownload"
+          disablePictureInPicture
+          onEnded={() => setIndex((i) => i + 1)}
+          onError={() => {
+            setNotice(`"${current!.description || current!.fileName || "This clip"}" failed to play — skipping`);
+            setIndex((i) => i + 1);
+          }}
+        />
+      )}
+
+      <div className="playlist-player-controls">
+        <button onClick={previous} disabled={index === 0}>
+          Previous
+        </button>
+        <button onClick={skip} disabled={finished}>
+          Skip
+        </button>
+      </div>
+    </Dialog>
   );
 }
