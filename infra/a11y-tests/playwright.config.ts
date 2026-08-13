@@ -15,6 +15,9 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: BASE_URL,
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
     ...devices["Desktop Chrome"],
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
