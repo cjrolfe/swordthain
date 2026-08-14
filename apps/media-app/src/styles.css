@@ -13,7 +13,18 @@
 
 body {
   margin: 0;
+  /* Plain fallback before each light-dark() — TV browsers (e.g. LG WebOS's
+     built-in browser) often run an older engine that doesn't support
+     light-dark() at all. An unsupported value drops the whole declaration,
+     leaving color/background at their inherited/initial defaults — on this
+     app that meant dark text with no opaque background, unreadable against
+     the login page's photo. A browser that DOES support light-dark() still
+     applies it normally, since it's declared second and wins the cascade;
+     one that doesn't just keeps this fallback instead of falling through to
+     nothing. Applied throughout this file for every light-dark() usage. */
+  background: #f7f7f8;
   background: light-dark(#f7f7f8, #17181a);
+  color: #1a1a1a;
   color: light-dark(#1a1a1a, #eaeaea);
 }
 
@@ -47,6 +58,7 @@ body {
   max-width: 360px;
   padding: 2rem;
   border-radius: 12px;
+  background: #fff;
   background: light-dark(#fff, #232427);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
@@ -61,6 +73,7 @@ body {
 
 .login-tagline {
   margin: 0.25rem 0 1.25rem;
+  color: #6b6f76;
   color: light-dark(#6b6f76, #9a9ea5);
   font-size: 0.9rem;
 }
@@ -102,6 +115,7 @@ body {
 .member-theme input,
 .member-theme select,
 .member-theme textarea {
+  color: #1a1a1a;
   color: light-dark(#1a1a1a, #eaeaea);
   text-shadow: none;
 }
@@ -175,6 +189,7 @@ header h1 {
 .tabs {
   display: flex;
   gap: 0.25rem;
+  border-bottom: 1px solid #ddd;
   border-bottom: 1px solid light-dark(#ddd, #333);
   margin-bottom: 1.5rem;
 }
@@ -207,7 +222,9 @@ select,
 textarea {
   padding: 0.45rem 0.6rem;
   border-radius: 6px;
+  border: 1px solid #ccc;
   border: 1px solid light-dark(#ccc, #444);
+  background: #fff;
   background: light-dark(#fff, #1c1d1f);
   color: inherit;
 }
@@ -230,20 +247,24 @@ button.link,
 a.link {
   background: none;
   border: none;
+  color: #3163e0;
   color: light-dark(#3163e0, #4a7dff);
   padding: 0.2rem 0.4rem;
   text-decoration: none;
 }
 
 button.danger {
+  color: #b3241c;
   color: light-dark(#b3241c, #d9483f);
 }
 
 .error {
+  color: #b3241c;
   color: light-dark(#b3241c, #d9483f);
 }
 
 .success {
+  color: #1e7a38;
   color: light-dark(#1e7a38, #2c9a4b);
 }
 
@@ -259,7 +280,9 @@ button.danger {
 
 .notify-banner,
 .notify-dialog {
+  background: #eef3ff;
   background: light-dark(#eef3ff, #1c2333);
+  border: 1px solid #c9d8ff;
   border: 1px solid light-dark(#c9d8ff, #33456b);
   border-radius: 6px;
   padding: 0.6rem 0.75rem;
@@ -283,6 +306,7 @@ button.danger {
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
   border-bottom: 1px solid light-dark(#eee, #2a2b2e);
 }
 
@@ -301,11 +325,13 @@ button.danger {
 }
 
 .empty {
+  color: #666;
   color: light-dark(#666, #999);
   font-style: italic;
 }
 
 .hint {
+  color: #666;
   color: light-dark(#666, #999);
   font-size: 0.9rem;
   margin: 0.25rem 0 0.75rem;
@@ -318,7 +344,9 @@ button.danger {
 }
 
 .code-block {
+  background: #f0f0f0;
   background: light-dark(#f0f0f0, #2a2a2a);
+  color: #222;
   color: light-dark(#222, #eee);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 0.85rem;
@@ -335,6 +363,7 @@ button.danger {
   gap: 0.4rem 1.2rem;
   margin: 0.5rem 0 1.25rem;
   padding: 0.7rem 0.9rem;
+  border: 1px solid #eee;
   border: 1px solid light-dark(#eee, #2a2b2e);
   border-radius: 6px;
 }
@@ -344,6 +373,7 @@ button.danger {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.85rem;
+  color: #666;
   color: light-dark(#666, #999);
 }
 
@@ -355,6 +385,7 @@ button.danger {
 }
 
 .diagram-frame {
+  border: 1px solid #eee;
   border: 1px solid light-dark(#eee, #2a2b2e);
   border-radius: 6px;
   padding: 1rem;
@@ -400,6 +431,7 @@ h4 {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 8px;
+  background: #eee;
   background: light-dark(#eee, #2a2b2e);
   display: flex;
   align-items: center;
@@ -452,6 +484,7 @@ h4 {
    backdrop behind it, so (unlike plain text) it needs its normal paired
    text color back, not the backdrop's forced white. */
 .lightbox-backdrop .badge {
+  color: #1a1a1a;
   color: light-dark(#1a1a1a, #eaeaea);
 }
 
@@ -530,6 +563,7 @@ table.matrix {
 table.matrix th,
 table.matrix td {
   padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
   border-bottom: 1px solid light-dark(#eee, #2a2b2e);
   text-align: left;
   white-space: nowrap;
@@ -541,11 +575,14 @@ table.matrix td {
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   font-size: 0.7rem;
+  background: #eee;
   background: light-dark(#eee, #333);
 }
 
 .badge-warn {
+  background: #fde2e1;
   background: light-dark(#fde2e1, #4a2323);
+  color: #8a1f1f;
   color: light-dark(#8a1f1f, #f5a3a3);
 }
 
@@ -558,6 +595,7 @@ table.matrix td {
 .stat-card {
   flex: 1;
   padding: 1rem;
+  border: 1px solid #eee;
   border: 1px solid light-dark(#eee, #2a2b2e);
   border-radius: 8px;
 }
@@ -566,6 +604,7 @@ table.matrix td {
   margin: 0 0 0.4rem;
   font-size: 0.8rem;
   font-weight: 500;
+  color: #726e63;
   color: light-dark(#726e63, #9a988f);
 }
 
@@ -592,6 +631,7 @@ table.matrix td {
   width: 100%;
   max-width: 560px;
   height: 420px;
+  border: 1px solid #ccc;
   border: 1px solid light-dark(#ccc, #444);
   border-radius: 6px;
   background: #fff;
