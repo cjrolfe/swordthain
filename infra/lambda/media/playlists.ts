@@ -3,7 +3,7 @@ import type {
   APIGatewayProxyHandlerV2WithJWTAuthorizer,
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
-import { ConditionalCheckFailedException, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   DeleteCommand,
@@ -20,6 +20,7 @@ import { randomUUID } from "node:crypto";
 import { isOwner } from "./authz";
 import { hasPermission, resolveAccess } from "./access";
 import { jsonResponse } from "./http";
+import { deletePlaylistItemRow } from "./playlist-items";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -379,18 +380,8 @@ async function removePlaylistItem(
   const loaded = await loadPlaylist(playlistId, owner, userId);
   if ("deny" in loaded) return denyResponse(loaded.deny);
 
-  try {
-    await ddb.send(
-      new DeleteCommand({
-        TableName: PLAYLIST_ITEMS_TABLE_NAME,
-        Key: { playlistId, position },
-        ConditionExpression: "attribute_exists(playlistId)",
-      })
-    );
-  } catch (err) {
-    if (err instanceof ConditionalCheckFailedException) return jsonResponse(404, { error: "Item not found" });
-    throw err;
-  }
+  const deleted = await deletePlaylistItemRow(ddb, PLAYLIST_ITEMS_TABLE_NAME, playlistId, position);
+  if (!deleted) return jsonResponse(404, { error: "Item not found" });
 
   await ddb.send(
     new UpdateCommand({

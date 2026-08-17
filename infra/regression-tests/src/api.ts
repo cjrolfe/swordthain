@@ -53,6 +53,12 @@ export function makeApi(idToken: string) {
 
     listPlaylists: () => request<{ playlists: { playlistId: string; name: string }[] }>("GET", "/playlists", idToken),
     createPlaylist: (name: string) => request<{ playlistId: string; name: string }>("POST", "/playlists", idToken, { name }),
+    getPlaylist: (playlistId: string) =>
+      request<{ playlistId: string; name: string; itemCount: number; nextPosition: number }>(
+        "GET",
+        `/playlists/${playlistId}`,
+        idToken
+      ),
     deletePlaylist: (playlistId: string) =>
       request<{ deleted: boolean }>("DELETE", `/playlists/${playlistId}`, idToken),
     getPlaylistItems: (playlistId: string) =>

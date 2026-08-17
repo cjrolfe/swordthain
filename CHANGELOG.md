@@ -4,6 +4,18 @@ All notable changes to this project, by release date. Each entry corresponds to 
 
 This history was reconstructed retroactively (12 Aug 2026) from git log and `apps/media-app/BACKLOG.md`. The 10–12 Aug entries are detailed and cross-checked against BACKLOG.md's own dated entries; earlier entries are concise summaries derived from commit messages, not a full diff-by-diff account — honest about being reconstructed, not live-tracked from day one.
 
+## [2026.08.17]
+
+- **Playlist orphaned-item cascade cleanup** — deleting a media item now removes any `PlaylistItems` rows referencing it, across every playlist that has it (new `byMedia` GSI on `PlaylistItemsTable`, queried by `deleteMedia`), and decrements each affected playlist's `itemCount` correctly. Previously the row was only ever tolerated as an advisory `available: false` at read time, accumulating forever. Going forward only — any orphans from the 11–17 Aug window weren't backfilled, since they're already tolerated the same way today.
+
+## [2026.08.14]
+
+- **`light-dark()` fallback for older browsers** — found live on an LG WebOS smart-TV browser: unreadable text/missing backgrounds app-wide. `apps/media-app/src/styles.css` uses the CSS `light-dark()` function extensively; TV browsers often run an older engine that doesn't support it, and an unsupported CSS value drops the entire declaration, leaving color/background at inherited/initial defaults. Fixed by declaring a plain fallback value immediately before every `light-dark(...)` declaration — the standard progressive-enhancement pattern for this function. Re-verified the full WCAG 2.1 AA suite afterward — zero violations.
+
+## [2026.08.13]
+
+- **`infra/a11y-tests` CI flake fix** — `PlaylistPlayer`'s WCAG scan test occasionally took 10-15s instead of ~2-5s, once hitting the full 90s CI budget. Root-caused via Playwright trace inspection to `axe-core`'s own `runPartial()` scan having real, externally-caused runtime variance — mitigated with a generous, evidence-based 180s timeout plus CI failure-artifact capture (trace/screenshot/video on failure). Along the way, found and fixed a real bug in the test's own self-healing cleanup sweep (`Locator.count()` doesn't auto-wait, so it raced the playlist list's async load and left orphaned test playlists behind).
+
 ## [2026.08.12]
 
 - **"Shared with me" list** — a folder nested under an unshared parent (e.g. moved under a new year-folder via Move) was real but unreachable for the Member it was shared with: access cascades downward from a shared ancestor, never upward to reveal the path to a deeper share. New `GET /folders/shared-with-me` lists every folder explicitly shared with the caller, with ancestor titles for display context only. Caught live against a real share that had gone quietly unreachable.

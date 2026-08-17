@@ -3,14 +3,22 @@ import type {
   APIGatewayProxyHandlerV2WithJWTAuthorizer,
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { ConditionalCheckFailedException, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  DeleteCommand,
+  UpdateCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { S3Client, GetObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
 import { isOwner } from "./authz";
 import { hasPermission, resolveAccess } from "./access";
 import { jsonResponse } from "./http";
+import { deletePlaylistItemRow } from "./playlist-items";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
@@ -20,6 +28,8 @@ const FOLDER_SHARES_TABLE_NAME = process.env.FOLDER_SHARES_TABLE_NAME!;
 const MEDIA_TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
 const MEDIA_BUCKET_NAME = process.env.MEDIA_BUCKET_NAME!;
 const ACTIVITY_LOG_TABLE_NAME = process.env.ACTIVITY_LOG_TABLE_NAME!;
+const PLAYLISTS_TABLE_NAME = process.env.PLAYLISTS_TABLE_NAME!;
+const PLAYLIST_ITEMS_TABLE_NAME = process.env.PLAYLIST_ITEMS_TABLE_NAME!;
 
 // Short-lived — reissued on every view/download rather than cached client-side.
 const URL_EXPIRY_SECONDS = 300;
@@ -98,7 +108,72 @@ async function deleteMedia(
 
   await ddb.send(new DeleteCommand({ TableName: MEDIA_TABLE_NAME, Key: { mediaId } }));
 
+  try {
+    await cleanupPlaylistReferences(mediaId);
+  } catch (err) {
+    console.error("cleanupPlaylistReferences failed for", mediaId, err);
+    // Best-effort tidiness, not correctness-critical — an orphaned row is
+    // already tolerated gracefully by listPlaylistItems (available: false)
+    // if this fails, same as before this cleanup existed.
+  }
+
   return jsonResponse(200, { mediaId, deleted: true });
+}
+
+/**
+ * Finds every PlaylistItems row referencing mediaId (across every playlist,
+ * possibly more than one row per playlist since addPlaylistItem doesn't
+ * dedupe) via the byMedia GSI, deletes each row, and decrements itemCount
+ * on each affected playlist by however many of its rows were actually
+ * removed. Safe under concurrent deleteMedia/removePlaylistItem calls: see
+ * deletePlaylistItemRow's own idempotency guarantee in playlist-items.ts.
+ */
+async function cleanupPlaylistReferences(mediaId: string): Promise<void> {
+  const matches = await ddb.send(
+    new QueryCommand({
+      TableName: PLAYLIST_ITEMS_TABLE_NAME,
+      IndexName: "byMedia",
+      KeyConditionExpression: "mediaId = :m",
+      ExpressionAttributeValues: { ":m": mediaId },
+    })
+  );
+  const items = (matches.Items ?? []) as { playlistId: string; position: number }[];
+  if (items.length === 0) return;
+
+  const results = await Promise.all(
+    items.map(async (item) => ({
+      playlistId: item.playlistId,
+      deleted: await deletePlaylistItemRow(ddb, PLAYLIST_ITEMS_TABLE_NAME, item.playlistId, item.position),
+    }))
+  );
+
+  const decrementsByPlaylist = new Map<string, number>();
+  for (const r of results) {
+    if (r.deleted) decrementsByPlaylist.set(r.playlistId, (decrementsByPlaylist.get(r.playlistId) ?? 0) + 1);
+  }
+
+  await Promise.all(
+    [...decrementsByPlaylist.entries()].map(([playlistId, n]) =>
+      ddb
+        .send(
+          new UpdateCommand({
+            TableName: PLAYLISTS_TABLE_NAME,
+            Key: { playlistId },
+            // Tolerates a concurrent deletePlaylist call racing this update
+            // — without this, UpdateItem's default upsert would resurrect a
+            // ghost {playlistId, itemCount: -n} row for a playlist that no
+            // longer exists.
+            ConditionExpression: "attribute_exists(playlistId)",
+            UpdateExpression: "ADD itemCount :neg SET updatedAt = :now",
+            ExpressionAttributeValues: { ":neg": -n, ":now": new Date().toISOString() },
+          })
+        )
+        .catch((err) => {
+          if (err instanceof ConditionalCheckFailedException) return;
+          throw err;
+        })
+    )
+  );
 }
 
 const DESCRIPTION_MAX_LENGTH = 140;

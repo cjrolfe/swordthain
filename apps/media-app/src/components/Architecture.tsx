@@ -121,6 +121,8 @@ flowchart LR
   access --> mediaItems
   access -->|write| activityT
   access --> mediaBucket
+  access -->|cascade cleanup| playlistItemsT
+  access --> playlistsT
 
   activity --> activityT
 

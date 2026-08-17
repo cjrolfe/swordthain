@@ -272,6 +272,14 @@ export class MediaAppDataStack extends Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: RemovalPolicy.RETAIN,
     });
+    // Lets MediaAccessFn's deleteMedia find every PlaylistItems row that
+    // references a given mediaId, across every playlist, so it can cascade
+    // the delete instead of leaving an orphaned row behind.
+    this.playlistItemsTable.addGlobalSecondaryIndex({
+      indexName: "byMedia",
+      partitionKey: { name: "mediaId", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "playlistId", type: dynamodb.AttributeType.STRING },
+    });
 
     const lambdaDir = path.join(__dirname, "..", "lambda", "media");
 
@@ -458,6 +466,8 @@ export class MediaAppDataStack extends Stack {
         MEDIA_TABLE_NAME: this.mediaItemsTable.tableName,
         MEDIA_BUCKET_NAME: this.mediaBucket.bucketName,
         ACTIVITY_LOG_TABLE_NAME: this.activityLogTable.tableName,
+        PLAYLISTS_TABLE_NAME: this.playlistsTable.tableName,
+        PLAYLIST_ITEMS_TABLE_NAME: this.playlistItemsTable.tableName,
       },
       bundling: {
         externalModules: [],
@@ -470,6 +480,9 @@ export class MediaAppDataStack extends Stack {
     this.mediaBucket.grantRead(mediaAccessFn);
     this.mediaBucket.grantDelete(mediaAccessFn);
     this.activityLogTable.grantWriteData(mediaAccessFn);
+    this.playlistsTable.grantWriteData(mediaAccessFn); // itemCount decrement on cascade cleanup
+    this.playlistItemsTable.grantReadData(mediaAccessFn); // byMedia GSI query
+    this.playlistItemsTable.grantWriteData(mediaAccessFn); // delete matched rows
 
     // --- Activity dashboard (read side of ActivityLog — MediaAccessFn is the write side) ---
     const activityFn = new NodejsFunction(this, "ActivityFn", {
