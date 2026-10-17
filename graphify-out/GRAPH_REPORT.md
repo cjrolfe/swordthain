@@ -1,16 +1,16 @@
-# Graph Report - swordthain  (2026-09-08)
+# Graph Report - swordthain  (2026-10-17)
 
 ## Corpus Check
-- 141 files · ~198,919 words
+- 142 files · ~201,137 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1074 nodes · 1610 edges · 118 communities (74 shown, 44 thin omitted)
+- 1083 nodes · 1639 edges · 117 communities (73 shown, 44 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 75 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e94c8095`
+- Built from commit: `9b779295`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -28,14 +28,14 @@
 - Regression Tests Dependencies
 - FolderBrowser Event Handlers
 - TypeScript Config (Regression)
-- lambda_function.py
+- AIRequest
 - CLI Package Config
 - media-app/src/auth.ts
 - App.tsx
 - s3_utils.py
 - TypeScript Config (A11y)
-- media/folders.ts
 - jsonResponse
+- media/playlists.ts
 - Modal Dialog & Media Types
 - TypeScript Config (CLI)
 - TypeScript Config (Infra)
@@ -43,10 +43,10 @@
 - Create Company Lambda
 - Infra Build Tooling Deps
 - Infra CDK Dependencies
-- app.js
+- AnthropicProvider
 - Folder Share Notifications
-- Multipart Upload Lambda
-- media-access.ts
+- upload-url.ts
+- OpenAIProvider
 - invites.ts
 - Playground Hub Frontend JS
 - isOwner
@@ -54,7 +54,7 @@
 - Playlist Player Component
 - Activity Log Lambda
 - OTP Auth Challenge Lambda
-- Thumbnail Generation Lambda
+- thumbnail.ts
 - Test Suite READMEs
 - CLI Tool & Auth Diagrams
 - Playlists Frontend Handlers
@@ -121,8 +121,7 @@
 - System Overview Diagram
 - Media App Domain
 - Playground Domain
-- sites.json Registry
-- create_project.py
+- stats.ts
 - useIdleTimeout
 
 ## God Nodes (most connected - your core abstractions)
@@ -134,8 +133,8 @@
 6. `compilerOptions` - 16 edges
 7. `test` - 15 edges
 8. `AIRequest` - 14 edges
-9. `assertNoWcagViolations()` - 14 edges
-10. `compilerOptions` - 13 edges
+9. `assert()` - 14 edges
+10. `assertNoWcagViolations()` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `isOwner() Cross-Authorizer-Shape Compatibility` --rationale_for--> `isOwner()`  [EXTRACTED]
@@ -160,15 +159,15 @@
 - **cognito:groups bracket-string bug, documented across three files** — claude_cognito_groups_gotcha, infra_readme_cognito_groups_bug, apps_media_app_readme_cognito_groups_bug [EXTRACTED 1.00]
 - **Company Demos CRUD Lambda Flow** — apps_playground_lambda_lambda_function, apps_playground_lambda_create_company, apps_playground_lambda_archive_company, apps_playground_lambda_create_project, apps_playground_lambda_delete_project, apps_playground_assets_sites [EXTRACTED 1.00]
 
-## Communities (118 total, 44 thin omitted)
+## Communities (117 total, 44 thin omitted)
 
 ### Community 0 - "Media App API Client"
 Cohesion: 0.07
 Nodes (47): api, ApiError, Folder, request(), clearSession(), client, getValidIdToken(), loadSession() (+39 more)
 
 ### Community 1 - "AIProvider"
-Cohesion: 0.06
-Nodes (26): ABC, AnthropicProvider, Any, Anthropic Claude provider using Messages API., Anthropic Claude provider using Messages API, AIProvider, AIRequest, AIResponse (+18 more)
+Cohesion: 0.16
+Nodes (10): AIProvider, Any, Abstract base class for AI providers, Return provider's default model, Return provider's API endpoint, Build provider-specific request payload, Build provider-specific headers, Extract summary text from provider response (+2 more)
 
 ### Community 2 - "CI Workflows & Backlog Docs"
 Cohesion: 0.05
@@ -176,7 +175,7 @@ Nodes (46): Deploy Playground workflow, Validate Infra workflow, Validate Media 
 
 ### Community 3 - "regression-tests/src/api.ts"
 Cohesion: 0.11
-Nodes (32): Api, ApiError, Folder, makeApi(), MediaItem, request(), assert(), cognito (+24 more)
+Nodes (35): Api, ApiError, Folder, makeApi(), MediaItem, request(), assert(), cognito (+27 more)
 
 ### Community 4 - "fixtures.ts"
 Cohesion: 0.13
@@ -214,9 +213,9 @@ Nodes (6): FolderBrowser(), handleMoveBreadcrumb(), handleMoveHome(), handleMove
 Cohesion: 0.09
 Nodes (21): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+13 more)
 
-### Community 13 - "lambda_function.py"
-Cohesion: 0.21
-Nodes (10): handle_archive(), Archive, restore, or delete company - S3-adapted for Lambda., Handle archive/restore/delete request. body: { action:…, handle_delete_project(), Delete a project from a company. Removes the S3 prefix and the entry from the…, Handle delete project request. body: { companyId: str, projectId: str }, lambda_handler(), Lambda handler for swordthain automation API. Routes POST /create and POST… (+2 more)
+### Community 13 - "AIRequest"
+Cohesion: 0.19
+Nodes (10): ABC, Anthropic Claude provider using Messages API., AIRequest, AIResponse, Abstract base class for AI providers with shared retry logic., Standardized request for all providers, Standardized response, Build the prompt (shared across all providers) (+2 more)
 
 ### Community 14 - "CLI Package Config"
 Cohesion: 0.10
@@ -231,20 +230,20 @@ Cohesion: 0.13
 Nodes (16): App(), IntroDecision, Tab, TAB_LABELS, Architecture(), DiagramKey, DIAGRAMS, Settings() (+8 more)
 
 ### Community 17 - "s3_utils.py"
-Cohesion: 0.17
-Nodes (19): _bucket(), _client(), delete_objects(), delete_prefix(), get_object(), get_object_str(), invalidate_cloudfront(), list_keys() (+11 more)
+Cohesion: 0.05
+Nodes (51): authHeaders(), clearErrors(), normalizeUrl(), render(), setOpen(), sites, updateArchivedCount(), validate() (+43 more)
 
 ### Community 18 - "TypeScript Config (A11y)"
 Cohesion: 0.10
 Nodes (19): compilerOptions, declaration, lib, module, moduleResolution, noFallthroughCasesInSwitch, noUnusedLocals, noUnusedParameters (+11 more)
 
-### Community 19 - "media/folders.ts"
-Cohesion: 0.19
-Nodes (17): PERMISSION_RANK, resolveAccess(), ResolvedAccess, ROOT, createFolder(), ddb, decodeCursor(), deleteFolder() (+9 more)
+### Community 19 - "jsonResponse"
+Cohesion: 0.22
+Nodes (18): PERMISSION_RANK, resolveAccess(), ResolvedAccess, ROOT, createFolder(), ddb, decodeCursor(), deleteFolder() (+10 more)
 
-### Community 20 - "jsonResponse"
-Cohesion: 0.31
-Nodes (18): jsonResponse(), addPlaylistItem(), cognito, createPlaylist(), ddb, deletePlaylist(), denyResponse(), getPlaylist() (+10 more)
+### Community 20 - "media/playlists.ts"
+Cohesion: 0.23
+Nodes (19): hasPermission(), deletePlaylistItemRow(), addPlaylistItem(), cognito, createPlaylist(), ddb, deletePlaylist(), denyResponse() (+11 more)
 
 ### Community 21 - "Modal Dialog & Media Types"
 Cohesion: 0.16
@@ -274,24 +273,24 @@ Nodes (15): aws-cdk, esbuild, devDependencies, aws-cdk, esbuild, sharp, ts-node,
 Cohesion: 0.13
 Nodes (15): aws-cdk-lib, @aws-sdk/client-s3, @aws-sdk/s3-request-presigner, constructs, dependencies, aws-cdk-lib, @aws-sdk/client-dynamodb, @aws-sdk/client-s3 (+7 more)
 
-### Community 28 - "app.js"
-Cohesion: 0.27
-Nodes (9): authHeaders(), clearErrors(), normalizeUrl(), render(), setOpen(), sites, updateArchivedCount(), validate() (+1 more)
+### Community 28 - "AnthropicProvider"
+Cohesion: 0.25
+Nodes (3): AnthropicProvider, Any, Anthropic Claude provider using Messages API
 
 ### Community 29 - "Folder Share Notifications"
 Cohesion: 0.26
 Nodes (12): buildNewMediaEmailHtml(), cognito, ddb, escapeHtml(), getPermissionsMatrix(), handler(), notifyShares(), sendNewMediaEmail() (+4 more)
 
-### Community 30 - "Multipart Upload Lambda"
-Cohesion: 0.37
-Nodes (12): abortMultipartUpload(), buildS3Key(), checkUploadPermission(), claims(), completeMultipartUpload(), ddb, getMultipartPartUrl(), getUploadUrl() (+4 more)
+### Community 30 - "upload-url.ts"
+Cohesion: 0.34
+Nodes (13): abortMultipartUpload(), buildS3Key(), checkUploadPermission(), claims(), completeMultipartUpload(), ddb, getMultipartPartUrl(), getUploadUrl() (+5 more)
 
-### Community 31 - "media-access.ts"
-Cohesion: 0.33
-Nodes (8): hasPermission(), cleanupPlaylistReferences(), ddb, deleteMedia(), handler(), s3, updateMedia(), deletePlaylistItemRow()
+### Community 31 - "OpenAIProvider"
+Cohesion: 0.25
+Nodes (3): OpenAIProvider, Any, OpenAI provider using /v1/responses endpoint
 
 ### Community 32 - "invites.ts"
-Cohesion: 0.29
+Cohesion: 0.26
 Nodes (10): buildInviteEmailHtml(), cognito, ddb, escapeHtml(), handler(), previewInvite(), sendInvite(), sendInviteEmail() (+2 more)
 
 ### Community 33 - "Playground Hub Frontend JS"
@@ -299,8 +298,8 @@ Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Why does isOwner() connect Media Delete & Cleanup Lambda to Invite Email Lambda, Stats/Cost Dashboard Lambda, Activity Log Lambda, API Testing Proxy Lambda, Folder Access Resolution, Playlists Lambda Handler, Folder Share Notifications, Multipart Upload Lambda?, Source Nodes
 
 ### Community 34 - "isOwner"
-Cohesion: 0.15
-Nodes (15): isOwner(), AppSettings, ddb, getSettings(), handler(), updateSettings(), cloudwatch, cloudwatchUsEast1 (+7 more)
+Cohesion: 0.22
+Nodes (13): isOwner(), cleanupPlaylistReferences(), ddb, deleteMedia(), handler(), s3, updateMedia(), AppSettings (+5 more)
 
 ### Community 35 - "Stats/Cost Dashboard Lambda"
 Cohesion: 0.40
@@ -318,9 +317,9 @@ Nodes (8): ActivityLogItem, cognito, ddb, definedValue(), handler(), resolveEmai
 Cohesion: 0.36
 Nodes (7): ddb, generateCode(), getTestOtp(), handler(), hashCode(), ses, ssm
 
-### Community 39 - "Thumbnail Generation Lambda"
-Cohesion: 0.29
-Nodes (7): ddb, extractFrameWithFfmpeg(), FFMPEG_IMAGE_TYPES, handler(), s3, SHARP_IMAGE_TYPES, VIDEO_TYPES
+### Community 39 - "thumbnail.ts"
+Cohesion: 0.26
+Nodes (11): CA_BUNDLE_CANDIDATES, ddb, extractFrameWithFfmpeg(), extractVideoFrame(), FFMPEG_IMAGE_TYPES, grabFrame(), handler(), redactUrl() (+3 more)
 
 ### Community 40 - "Test Suite READMEs"
 Cohesion: 0.29
@@ -410,13 +409,9 @@ Nodes (3): Salesforce Access Denied Screenshot, Akamai Edge Access Denial (Bot/S
 Cohesion: 0.67
 Nodes (3): ffmpeg Lambda layer README, FfmpegLayer, Synthetic MediaItems row fixture (playlists scenario)
 
-### Community 115 - "sites.json Registry"
-Cohesion: 0.22
-Nodes (7): sites.json Registry, Company Template Page, Archived Companies Page, handle_generate(), Generate sites.json from S3 folder structure - S3-adapted for Lambda., Rebuild sites.json from S3 prefixes that have index.html., GitHub Issue-Driven Automation (legacy pattern)
-
-### Community 116 - "create_project.py"
-Cohesion: 0.38
-Nodes (6): handle_create_project(), Create a new project under a company. Reads project-template from S3, renders…, Handle create project request. body: { companyId: str, name: str, description?:…, render_project_template(), slugify(), Project Template Page
+### Community 115 - "stats.ts"
+Cohesion: 0.25
+Nodes (8): cloudwatch, cloudwatchUsEast1, ddb, handler(), LAMBDA_FUNCTIONS, RATE_PER_GB, ses, storageMetric()
 
 ### Community 117 - "useIdleTimeout"
 Cohesion: 0.47
@@ -429,7 +424,7 @@ Nodes (5): ACTIVITY_EVENTS, useIdleTimeout(), handleActivity(), setWarning(), st
   apps/playground/favicon.svg · relation: rationale_for
 
 ## Knowledge Gaps
-- **348 isolated node(s):** `Tab`, `TAB_LABELS`, `IntroDecision`, `AppSettings`, `DIAGRAMS` (+343 more)
+- **349 isolated node(s):** `AppSettings`, `SUPPORTED_CONTENT_TYPES`, `UploadStatus`, `MultipartUploadState`, `s3` (+344 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **44 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -445,13 +440,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Sword Motif / Branding` and `Playground Favicon (Sword Icon)`?**
   _Edge tagged AMBIGUOUS (relation: rationale_for) - confidence is low._
-- **Why does `Cognito Owner-group Authorizer` connect `API Testing Playground Pages` to `lambda_function.py`?**
+- **Why does `Cognito Owner-group Authorizer` connect `API Testing Playground Pages` to `s3_utils.py`?**
   _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `isOwner()` connect `isOwner` to `invites.ts`, `Activity Log Lambda`, `API Testing Playground Pages`, `media/folders.ts`, `jsonResponse`, `Folder Share Notifications`, `Multipart Upload Lambda`, `media-access.ts`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+- **Why does `isOwner()` connect `isOwner` to `invites.ts`, `Activity Log Lambda`, `API Testing Playground Pages`, `jsonResponse`, `media/playlists.ts`, `stats.ts`, `Folder Share Notifications`, `upload-url.ts`?**
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
 - **Why does `Playground README` connect `API Testing Playground Pages` to `CDK App Entry (infra.ts)`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Are the 3 inferred relationships involving `FolderBrowser()` (e.g. with `handleCancelEditDescription()` and `handleDownload()`) actually correct?**
   _`FolderBrowser()` has 3 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Tab`, `TAB_LABELS`, `IntroDecision` to the rest of the system?**
-  _348 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `AppSettings`, `SUPPORTED_CONTENT_TYPES`, `UploadStatus` to the rest of the system?**
+  _349 weakly-connected nodes found - possible documentation gaps or missing edges._

@@ -227,19 +227,6 @@
       "source_location": "L18"
     },
     {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider",
-      "label": "AnthropicProvider",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "anthropicprovider",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L8"
-    },
-    {
       "id": "apps_playground_lambda_ai_providers_base_aiprovider",
       "label": "AIProvider",
       "_callable": true,
@@ -258,8 +245,8 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
+      "community": 13,
+      "community_name": "AIRequest",
       "file_type": "code",
       "norm_label": "airequest",
       "source_file": "apps/playground/lambda/ai_providers/base.py",
@@ -271,25 +258,12 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
+      "community": 13,
+      "community_name": "AIRequest",
       "file_type": "code",
       "norm_label": "airesponse",
       "source_file": "apps/playground/lambda/ai_providers/base.py",
       "source_location": "L26"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider",
-      "label": "OpenAIProvider",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "openaiprovider",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L8"
     },
     {
       "id": "apps_media_app_src_auth_session",
@@ -376,7 +350,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "resolvedaccess",
       "source_file": "infra/lambda/media/access.ts",
@@ -389,7 +363,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "playlistrecord",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -471,7 +445,7 @@
       "file_type": "code",
       "norm_label": "activityentry",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L174"
+      "source_location": "L173"
     },
     {
       "id": "apps_media_app_src_api_appsettings",
@@ -484,7 +458,7 @@
       "file_type": "code",
       "norm_label": "appsettings",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L218"
+      "source_location": "L217"
     },
     {
       "id": "apps_media_app_src_api_folder",
@@ -565,6 +539,19 @@
       "source_location": "L25"
     },
     {
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider",
+      "label": "AnthropicProvider",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 28,
+      "community_name": "AnthropicProvider",
+      "file_type": "code",
+      "norm_label": "anthropicprovider",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L8"
+    },
+    {
       "id": "infra_regression_tests_src_api_api",
       "label": "Api",
       "_callable": true,
@@ -575,7 +562,7 @@
       "file_type": "code",
       "norm_label": "api",
       "source_file": "infra/regression-tests/src/api.ts",
-      "source_location": "L81"
+      "source_location": "L97"
     },
     {
       "id": "infra_regression_tests_src_api_apierror",
@@ -617,6 +604,19 @@
       "source_location": "L16"
     },
     {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider",
+      "label": "OpenAIProvider",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "OpenAIProvider",
+      "file_type": "code",
+      "norm_label": "openaiprovider",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L8"
+    },
+    {
       "id": "infra_lambda_media_settings_appsettings",
       "label": "AppSettings",
       "_callable": true,
@@ -653,7 +653,7 @@
       "file_type": "code",
       "norm_label": "playlist",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L186"
+      "source_location": "L185"
     },
     {
       "id": "apps_media_app_src_api_playlistitem",
@@ -666,7 +666,7 @@
       "file_type": "code",
       "norm_label": "playlistitem",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L199"
+      "source_location": "L198"
     },
     {
       "id": "infra_lambda_media_activity_activitylogitem",
@@ -705,7 +705,7 @@
       "file_type": "code",
       "norm_label": "storagestats",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L222"
+      "source_location": "L221"
     },
     {
       "id": "apps_media_app_src_vite_env_d_importmeta",
@@ -1276,90 +1276,6 @@
       "source_location": "L49"
     },
     {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_build_request_headers",
-      "label": ".build_request_headers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".build_request_headers()",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L17"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_build_request_payload",
-      "label": ".build_request_payload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".build_request_payload()",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L24"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_extract_text_from_response",
-      "label": ".extract_text_from_response()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".extract_text_from_response()",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L36"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_get_api_endpoint",
-      "label": ".get_api_endpoint()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".get_api_endpoint()",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_get_default_model",
-      "label": ".get_default_model()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".get_default_model()",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L11"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_is_retryable_status",
-      "label": ".is_retryable_status()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".is_retryable_status()",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L42"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_base_aiprovider_build_prompt",
-      "label": "._build_prompt()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "._build_prompt()",
-      "source_file": "apps/playground/lambda/ai_providers/base.py",
-      "source_location": "L70"
-    },
-    {
       "id": "apps_playground_lambda_ai_providers_base_aiprovider_build_request_headers",
       "label": ".build_request_headers()",
       "_callable": true,
@@ -1454,78 +1370,6 @@
       "norm_label": ".is_retryable_status()",
       "source_file": "apps/playground/lambda/ai_providers/base.py",
       "source_location": "L66"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_build_request_headers",
-      "label": ".build_request_headers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".build_request_headers()",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L17"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_build_request_payload",
-      "label": ".build_request_payload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".build_request_payload()",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L23"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_extract_text_from_response",
-      "label": ".extract_text_from_response()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".extract_text_from_response()",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L34"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_get_api_endpoint",
-      "label": ".get_api_endpoint()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".get_api_endpoint()",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_get_default_model",
-      "label": ".get_default_model()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".get_default_model()",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L11"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_is_retryable_status",
-      "label": ".is_retryable_status()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": ".is_retryable_status()",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L46"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser",
@@ -1804,52 +1648,28 @@
       "source_location": "L299"
     },
     {
-      "id": "apps_playground_lambda_generate_sites_handle_generate",
-      "label": "handle_generate()",
+      "id": "infra_lambda_media_stats_handler",
+      "label": "handler()",
       "_callable": true,
       "_origin": "ast",
       "community": 115,
-      "community_name": "sites.json Registry",
+      "community_name": "stats.ts",
       "file_type": "code",
-      "norm_label": "handle_generate()",
-      "source_file": "apps/playground/lambda/generate_sites.py",
-      "source_location": "L13"
+      "norm_label": "handler()",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L60"
     },
     {
-      "id": "apps_playground_lambda_create_project_handle_create_project",
-      "label": "handle_create_project()",
+      "id": "infra_lambda_media_stats_storagemetric",
+      "label": "storageMetric()",
       "_callable": true,
       "_origin": "ast",
-      "community": 116,
-      "community_name": "create_project.py",
+      "community": 115,
+      "community_name": "stats.ts",
       "file_type": "code",
-      "norm_label": "handle_create_project()",
-      "source_file": "apps/playground/lambda/create_project.py",
-      "source_location": "L50"
-    },
-    {
-      "id": "apps_playground_lambda_create_project_render_project_template",
-      "label": "render_project_template()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 116,
-      "community_name": "create_project.py",
-      "file_type": "code",
-      "norm_label": "render_project_template()",
-      "source_file": "apps/playground/lambda/create_project.py",
-      "source_location": "L23"
-    },
-    {
-      "id": "apps_playground_lambda_create_project_slugify",
-      "label": "slugify()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 116,
-      "community_name": "create_project.py",
-      "file_type": "code",
-      "norm_label": "slugify()",
-      "source_file": "apps/playground/lambda/create_project.py",
-      "source_location": "L15"
+      "norm_label": "storagemetric()",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L44"
     },
     {
       "id": "apps_media_app_src_useidletimeout_useidletimeout",
@@ -1900,40 +1720,16 @@
       "source_location": "L27"
     },
     {
-      "id": "apps_playground_lambda_archive_company_handle_archive",
-      "label": "handle_archive()",
+      "id": "apps_playground_lambda_ai_providers_base_aiprovider_build_prompt",
+      "label": "._build_prompt()",
       "_callable": true,
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
+      "community_name": "AIRequest",
       "file_type": "code",
-      "norm_label": "handle_archive()",
-      "source_file": "apps/playground/lambda/archive_company.py",
-      "source_location": "L12"
-    },
-    {
-      "id": "apps_playground_lambda_delete_project_handle_delete_project",
-      "label": "handle_delete_project()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "lambda_function.py",
-      "file_type": "code",
-      "norm_label": "handle_delete_project()",
-      "source_file": "apps/playground/lambda/delete_project.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "apps_playground_lambda_lambda_function_lambda_handler",
-      "label": "lambda_handler()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "lambda_function.py",
-      "file_type": "code",
-      "norm_label": "lambda_handler()",
-      "source_file": "apps/playground/lambda/lambda_function.py",
-      "source_location": "L8"
+      "norm_label": "._build_prompt()",
+      "source_file": "apps/playground/lambda/ai_providers/base.py",
+      "source_location": "L70"
     },
     {
       "id": "apps_media_app_src_api_request",
@@ -2284,6 +2080,186 @@
       "source_location": "L12"
     },
     {
+      "id": "apps_playground_assets_app_authheaders",
+      "label": "authHeaders()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "authheaders()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L8"
+    },
+    {
+      "id": "apps_playground_assets_app_clearerrors",
+      "label": "clearErrors()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "clearerrors()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L194"
+    },
+    {
+      "id": "apps_playground_assets_app_getfocusable",
+      "label": "getFocusable()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "getfocusable()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L185"
+    },
+    {
+      "id": "apps_playground_assets_app_normalizeurl",
+      "label": "normalizeUrl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "normalizeurl()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L201"
+    },
+    {
+      "id": "apps_playground_assets_app_render",
+      "label": "render()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "render()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L27"
+    },
+    {
+      "id": "apps_playground_assets_app_setopen",
+      "label": "setOpen()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "setopen()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L243"
+    },
+    {
+      "id": "apps_playground_assets_app_updatearchivedcount",
+      "label": "updateArchivedCount()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "updatearchivedcount()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L20"
+    },
+    {
+      "id": "apps_playground_assets_app_validate",
+      "label": "validate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "validate()",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L215"
+    },
+    {
+      "id": "apps_playground_lambda_archive_company_handle_archive",
+      "label": "handle_archive()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "handle_archive()",
+      "source_file": "apps/playground/lambda/archive_company.py",
+      "source_location": "L12"
+    },
+    {
+      "id": "apps_playground_lambda_create_project_handle_create_project",
+      "label": "handle_create_project()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "handle_create_project()",
+      "source_file": "apps/playground/lambda/create_project.py",
+      "source_location": "L50"
+    },
+    {
+      "id": "apps_playground_lambda_create_project_render_project_template",
+      "label": "render_project_template()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "render_project_template()",
+      "source_file": "apps/playground/lambda/create_project.py",
+      "source_location": "L23"
+    },
+    {
+      "id": "apps_playground_lambda_create_project_slugify",
+      "label": "slugify()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "slugify()",
+      "source_file": "apps/playground/lambda/create_project.py",
+      "source_location": "L15"
+    },
+    {
+      "id": "apps_playground_lambda_delete_project_handle_delete_project",
+      "label": "handle_delete_project()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "handle_delete_project()",
+      "source_file": "apps/playground/lambda/delete_project.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "apps_playground_lambda_generate_sites_handle_generate",
+      "label": "handle_generate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "handle_generate()",
+      "source_file": "apps/playground/lambda/generate_sites.py",
+      "source_location": "L13"
+    },
+    {
+      "id": "apps_playground_lambda_lambda_function_lambda_handler",
+      "label": "lambda_handler()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "lambda_handler()",
+      "source_file": "apps/playground/lambda/lambda_function.py",
+      "source_location": "L8"
+    },
+    {
       "id": "apps_playground_lambda_s3_utils_bucket",
       "label": "_bucket()",
       "_callable": true,
@@ -2409,7 +2385,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "resolveaccess()",
       "source_file": "infra/lambda/media/access.ts",
@@ -2421,7 +2397,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "createfolder()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2433,7 +2409,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "decodecursor()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2445,7 +2421,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "deletefolder()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2457,7 +2433,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "encodecursor()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2469,7 +2445,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "getfolder()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2481,7 +2457,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "handler()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2493,7 +2469,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "isselfordescendant()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2505,7 +2481,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "listfoldermedia()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2517,7 +2493,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "listfolders()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2529,7 +2505,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "listsharedwithme()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2541,7 +2517,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "updatefolder()",
       "source_file": "infra/lambda/media/folders.ts",
@@ -2552,7 +2528,7 @@
       "label": "jsonResponse()",
       "_callable": true,
       "_origin": "ast",
-      "community": 20,
+      "community": 19,
       "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "jsonresponse()",
@@ -2560,12 +2536,36 @@
       "source_location": "L10"
     },
     {
+      "id": "infra_lambda_media_access_haspermission",
+      "label": "hasPermission()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "media/playlists.ts",
+      "file_type": "code",
+      "norm_label": "haspermission()",
+      "source_file": "infra/lambda/media/access.ts",
+      "source_location": "L56"
+    },
+    {
+      "id": "infra_lambda_media_playlist_items_deleteplaylistitemrow",
+      "label": "deletePlaylistItemRow()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "media/playlists.ts",
+      "file_type": "code",
+      "norm_label": "deleteplaylistitemrow()",
+      "source_file": "infra/lambda/media/playlist-items.ts",
+      "source_location": "L17"
+    },
+    {
       "id": "infra_lambda_media_playlists_addplaylistitem",
       "label": "addPlaylistItem()",
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "addplaylistitem()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2577,7 +2577,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "createplaylist()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2589,7 +2589,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "deleteplaylist()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2601,7 +2601,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "denyresponse()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2613,7 +2613,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "getplaylist()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2625,7 +2625,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "handler()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2637,7 +2637,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "listplaylistitems()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2649,7 +2649,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "listplaylists()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2661,7 +2661,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "loadplaylist()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2673,7 +2673,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "moveitem()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2685,7 +2685,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "removeplaylistitem()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2697,7 +2697,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "renameplaylist()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2709,7 +2709,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "resolveemails()",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -2956,100 +2956,76 @@
       "source_location": "L32"
     },
     {
-      "id": "apps_playground_assets_app_authheaders",
-      "label": "authHeaders()",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_build_request_headers",
+      "label": ".build_request_headers()",
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "authheaders()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L8"
+      "norm_label": ".build_request_headers()",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L17"
     },
     {
-      "id": "apps_playground_assets_app_clearerrors",
-      "label": "clearErrors()",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_build_request_payload",
+      "label": ".build_request_payload()",
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "clearerrors()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L194"
+      "norm_label": ".build_request_payload()",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L24"
     },
     {
-      "id": "apps_playground_assets_app_getfocusable",
-      "label": "getFocusable()",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_extract_text_from_response",
+      "label": ".extract_text_from_response()",
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "getfocusable()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L185"
+      "norm_label": ".extract_text_from_response()",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L36"
     },
     {
-      "id": "apps_playground_assets_app_normalizeurl",
-      "label": "normalizeUrl()",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_get_api_endpoint",
+      "label": ".get_api_endpoint()",
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "normalizeurl()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L201"
+      "norm_label": ".get_api_endpoint()",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L14"
     },
     {
-      "id": "apps_playground_assets_app_render",
-      "label": "render()",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_get_default_model",
+      "label": ".get_default_model()",
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "render()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L27"
+      "norm_label": ".get_default_model()",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L11"
     },
     {
-      "id": "apps_playground_assets_app_setopen",
-      "label": "setOpen()",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_anthropicprovider_is_retryable_status",
+      "label": ".is_retryable_status()",
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "setopen()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L243"
-    },
-    {
-      "id": "apps_playground_assets_app_updatearchivedcount",
-      "label": "updateArchivedCount()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "app.js",
-      "file_type": "code",
-      "norm_label": "updatearchivedcount()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L20"
-    },
-    {
-      "id": "apps_playground_assets_app_validate",
-      "label": "validate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "app.js",
-      "file_type": "code",
-      "norm_label": "validate()",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L215"
+      "norm_label": ".is_retryable_status()",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L42"
     },
     {
       "id": "infra_lambda_media_shares_buildnewmediaemailhtml",
@@ -3253,7 +3229,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L11"
+      "source_location": "L12"
     },
     {
       "id": "infra_regression_tests_src_scenarios_folders_assertapierror",
@@ -3316,6 +3292,42 @@
       "source_location": "L17"
     },
     {
+      "id": "infra_regression_tests_src_scenarios_multipart_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L42"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_multipart_tinymp4bytes",
+      "label": "tinyMp4Bytes()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "tinymp4bytes()",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L13"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_multipart_waitformediaitem",
+      "label": "waitForMediaItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "waitformediaitem()",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L17"
+    },
+    {
       "id": "infra_regression_tests_src_scenarios_playlists_run",
       "label": "run()",
       "_callable": true,
@@ -3369,11 +3381,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "abortmultipartupload()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L243"
+      "source_location": "L306"
     },
     {
       "id": "infra_lambda_media_upload_url_builds3key",
@@ -3381,11 +3393,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "builds3key()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L77"
+      "source_location": "L78"
     },
     {
       "id": "infra_lambda_media_upload_url_checkuploadpermission",
@@ -3393,11 +3405,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "checkuploadpermission()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L55"
+      "source_location": "L56"
     },
     {
       "id": "infra_lambda_media_upload_url_claims",
@@ -3405,11 +3417,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "claims()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L82"
+      "source_location": "L83"
     },
     {
       "id": "infra_lambda_media_upload_url_completemultipartupload",
@@ -3417,11 +3429,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "completemultipartupload()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L206"
+      "source_location": "L241"
     },
     {
       "id": "infra_lambda_media_upload_url_getmultipartparturl",
@@ -3429,11 +3441,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "getmultipartparturl()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L178"
+      "source_location": "L179"
     },
     {
       "id": "infra_lambda_media_upload_url_getuploadurl",
@@ -3441,11 +3453,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "getuploadurl()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L105"
+      "source_location": "L106"
     },
     {
       "id": "infra_lambda_media_upload_url_handler",
@@ -3453,11 +3465,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "handler()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L88"
+      "source_location": "L89"
     },
     {
       "id": "infra_lambda_media_upload_url_initmultipartupload",
@@ -3465,83 +3477,95 @@
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "initmultipartupload()",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L139"
+      "source_location": "L140"
     },
     {
-      "id": "infra_lambda_media_access_haspermission",
-      "label": "hasPermission()",
+      "id": "infra_lambda_media_upload_url_listcompletedparts",
+      "label": "listCompletedParts()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "upload-url.ts",
+      "file_type": "code",
+      "norm_label": "listcompletedparts()",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L214"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_build_request_headers",
+      "label": ".build_request_headers()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
-      "community_name": "media-access.ts",
+      "community_name": "OpenAIProvider",
       "file_type": "code",
-      "norm_label": "haspermission()",
-      "source_file": "infra/lambda/media/access.ts",
-      "source_location": "L56"
-    },
-    {
-      "id": "infra_lambda_media_media_access_cleanupplaylistreferences",
-      "label": "cleanupPlaylistReferences()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "cleanupplaylistreferences()",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L131"
-    },
-    {
-      "id": "infra_lambda_media_media_access_deletemedia",
-      "label": "deleteMedia()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "deletemedia()",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L92"
-    },
-    {
-      "id": "infra_lambda_media_media_access_handler",
-      "label": "handler()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "handler()",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L37"
-    },
-    {
-      "id": "infra_lambda_media_media_access_updatemedia",
-      "label": "updateMedia()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "updatemedia()",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L181"
-    },
-    {
-      "id": "infra_lambda_media_playlist_items_deleteplaylistitemrow",
-      "label": "deletePlaylistItemRow()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "deleteplaylistitemrow()",
-      "source_file": "infra/lambda/media/playlist-items.ts",
+      "norm_label": ".build_request_headers()",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
       "source_location": "L17"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_build_request_payload",
+      "label": ".build_request_payload()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "OpenAIProvider",
+      "file_type": "code",
+      "norm_label": ".build_request_payload()",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L23"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_extract_text_from_response",
+      "label": ".extract_text_from_response()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "OpenAIProvider",
+      "file_type": "code",
+      "norm_label": ".extract_text_from_response()",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L34"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_get_api_endpoint",
+      "label": ".get_api_endpoint()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "OpenAIProvider",
+      "file_type": "code",
+      "norm_label": ".get_api_endpoint()",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_get_default_model",
+      "label": ".get_default_model()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "OpenAIProvider",
+      "file_type": "code",
+      "norm_label": ".get_default_model()",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L11"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_openaiprovider_is_retryable_status",
+      "label": ".is_retryable_status()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "OpenAIProvider",
+      "file_type": "code",
+      "norm_label": ".is_retryable_status()",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L46"
     },
     {
       "id": "infra_lambda_media_invites_buildinviteemailhtml",
@@ -3628,6 +3652,54 @@
       "source_location": "L13"
     },
     {
+      "id": "infra_lambda_media_media_access_cleanupplaylistreferences",
+      "label": "cleanupPlaylistReferences()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "isOwner",
+      "file_type": "code",
+      "norm_label": "cleanupplaylistreferences()",
+      "source_file": "infra/lambda/media/media-access.ts",
+      "source_location": "L131"
+    },
+    {
+      "id": "infra_lambda_media_media_access_deletemedia",
+      "label": "deleteMedia()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "isOwner",
+      "file_type": "code",
+      "norm_label": "deletemedia()",
+      "source_file": "infra/lambda/media/media-access.ts",
+      "source_location": "L92"
+    },
+    {
+      "id": "infra_lambda_media_media_access_handler",
+      "label": "handler()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "isOwner",
+      "file_type": "code",
+      "norm_label": "handler()",
+      "source_file": "infra/lambda/media/media-access.ts",
+      "source_location": "L37"
+    },
+    {
+      "id": "infra_lambda_media_media_access_updatemedia",
+      "label": "updateMedia()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "isOwner",
+      "file_type": "code",
+      "norm_label": "updatemedia()",
+      "source_file": "infra/lambda/media/media-access.ts",
+      "source_location": "L181"
+    },
+    {
       "id": "infra_lambda_media_settings_getsettings",
       "label": "getSettings()",
       "_callable": true,
@@ -3662,30 +3734,6 @@
       "norm_label": "updatesettings()",
       "source_file": "infra/lambda/media/settings.ts",
       "source_location": "L39"
-    },
-    {
-      "id": "infra_lambda_media_stats_handler",
-      "label": "handler()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "handler()",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L60"
-    },
-    {
-      "id": "infra_lambda_media_stats_storagemetric",
-      "label": "storageMetric()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "storagemetric()",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L44"
     },
     {
       "id": "apps_media_app_src_api_apierror_constructor",
@@ -3849,11 +3897,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "extractframewithffmpeg()",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L104"
+      "source_location": "L183"
+    },
+    {
+      "id": "infra_lambda_media_thumbnail_extractvideoframe",
+      "label": "extractVideoFrame()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "thumbnail.ts",
+      "file_type": "code",
+      "norm_label": "extractvideoframe()",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L159"
+    },
+    {
+      "id": "infra_lambda_media_thumbnail_grabframe",
+      "label": "grabFrame()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "thumbnail.ts",
+      "file_type": "code",
+      "norm_label": "grabframe()",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L120"
     },
     {
       "id": "infra_lambda_media_thumbnail_handler",
@@ -3861,11 +3933,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "handler()",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L32"
+      "source_location": "L43"
+    },
+    {
+      "id": "infra_lambda_media_thumbnail_redacturl",
+      "label": "redactUrl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "thumbnail.ts",
+      "file_type": "code",
+      "norm_label": "redacturl()",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L179"
     },
     {
       "id": "infra_a11y_tests_src_auth_base64urlencode",
@@ -4702,50 +4786,6 @@
       "source_location": "L1"
     },
     {
-      "id": "abc",
-      "label": "ABC",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "abc",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider",
-      "label": "anthropic_provider.py",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "anthropic_provider.py",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_py_any",
-      "label": "Any",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "any",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_base",
-      "label": "base.py",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "base.py",
-      "source_file": "apps/playground/lambda/ai_providers/base.py",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_playground_lambda_ai_providers_base_py_any",
       "label": "Any",
       "_origin": "ast",
@@ -4755,94 +4795,6 @@
       "norm_label": "any",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_init",
-      "label": "__init__.py",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "__init__.py",
-      "source_file": "apps/playground/lambda/ai_providers/__init__.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider",
-      "label": "openai_provider.py",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "openai_provider.py",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_py_any",
-      "label": "Any",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "code",
-      "norm_label": "any",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_rationale_1",
-      "label": "Anthropic Claude provider using Messages API.",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "anthropic claude provider using messages api.",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_anthropic_provider_rationale_9",
-      "label": "Anthropic Claude provider using Messages API",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "anthropic claude provider using messages api",
-      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
-      "source_location": "L9"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_base_rationale_1",
-      "label": "Abstract base class for AI providers with shared retry logic.",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "abstract base class for ai providers with shared retry logic.",
-      "source_file": "apps/playground/lambda/ai_providers/base.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_base_rationale_14",
-      "label": "Standardized request for all providers",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "standardized request for all providers",
-      "source_file": "apps/playground/lambda/ai_providers/base.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_base_rationale_27",
-      "label": "Standardized response",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "standardized response",
-      "source_file": "apps/playground/lambda/ai_providers/base.py",
-      "source_location": "L27"
     },
     {
       "id": "apps_playground_lambda_ai_providers_base_rationale_34",
@@ -4922,17 +4874,6 @@
       "source_location": "L67"
     },
     {
-      "id": "apps_playground_lambda_ai_providers_base_rationale_71",
-      "label": "Build the prompt (shared across all providers)",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "build the prompt (shared across all providers)",
-      "source_file": "apps/playground/lambda/ai_providers/base.py",
-      "source_location": "L71"
-    },
-    {
       "id": "apps_playground_lambda_ai_providers_base_rationale_91",
       "label": "Generate summary with retry logic.",
       "_origin": "ast",
@@ -4942,39 +4883,6 @@
       "norm_label": "generate summary with retry logic.",
       "source_file": "apps/playground/lambda/ai_providers/base.py",
       "source_location": "L91"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_init_rationale_1",
-      "label": "Factory function for AI provider creation with backward compatibility.",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "factory function for ai provider creation with backward compatibility.",
-      "source_file": "apps/playground/lambda/ai_providers/__init__.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_rationale_1",
-      "label": "OpenAI provider using /v1/responses endpoint.",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "openai provider using /v1/responses endpoint.",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_ai_providers_openai_provider_rationale_9",
-      "label": "OpenAI provider using /v1/responses endpoint",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "AIProvider",
-      "file_type": "rationale",
-      "norm_label": "openai provider using /v1/responses endpoint",
-      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
-      "source_location": "L9"
     },
     {
       "id": "infra_regression_tests_package",
@@ -5252,81 +5160,81 @@
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_docs_codebase_diagram",
-      "label": "codebase-diagram.js",
+      "id": "infra_lambda_media_stats",
+      "label": "stats.ts",
       "_origin": "ast",
       "community": 115,
-      "community_name": "sites.json Registry",
+      "community_name": "stats.ts",
       "file_type": "code",
-      "norm_label": "codebase-diagram.js",
-      "source_file": "apps/playground/docs/codebase-diagram.js",
+      "norm_label": "stats.ts",
+      "source_file": "infra/lambda/media/stats.ts",
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_lambda_generate_sites",
-      "label": "generate_sites.py",
+      "id": "infra_lambda_media_stats_cloudwatch",
+      "label": "cloudwatch",
       "_origin": "ast",
       "community": 115,
-      "community_name": "sites.json Registry",
+      "community_name": "stats.ts",
       "file_type": "code",
-      "norm_label": "generate_sites.py",
-      "source_file": "apps/playground/lambda/generate_sites.py",
-      "source_location": "L1"
+      "norm_label": "cloudwatch",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L8"
     },
     {
-      "id": "apps_playground_lambda_generate_sites_rationale_1",
-      "label": "Generate sites.json from S3 folder structure - S3-adapted for Lambda.",
+      "id": "infra_lambda_media_stats_cloudwatchuseast1",
+      "label": "cloudwatchUsEast1",
       "_origin": "ast",
       "community": 115,
-      "community_name": "sites.json Registry",
-      "file_type": "rationale",
-      "norm_label": "generate sites.json from s3 folder structure - s3-adapted for lambda.",
-      "source_file": "apps/playground/lambda/generate_sites.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "apps_playground_lambda_generate_sites_rationale_14",
-      "label": "Rebuild sites.json from S3 prefixes that have index.html.",
-      "_origin": "ast",
-      "community": 115,
-      "community_name": "sites.json Registry",
-      "file_type": "rationale",
-      "norm_label": "rebuild sites.json from s3 prefixes that have index.html.",
-      "source_file": "apps/playground/lambda/generate_sites.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "apps_playground_lambda_create_project",
-      "label": "create_project.py",
-      "_origin": "ast",
-      "community": 116,
-      "community_name": "create_project.py",
+      "community_name": "stats.ts",
       "file_type": "code",
-      "norm_label": "create_project.py",
-      "source_file": "apps/playground/lambda/create_project.py",
-      "source_location": "L1"
+      "norm_label": "cloudwatchuseast1",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L12"
     },
     {
-      "id": "apps_playground_lambda_create_project_rationale_1",
-      "label": "Create a new project under a company. Reads project-template from S3, renders\u2026",
+      "id": "infra_lambda_media_stats_ddb",
+      "label": "ddb",
       "_origin": "ast",
-      "community": 116,
-      "community_name": "create_project.py",
-      "file_type": "rationale",
-      "norm_label": "create a new project under a company. reads project-template from s3, renders...",
-      "source_file": "apps/playground/lambda/create_project.py",
-      "source_location": "L1"
+      "community": 115,
+      "community_name": "stats.ts",
+      "file_type": "code",
+      "norm_label": "ddb",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L13"
     },
     {
-      "id": "apps_playground_lambda_create_project_rationale_51",
-      "label": "Handle create project request. body: { companyId: str, name: str, description?:\u2026",
+      "id": "infra_lambda_media_stats_lambda_functions",
+      "label": "LAMBDA_FUNCTIONS",
       "_origin": "ast",
-      "community": 116,
-      "community_name": "create_project.py",
-      "file_type": "rationale",
-      "norm_label": "handle create project request. body: { companyid: str, name: str, description?:...",
-      "source_file": "apps/playground/lambda/create_project.py",
-      "source_location": "L51"
+      "community": 115,
+      "community_name": "stats.ts",
+      "file_type": "code",
+      "norm_label": "lambda_functions",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L26"
+    },
+    {
+      "id": "infra_lambda_media_stats_rate_per_gb",
+      "label": "RATE_PER_GB",
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "stats.ts",
+      "file_type": "code",
+      "norm_label": "rate_per_gb",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L37"
+    },
+    {
+      "id": "infra_lambda_media_stats_ses",
+      "label": "ses",
+      "_origin": "ast",
+      "community": 115,
+      "community_name": "stats.ts",
+      "file_type": "code",
+      "norm_label": "ses",
+      "source_file": "infra/lambda/media/stats.ts",
+      "source_location": "L17"
     },
     {
       "id": "apps_media_app_src_useidletimeout",
@@ -5593,103 +5501,136 @@
       "source_location": "L5"
     },
     {
-      "id": "apps_playground_lambda_archive_company",
-      "label": "archive_company.py",
+      "id": "abc",
+      "label": "ABC",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
+      "community_name": "AIRequest",
       "file_type": "code",
-      "norm_label": "archive_company.py",
-      "source_file": "apps/playground/lambda/archive_company.py",
-      "source_location": "L1"
+      "norm_label": "abc",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "apps_playground_lambda_delete_project",
-      "label": "delete_project.py",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider",
+      "label": "anthropic_provider.py",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
+      "community_name": "AIRequest",
       "file_type": "code",
-      "norm_label": "delete_project.py",
-      "source_file": "apps/playground/lambda/delete_project.py",
+      "norm_label": "anthropic_provider.py",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_lambda_lambda_function",
-      "label": "lambda_function.py",
+      "id": "apps_playground_lambda_ai_providers_base",
+      "label": "base.py",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
+      "community_name": "AIRequest",
       "file_type": "code",
-      "norm_label": "lambda_function.py",
-      "source_file": "apps/playground/lambda/lambda_function.py",
+      "norm_label": "base.py",
+      "source_file": "apps/playground/lambda/ai_providers/base.py",
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_lambda_archive_company_rationale_1",
-      "label": "Archive, restore, or delete company - S3-adapted for Lambda.",
+      "id": "apps_playground_lambda_ai_providers_init",
+      "label": "__init__.py",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
-      "file_type": "rationale",
-      "norm_label": "archive, restore, or delete company - s3-adapted for lambda.",
-      "source_file": "apps/playground/lambda/archive_company.py",
+      "community_name": "AIRequest",
+      "file_type": "code",
+      "norm_label": "__init__.py",
+      "source_file": "apps/playground/lambda/ai_providers/__init__.py",
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_lambda_archive_company_rationale_13",
-      "label": "Handle archive/restore/delete request. body: { action:\u2026",
+      "id": "apps_playground_lambda_ai_providers_openai_provider",
+      "label": "openai_provider.py",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
-      "file_type": "rationale",
-      "norm_label": "handle archive/restore/delete request. body: { action:...",
-      "source_file": "apps/playground/lambda/archive_company.py",
-      "source_location": "L13"
-    },
-    {
-      "id": "apps_playground_lambda_delete_project_rationale_1",
-      "label": "Delete a project from a company. Removes the S3 prefix and the entry from the\u2026",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "lambda_function.py",
-      "file_type": "rationale",
-      "norm_label": "delete a project from a company. removes the s3 prefix and the entry from the...",
-      "source_file": "apps/playground/lambda/delete_project.py",
+      "community_name": "AIRequest",
+      "file_type": "code",
+      "norm_label": "openai_provider.py",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_lambda_delete_project_rationale_15",
-      "label": "Handle delete project request. body: { companyId: str, projectId: str }",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_rationale_1",
+      "label": "Anthropic Claude provider using Messages API.",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
+      "community_name": "AIRequest",
       "file_type": "rationale",
-      "norm_label": "handle delete project request. body: { companyid: str, projectid: str }",
-      "source_file": "apps/playground/lambda/delete_project.py",
-      "source_location": "L15"
-    },
-    {
-      "id": "apps_playground_lambda_lambda_function_rationale_1",
-      "label": "Lambda handler for swordthain automation API. Routes POST /create and POST\u2026",
-      "_origin": "ast",
-      "community": 13,
-      "community_name": "lambda_function.py",
-      "file_type": "rationale",
-      "norm_label": "lambda handler for swordthain automation api. routes post /create and post...",
-      "source_file": "apps/playground/lambda/lambda_function.py",
+      "norm_label": "anthropic claude provider using messages api.",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
       "source_location": "L1"
     },
     {
-      "id": "apps_playground_lambda_lambda_function_rationale_9",
-      "label": "Route requests by path and method.",
+      "id": "apps_playground_lambda_ai_providers_base_rationale_1",
+      "label": "Abstract base class for AI providers with shared retry logic.",
       "_origin": "ast",
       "community": 13,
-      "community_name": "lambda_function.py",
+      "community_name": "AIRequest",
       "file_type": "rationale",
-      "norm_label": "route requests by path and method.",
-      "source_file": "apps/playground/lambda/lambda_function.py",
-      "source_location": "L9"
+      "norm_label": "abstract base class for ai providers with shared retry logic.",
+      "source_file": "apps/playground/lambda/ai_providers/base.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_base_rationale_14",
+      "label": "Standardized request for all providers",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "AIRequest",
+      "file_type": "rationale",
+      "norm_label": "standardized request for all providers",
+      "source_file": "apps/playground/lambda/ai_providers/base.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_base_rationale_27",
+      "label": "Standardized response",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "AIRequest",
+      "file_type": "rationale",
+      "norm_label": "standardized response",
+      "source_file": "apps/playground/lambda/ai_providers/base.py",
+      "source_location": "L27"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_base_rationale_71",
+      "label": "Build the prompt (shared across all providers)",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "AIRequest",
+      "file_type": "rationale",
+      "norm_label": "build the prompt (shared across all providers)",
+      "source_file": "apps/playground/lambda/ai_providers/base.py",
+      "source_location": "L71"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_init_rationale_1",
+      "label": "Factory function for AI provider creation with backward compatibility.",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "AIRequest",
+      "file_type": "rationale",
+      "norm_label": "factory function for ai provider creation with backward compatibility.",
+      "source_file": "apps/playground/lambda/ai_providers/__init__.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_ai_providers_openai_provider_rationale_1",
+      "label": "OpenAI provider using /v1/responses endpoint.",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "AIRequest",
+      "file_type": "rationale",
+      "norm_label": "openai provider using /v1/responses endpoint.",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L1"
     },
     {
       "id": "apps_media_app_cli_package",
@@ -6033,6 +5974,94 @@
       "source_location": "L1"
     },
     {
+      "id": "apps_playground_assets_app",
+      "label": "app.js",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "app.js",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_assets_app_sites",
+      "label": "sites",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "sites",
+      "source_file": "apps/playground/assets/app.js",
+      "source_location": "L14"
+    },
+    {
+      "id": "apps_playground_docs_codebase_diagram",
+      "label": "codebase-diagram.js",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "codebase-diagram.js",
+      "source_file": "apps/playground/docs/codebase-diagram.js",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_archive_company",
+      "label": "archive_company.py",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "archive_company.py",
+      "source_file": "apps/playground/lambda/archive_company.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_create_project",
+      "label": "create_project.py",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "create_project.py",
+      "source_file": "apps/playground/lambda/create_project.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_delete_project",
+      "label": "delete_project.py",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "delete_project.py",
+      "source_file": "apps/playground/lambda/delete_project.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_generate_sites",
+      "label": "generate_sites.py",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "generate_sites.py",
+      "source_file": "apps/playground/lambda/generate_sites.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_lambda_function",
+      "label": "lambda_function.py",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "code",
+      "norm_label": "lambda_function.py",
+      "source_file": "apps/playground/lambda/lambda_function.py",
+      "source_location": "L1"
+    },
+    {
       "id": "apps_playground_lambda_s3_utils",
       "label": "s3_utils.py",
       "_origin": "ast",
@@ -6042,6 +6071,116 @@
       "norm_label": "s3_utils.py",
       "source_file": "apps/playground/lambda/s3_utils.py",
       "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_archive_company_rationale_1",
+      "label": "Archive, restore, or delete company - S3-adapted for Lambda.",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "archive, restore, or delete company - s3-adapted for lambda.",
+      "source_file": "apps/playground/lambda/archive_company.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_archive_company_rationale_13",
+      "label": "Handle archive/restore/delete request. body: { action:\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "handle archive/restore/delete request. body: { action:...",
+      "source_file": "apps/playground/lambda/archive_company.py",
+      "source_location": "L13"
+    },
+    {
+      "id": "apps_playground_lambda_create_project_rationale_1",
+      "label": "Create a new project under a company. Reads project-template from S3, renders\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "create a new project under a company. reads project-template from s3, renders...",
+      "source_file": "apps/playground/lambda/create_project.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_create_project_rationale_51",
+      "label": "Handle create project request. body: { companyId: str, name: str, description?:\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "handle create project request. body: { companyid: str, name: str, description?:...",
+      "source_file": "apps/playground/lambda/create_project.py",
+      "source_location": "L51"
+    },
+    {
+      "id": "apps_playground_lambda_delete_project_rationale_1",
+      "label": "Delete a project from a company. Removes the S3 prefix and the entry from the\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "delete a project from a company. removes the s3 prefix and the entry from the...",
+      "source_file": "apps/playground/lambda/delete_project.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_delete_project_rationale_15",
+      "label": "Handle delete project request. body: { companyId: str, projectId: str }",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "handle delete project request. body: { companyid: str, projectid: str }",
+      "source_file": "apps/playground/lambda/delete_project.py",
+      "source_location": "L15"
+    },
+    {
+      "id": "apps_playground_lambda_generate_sites_rationale_1",
+      "label": "Generate sites.json from S3 folder structure - S3-adapted for Lambda.",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "generate sites.json from s3 folder structure - s3-adapted for lambda.",
+      "source_file": "apps/playground/lambda/generate_sites.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_generate_sites_rationale_14",
+      "label": "Rebuild sites.json from S3 prefixes that have index.html.",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "rebuild sites.json from s3 prefixes that have index.html.",
+      "source_file": "apps/playground/lambda/generate_sites.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "apps_playground_lambda_lambda_function_rationale_1",
+      "label": "Lambda handler for swordthain automation API. Routes POST /create and POST\u2026",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "lambda handler for swordthain automation api. routes post /create and post...",
+      "source_file": "apps/playground/lambda/lambda_function.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "apps_playground_lambda_lambda_function_rationale_9",
+      "label": "Route requests by path and method.",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "file_type": "rationale",
+      "norm_label": "route requests by path and method.",
+      "source_file": "apps/playground/lambda/lambda_function.py",
+      "source_location": "L9"
     },
     {
       "id": "apps_playground_lambda_s3_utils_rationale_1",
@@ -6356,7 +6495,7 @@
       "label": "access.ts",
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "access.ts",
       "source_file": "infra/lambda/media/access.ts",
@@ -6367,7 +6506,7 @@
       "label": "PERMISSION_RANK",
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "permission_rank",
       "source_file": "infra/lambda/media/access.ts",
@@ -6378,7 +6517,7 @@
       "label": "ROOT",
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "root",
       "source_file": "infra/lambda/media/access.ts",
@@ -6389,7 +6528,7 @@
       "label": "media/folders.ts",
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "media/folders.ts",
       "source_file": "infra/lambda/media/folders.ts",
@@ -6400,7 +6539,7 @@
       "label": "ddb",
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "ddb",
       "source_file": "infra/lambda/media/folders.ts",
@@ -6411,18 +6550,29 @@
       "label": "s3",
       "_origin": "ast",
       "community": 19,
-      "community_name": "media/folders.ts",
+      "community_name": "jsonResponse",
       "file_type": "code",
       "norm_label": "s3",
       "source_file": "infra/lambda/media/folders.ts",
       "source_location": "L23"
     },
     {
+      "id": "infra_lambda_media_playlist_items",
+      "label": "playlist-items.ts",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "media/playlists.ts",
+      "file_type": "code",
+      "norm_label": "playlist-items.ts",
+      "source_file": "infra/lambda/media/playlist-items.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "infra_lambda_media_playlists",
       "label": "media/playlists.ts",
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "media/playlists.ts",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -6433,7 +6583,7 @@
       "label": "cognito",
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "cognito",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -6444,7 +6594,7 @@
       "label": "ddb",
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "ddb",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -6455,7 +6605,7 @@
       "label": "s3",
       "_origin": "ast",
       "community": 20,
-      "community_name": "jsonResponse",
+      "community_name": "media/playlists.ts",
       "file_type": "code",
       "norm_label": "s3",
       "source_file": "infra/lambda/media/playlists.ts",
@@ -7364,26 +7514,26 @@
       "source_location": "L31"
     },
     {
-      "id": "apps_playground_assets_app",
-      "label": "app.js",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_py_any",
+      "label": "Any",
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
+      "community_name": "AnthropicProvider",
       "file_type": "code",
-      "norm_label": "app.js",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L1"
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "apps_playground_assets_app_sites",
-      "label": "sites",
+      "id": "apps_playground_lambda_ai_providers_anthropic_provider_rationale_9",
+      "label": "Anthropic Claude provider using Messages API",
       "_origin": "ast",
       "community": 28,
-      "community_name": "app.js",
-      "file_type": "code",
-      "norm_label": "sites",
-      "source_file": "apps/playground/assets/app.js",
-      "source_location": "L14"
+      "community_name": "AnthropicProvider",
+      "file_type": "rationale",
+      "norm_label": "anthropic claude provider using messages api",
+      "source_file": "apps/playground/lambda/ai_providers/anthropic_provider.py",
+      "source_location": "L9"
     },
     {
       "id": "infra_lambda_media_shares",
@@ -7625,7 +7775,7 @@
       "file_type": "code",
       "norm_label": "scenarios",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L9"
+      "source_location": "L10"
     },
     {
       "id": "infra_regression_tests_src_scenarios_folders",
@@ -7647,6 +7797,17 @@
       "file_type": "code",
       "norm_label": "media.ts",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_multipart",
+      "label": "multipart.ts",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "multipart.ts",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
       "source_location": "L1"
     },
     {
@@ -7687,7 +7848,7 @@
       "label": "upload-url.ts",
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "upload-url.ts",
       "source_file": "infra/lambda/media/upload-url.ts",
@@ -7698,76 +7859,65 @@
       "label": "ddb",
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "ddb",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L22"
+      "source_location": "L23"
     },
     {
       "id": "infra_lambda_media_upload_url_s3",
       "label": "s3",
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "s3",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L23"
+      "source_location": "L24"
     },
     {
       "id": "infra_lambda_media_upload_url_supported_content_types",
       "label": "SUPPORTED_CONTENT_TYPES",
       "_origin": "ast",
       "community": 30,
-      "community_name": "Multipart Upload Lambda",
+      "community_name": "upload-url.ts",
       "file_type": "code",
       "norm_label": "supported_content_types",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L37"
+      "source_location": "L38"
     },
     {
-      "id": "infra_lambda_media_media_access",
-      "label": "media-access.ts",
+      "id": "apps_playground_lambda_ai_providers_openai_provider_py_any",
+      "label": "Any",
       "_origin": "ast",
       "community": 31,
-      "community_name": "media-access.ts",
+      "community_name": "OpenAIProvider",
       "file_type": "code",
-      "norm_label": "media-access.ts",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L1"
+      "norm_label": "any",
+      "source_file": "",
+      "source_location": ""
     },
     {
-      "id": "infra_lambda_media_media_access_ddb",
-      "label": "ddb",
+      "id": "apps_playground_lambda_ai_providers_openai_provider_rationale_9",
+      "label": "OpenAI provider using /v1/responses endpoint",
       "_origin": "ast",
       "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "ddb",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L23"
+      "community_name": "OpenAIProvider",
+      "file_type": "rationale",
+      "norm_label": "openai provider using /v1/responses endpoint",
+      "source_file": "apps/playground/lambda/ai_providers/openai_provider.py",
+      "source_location": "L9"
     },
     {
-      "id": "infra_lambda_media_media_access_s3",
-      "label": "s3",
+      "id": "infra_lambda_media_http",
+      "label": "http.ts",
       "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
+      "community": 32,
+      "community_name": "invites.ts",
       "file_type": "code",
-      "norm_label": "s3",
-      "source_file": "infra/lambda/media/media-access.ts",
-      "source_location": "L24"
-    },
-    {
-      "id": "infra_lambda_media_playlist_items",
-      "label": "playlist-items.ts",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "media-access.ts",
-      "file_type": "code",
-      "norm_label": "playlist-items.ts",
-      "source_file": "infra/lambda/media/playlist-items.ts",
+      "norm_label": "http.ts",
+      "source_file": "infra/lambda/media/http.ts",
       "source_location": "L1"
     },
     {
@@ -7905,15 +8055,37 @@
       "source_location": "L1"
     },
     {
-      "id": "infra_lambda_media_http",
-      "label": "http.ts",
+      "id": "infra_lambda_media_media_access",
+      "label": "media-access.ts",
       "_origin": "ast",
       "community": 34,
       "community_name": "isOwner",
       "file_type": "code",
-      "norm_label": "http.ts",
-      "source_file": "infra/lambda/media/http.ts",
+      "norm_label": "media-access.ts",
+      "source_file": "infra/lambda/media/media-access.ts",
       "source_location": "L1"
+    },
+    {
+      "id": "infra_lambda_media_media_access_ddb",
+      "label": "ddb",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "isOwner",
+      "file_type": "code",
+      "norm_label": "ddb",
+      "source_file": "infra/lambda/media/media-access.ts",
+      "source_location": "L23"
+    },
+    {
+      "id": "infra_lambda_media_media_access_s3",
+      "label": "s3",
+      "_origin": "ast",
+      "community": 34,
+      "community_name": "isOwner",
+      "file_type": "code",
+      "norm_label": "s3",
+      "source_file": "infra/lambda/media/media-access.ts",
+      "source_location": "L24"
     },
     {
       "id": "infra_lambda_media_settings",
@@ -7936,83 +8108,6 @@
       "norm_label": "ddb",
       "source_file": "infra/lambda/media/settings.ts",
       "source_location": "L7"
-    },
-    {
-      "id": "infra_lambda_media_stats",
-      "label": "stats.ts",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "stats.ts",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "infra_lambda_media_stats_cloudwatch",
-      "label": "cloudwatch",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "cloudwatch",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L8"
-    },
-    {
-      "id": "infra_lambda_media_stats_cloudwatchuseast1",
-      "label": "cloudwatchUsEast1",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "cloudwatchuseast1",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L12"
-    },
-    {
-      "id": "infra_lambda_media_stats_ddb",
-      "label": "ddb",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "ddb",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L13"
-    },
-    {
-      "id": "infra_lambda_media_stats_lambda_functions",
-      "label": "LAMBDA_FUNCTIONS",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "lambda_functions",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L26"
-    },
-    {
-      "id": "infra_lambda_media_stats_rate_per_gb",
-      "label": "RATE_PER_GB",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "rate_per_gb",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L37"
-    },
-    {
-      "id": "infra_lambda_media_stats_ses",
-      "label": "ses",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "isOwner",
-      "file_type": "code",
-      "norm_label": "ses",
-      "source_file": "infra/lambda/media/stats.ts",
-      "source_location": "L17"
     },
     {
       "id": "graphify_out_memory_query_20260827_175127_trace_jsonresponse_why_is_it_the_1_god_node_w",
@@ -8186,66 +8281,77 @@
       "label": "thumbnail.ts",
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "thumbnail.ts",
       "source_file": "infra/lambda/media/thumbnail.ts",
       "source_location": "L1"
     },
     {
+      "id": "infra_lambda_media_thumbnail_ca_bundle_candidates",
+      "label": "CA_BUNDLE_CANDIDATES",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "thumbnail.ts",
+      "file_type": "code",
+      "norm_label": "ca_bundle_candidates",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L39"
+    },
+    {
       "id": "infra_lambda_media_thumbnail_ddb",
       "label": "ddb",
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "ddb",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L19"
+      "source_location": "L20"
     },
     {
       "id": "infra_lambda_media_thumbnail_ffmpeg_image_types",
       "label": "FFMPEG_IMAGE_TYPES",
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "ffmpeg_image_types",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L27"
+      "source_location": "L28"
     },
     {
       "id": "infra_lambda_media_thumbnail_s3",
       "label": "s3",
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "s3",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L18"
+      "source_location": "L19"
     },
     {
       "id": "infra_lambda_media_thumbnail_sharp_image_types",
       "label": "SHARP_IMAGE_TYPES",
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "sharp_image_types",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L26"
+      "source_location": "L27"
     },
     {
       "id": "infra_lambda_media_thumbnail_video_types",
       "label": "VIDEO_TYPES",
       "_origin": "ast",
       "community": 39,
-      "community_name": "Thumbnail Generation Lambda",
+      "community_name": "thumbnail.ts",
       "file_type": "code",
       "norm_label": "video_types",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L28"
+      "source_location": "L29"
     },
     {
       "id": "infra_a11y_tests_playwright_config",
@@ -10445,8 +10551,8 @@
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
-      "community": 115,
-      "community_name": "sites.json Registry",
+      "community": 17,
+      "community_name": "s3_utils.py",
       "contributor": null,
       "file_type": "code",
       "norm_label": "sites.json registry",
@@ -10460,8 +10566,8 @@
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
-      "community": 115,
-      "community_name": "sites.json Registry",
+      "community": 17,
+      "community_name": "s3_utils.py",
       "contributor": null,
       "file_type": "code",
       "norm_label": "company template page",
@@ -10475,27 +10581,12 @@
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
-      "community": 115,
-      "community_name": "sites.json Registry",
+      "community": 17,
+      "community_name": "s3_utils.py",
       "contributor": null,
       "file_type": "code",
       "norm_label": "archived companies page",
       "source_file": "apps/playground/demos/archived.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "concept_github_issue_driven_automation_legacy",
-      "label": "GitHub Issue-Driven Automation (legacy pattern)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 115,
-      "community_name": "sites.json Registry",
-      "contributor": null,
-      "file_type": "concept",
-      "norm_label": "github issue-driven automation (legacy pattern)",
-      "source_file": "apps/playground/docs/codebase-diagram.html",
       "source_location": null,
       "source_url": null
     },
@@ -10505,27 +10596,12 @@
       "_origin": "semantic",
       "author": null,
       "captured_at": null,
-      "community": 116,
-      "community_name": "create_project.py",
+      "community": 17,
+      "community_name": "s3_utils.py",
       "contributor": null,
       "file_type": "code",
       "norm_label": "project template page",
       "source_file": "apps/playground/project-template/index.html",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "rationale_route_ordering_gotcha",
-      "label": "Route-Ordering Gotcha (prefix matching)",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 13,
-      "community_name": "lambda_function.py",
-      "contributor": null,
-      "file_type": "rationale",
-      "norm_label": "route-ordering gotcha (prefix matching)",
-      "source_file": "apps/playground/CLAUDE.md",
       "source_location": null,
       "source_url": null
     },
@@ -10540,6 +10616,51 @@
       "contributor": null,
       "file_type": "concept",
       "norm_label": "cloudfront cache invalidation",
+      "source_file": "apps/playground/CLAUDE.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "concept_github_issue_driven_automation_legacy",
+      "label": "GitHub Issue-Driven Automation (legacy pattern)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "contributor": null,
+      "file_type": "concept",
+      "norm_label": "github issue-driven automation (legacy pattern)",
+      "source_file": "apps/playground/docs/codebase-diagram.html",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "rationale_inmemory_state_update_pattern",
+      "label": "In-Memory State Update Pattern",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "in-memory state update pattern",
+      "source_file": "apps/playground/CLAUDE.md",
+      "source_location": null,
+      "source_url": null
+    },
+    {
+      "id": "rationale_route_ordering_gotcha",
+      "label": "Route-Ordering Gotcha (prefix matching)",
+      "_origin": "semantic",
+      "author": null,
+      "captured_at": null,
+      "community": 17,
+      "community_name": "s3_utils.py",
+      "contributor": null,
+      "file_type": "rationale",
+      "norm_label": "route-ordering gotcha (prefix matching)",
       "source_file": "apps/playground/CLAUDE.md",
       "source_location": null,
       "source_url": null
@@ -11275,21 +11396,6 @@
       "contributor": null,
       "file_type": "rationale",
       "norm_label": "double-brace regex requirement",
-      "source_file": "apps/playground/CLAUDE.md",
-      "source_location": null,
-      "source_url": null
-    },
-    {
-      "id": "rationale_inmemory_state_update_pattern",
-      "label": "In-Memory State Update Pattern",
-      "_origin": "semantic",
-      "author": null,
-      "captured_at": null,
-      "community": 28,
-      "community_name": "app.js",
-      "contributor": null,
-      "file_type": "rationale",
-      "norm_label": "in-memory state update pattern",
       "source_file": "apps/playground/CLAUDE.md",
       "source_location": null,
       "source_url": null
@@ -15989,6 +16095,54 @@
       "weight": 1.0
     },
     {
+      "source": "infra_lambda_media_thumbnail_extractframewithffmpeg",
+      "target": "infra_lambda_media_thumbnail_grabframe",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L195",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail_extractvideoframe",
+      "target": "infra_lambda_media_thumbnail_grabframe",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L164",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail_extractvideoframe",
+      "target": "infra_lambda_media_thumbnail_redacturl",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L169",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail_extractvideoframe",
+      "target": "infra_lambda_media_thumbnail_extractframewithffmpeg",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L176",
+      "weight": 1.0
+    },
+    {
       "source": "infra_lambda_media_thumbnail_handler",
       "target": "infra_lambda_media_thumbnail_extractframewithffmpeg",
       "relation": "calls",
@@ -15997,7 +16151,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L63",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail_handler",
+      "target": "infra_lambda_media_thumbnail_extractvideoframe",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -16009,7 +16175,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L250",
+      "source_location": "L313",
       "weight": 1.0
     },
     {
@@ -16021,7 +16187,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L258",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -16033,7 +16199,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L259",
+      "source_location": "L322",
       "weight": 1.0
     },
     {
@@ -16045,7 +16211,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -16057,7 +16223,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -16069,7 +16235,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L83",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -16081,7 +16247,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L213",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -16093,7 +16259,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L221",
+      "source_location": "L264",
       "weight": 1.0
     },
     {
@@ -16105,7 +16271,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L222",
+      "source_location": "L265",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_completemultipartupload",
+      "target": "infra_lambda_media_upload_url_listcompletedparts",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -16117,24 +16295,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L185",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
       "source": "infra_lambda_media_upload_url_getmultipartparturl",
       "target": "infra_lambda_media_upload_url_claims",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L193",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_getmultipartparturl",
-      "target": "infra_lambda_media_upload_url_checkuploadpermission",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -16145,6 +16311,18 @@
       "weight": 1.0
     },
     {
+      "source": "infra_lambda_media_upload_url_getmultipartparturl",
+      "target": "infra_lambda_media_upload_url_checkuploadpermission",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L195",
+      "weight": 1.0
+    },
+    {
       "source": "infra_lambda_media_upload_url_getuploadurl",
       "target": "infra_lambda_media_http_jsonresponse",
       "relation": "calls",
@@ -16153,24 +16331,12 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L112",
+      "source_location": "L113",
       "weight": 1.0
     },
     {
       "source": "infra_lambda_media_upload_url_getuploadurl",
       "target": "infra_lambda_media_upload_url_claims",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L123",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_getuploadurl",
-      "target": "infra_lambda_media_upload_url_checkuploadpermission",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -16182,6 +16348,18 @@
     },
     {
       "source": "infra_lambda_media_upload_url_getuploadurl",
+      "target": "infra_lambda_media_upload_url_checkuploadpermission",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L125",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_getuploadurl",
       "target": "infra_lambda_media_upload_url_builds3key",
       "relation": "calls",
       "_origin": "ast",
@@ -16189,67 +16367,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L128",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_handler",
-      "target": "infra_lambda_media_http_jsonresponse",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L101",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_handler",
-      "target": "infra_lambda_media_upload_url_getuploadurl",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L91",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_handler",
-      "target": "infra_lambda_media_upload_url_initmultipartupload",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L93",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_handler",
-      "target": "infra_lambda_media_upload_url_getmultipartparturl",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L95",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_lambda_media_upload_url_handler",
-      "target": "infra_lambda_media_upload_url_completemultipartupload",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L97",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
@@ -16261,7 +16379,67 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L99",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_handler",
+      "target": "infra_lambda_media_http_jsonresponse",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_handler",
+      "target": "infra_lambda_media_upload_url_getuploadurl",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_handler",
+      "target": "infra_lambda_media_upload_url_initmultipartupload",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L94",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_handler",
+      "target": "infra_lambda_media_upload_url_getmultipartparturl",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L96",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url_handler",
+      "target": "infra_lambda_media_upload_url_completemultipartupload",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L98",
       "weight": 1.0
     },
     {
@@ -16273,7 +16451,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L146",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -16285,7 +16463,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L157",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -16297,7 +16475,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -16309,7 +16487,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L162",
+      "source_location": "L163",
       "weight": 1.0
     },
     {
@@ -16465,7 +16643,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -16477,7 +16655,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -16538,6 +16716,54 @@
       "context": "call",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart_run",
+      "target": "infra_regression_tests_src_scenarios_media_tinyjpegbytes",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart_run",
+      "target": "infra_regression_tests_src_scenarios_multipart_tinymp4bytes",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart_run",
+      "target": "infra_regression_tests_src_assert_assert",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L57",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart_run",
+      "target": "infra_regression_tests_src_scenarios_multipart_waitformediaitem",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -19705,7 +19931,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -19717,7 +19943,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -19729,7 +19955,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -20246,6 +20472,78 @@
       "context": "import",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_api_api",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_api_mediaitem",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_api_apierror",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_assert_assert",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_config_ci_test_folder_id",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_scenarios_media_tinyjpegbytes",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -21625,7 +21923,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -21637,7 +21935,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -21649,7 +21947,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -21785,6 +22083,18 @@
       "weight": 1.0
     },
     {
+      "source": "infra_regression_tests_src_run",
+      "target": "infra_regression_tests_src_scenarios_multipart",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/run.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
       "source": "infra_regression_tests_src_scenarios_folders",
       "target": "infra_regression_tests_src_api",
       "relation": "imports_from",
@@ -21854,6 +22164,54 @@
       "context": "import",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_assert",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_config",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_scenarios_media",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -23089,7 +23447,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L174",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -23100,7 +23458,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L186",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -23111,7 +23469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L199",
+      "source_location": "L198",
       "weight": 1.0
     },
     {
@@ -23122,7 +23480,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L218",
+      "source_location": "L217",
       "weight": 1.0
     },
     {
@@ -23133,7 +23491,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L222",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -26680,13 +27038,46 @@
     },
     {
       "source": "infra_lambda_media_thumbnail",
+      "target": "infra_lambda_media_thumbnail_grabframe",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail",
+      "target": "infra_lambda_media_thumbnail_extractvideoframe",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L159",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail",
+      "target": "infra_lambda_media_thumbnail_redacturl",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L179",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail",
       "target": "infra_lambda_media_thumbnail_extractframewithffmpeg",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L104",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
@@ -26697,7 +27088,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -26708,7 +27099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -26719,7 +27110,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -26730,7 +27121,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -26741,7 +27132,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L28",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_thumbnail",
+      "target": "infra_lambda_media_thumbnail_ca_bundle_candidates",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/lambda/media/thumbnail.ts",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -26752,7 +27154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/thumbnail.ts",
-      "source_location": "L32",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -26763,7 +27165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -26774,7 +27176,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -26785,18 +27187,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L178",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
       "source": "infra_lambda_media_upload_url",
-      "target": "infra_lambda_media_upload_url_completemultipartupload",
+      "target": "infra_lambda_media_upload_url_listcompletedparts",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L206",
+      "source_location": "L214",
       "weight": 1.0
     },
     {
@@ -26807,7 +27209,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -26818,7 +27220,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L23",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_lambda_media_upload_url",
+      "target": "infra_lambda_media_upload_url_completemultipartupload",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/lambda/media/upload-url.ts",
+      "source_location": "L241",
       "weight": 1.0
     },
     {
@@ -26829,7 +27242,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L243",
+      "source_location": "L306",
       "weight": 1.0
     },
     {
@@ -26840,7 +27253,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -26851,7 +27264,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -26862,7 +27275,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L77",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -26873,7 +27286,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -26884,7 +27297,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/lambda/media/upload-url.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -27769,17 +28182,6 @@
     },
     {
       "source": "infra_regression_tests_src_api",
-      "target": "infra_regression_tests_src_api_api",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "infra/regression-tests/src/api.ts",
-      "source_location": "L81",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_regression_tests_src_api",
       "target": "infra_regression_tests_src_api_folder",
       "relation": "contains",
       "_origin": "ast",
@@ -27787,6 +28189,17 @@
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/api.ts",
       "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_api",
+      "target": "infra_regression_tests_src_api_api",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/api.ts",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -27956,24 +28369,24 @@
     },
     {
       "source": "infra_regression_tests_src_run",
-      "target": "infra_regression_tests_src_run_main",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L11",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_regression_tests_src_run",
       "target": "infra_regression_tests_src_run_scenarios",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L9",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_run",
+      "target": "infra_regression_tests_src_run_main",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/run.ts",
+      "source_location": "L12",
       "weight": 1.0
     },
     {
@@ -28029,6 +28442,39 @@
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_scenarios_multipart_tinymp4bytes",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_scenarios_multipart_waitformediaitem",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_multipart",
+      "target": "infra_regression_tests_src_scenarios_multipart_run",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/scenarios/multipart.ts",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -31711,5 +32157,5 @@
       "source_file": "apps/playground/CLAUDE.md"
     }
   ],
-  "built_at_commit": "e94c80953c726b32e33a7122d848692e00224c67"
+  "built_at_commit": "9b779295fcdd4146a8f2488ed948b1a180c0f67d"
 }
