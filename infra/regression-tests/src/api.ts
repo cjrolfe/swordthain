@@ -72,6 +72,22 @@ export function makeApi(idToken: string) {
     removePlaylistItem: (playlistId: string, position: number) =>
       request<{ deleted: boolean }>("DELETE", `/playlists/${playlistId}/items/${position}`, idToken),
 
+    initMultipartUpload: (body: { folderId: string; fileName: string; contentType: string; fileSize: number }) =>
+      request<{ mediaId: string; s3Key: string; uploadId: string; partSize: number; totalParts: number }>(
+        "POST",
+        "/media/upload-url/multipart/init",
+        idToken,
+        body
+      ),
+    getMultipartPartUrl: (body: { folderId: string; s3Key: string; uploadId: string; partNumber: number }) =>
+      request<{ url: string }>("POST", "/media/upload-url/multipart/part-url", idToken, body),
+    // No `parts` list — the server asks S3 which parts arrived (see
+    // upload-url.ts); that's the whole point of what the multipart scenario checks.
+    completeMultipartUpload: (body: { folderId: string; s3Key: string; uploadId: string; totalParts: number }) =>
+      request<{ completed: boolean }>("POST", "/media/upload-url/multipart/complete", idToken, body),
+    abortMultipartUpload: (body: { folderId: string; s3Key: string; uploadId: string }) =>
+      request<{ aborted: boolean }>("POST", "/media/upload-url/multipart/abort", idToken, body),
+
     getSettings: () => request<{ introEnabled: boolean }>("GET", "/settings", idToken),
     updateSettings: (introEnabled: boolean) =>
       request<{ introEnabled: boolean }>("PATCH", "/settings", idToken, { introEnabled }),

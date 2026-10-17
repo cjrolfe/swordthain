@@ -12,6 +12,7 @@ import {
   UploadPartCommand,
   CompleteMultipartUploadCommand,
   AbortMultipartUploadCommand,
+  ListPartsCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
@@ -203,24 +204,86 @@ async function getMultipartPartUrl(
   return jsonResponse(200, { url });
 }
 
+/**
+ * Lists every uploaded part for a multipart upload straight from S3 (paged
+ * — S3 returns at most 1,000 per call) and checks that all `totalParts` of
+ * them are actually there before anyone is allowed to finalize the upload.
+ * Without that check, completing with whatever happens to be present would
+ * silently produce a truncated file.
+ */
+async function listCompletedParts(
+  s3Key: string,
+  uploadId: string,
+  totalParts: number
+): Promise<{ PartNumber: number; ETag: string }[] | { missing: number }> {
+  const found = new Map<number, string>();
+  let marker: string | undefined;
+  do {
+    const page = await s3.send(
+      new ListPartsCommand({ Bucket: MEDIA_BUCKET_NAME, Key: s3Key, UploadId: uploadId, PartNumberMarker: marker })
+    );
+    for (const part of page.Parts ?? []) {
+      if (part.PartNumber && part.ETag) found.set(part.PartNumber, part.ETag);
+    }
+    marker = page.IsTruncated ? page.NextPartNumberMarker : undefined;
+  } while (marker);
+
+  const parts: { PartNumber: number; ETag: string }[] = [];
+  let missing = 0;
+  for (let n = 1; n <= totalParts; n++) {
+    const etag = found.get(n);
+    if (etag) parts.push({ PartNumber: n, ETag: etag });
+    else missing++;
+  }
+  return missing > 0 ? { missing } : parts;
+}
+
 async function completeMultipartUpload(
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ): Promise<APIGatewayProxyStructuredResultV2> {
-  let payload: { folderId?: string; s3Key?: string; uploadId?: string; parts?: { partNumber: number; etag: string }[] };
+  let payload: {
+    folderId?: string;
+    s3Key?: string;
+    uploadId?: string;
+    totalParts?: number;
+    parts?: { partNumber: number; etag: string }[];
+  };
   try {
     payload = event.body ? JSON.parse(event.body) : {};
   } catch {
     return jsonResponse(400, { error: "Invalid JSON body" });
   }
 
-  const { folderId, s3Key, uploadId, parts } = payload;
-  if (!folderId || !s3Key || !uploadId || !Array.isArray(parts) || parts.length === 0) {
-    return jsonResponse(400, { error: "folderId, s3Key, uploadId, and a non-empty parts array are required" });
+  const { folderId, s3Key, uploadId, totalParts, parts } = payload;
+  const hasLegacyParts = Array.isArray(parts) && parts.length > 0;
+  const hasTotalParts = Number.isInteger(totalParts) && (totalParts as number) > 0;
+  if (!folderId || !s3Key || !uploadId || (!hasLegacyParts && !hasTotalParts)) {
+    return jsonResponse(400, { error: "folderId, s3Key, uploadId, and totalParts (or a non-empty parts array) are required" });
   }
 
   const { owner, userId } = claims(event);
   const permissionError = await checkUploadPermission(owner, userId, folderId);
   if (permissionError) return permissionError;
+
+  // The browser sends just `totalParts` and S3 is asked what it actually
+  // has: a request body that lists every part grows with file size (~66
+  // bytes per 50MB part) and, for files over ~6GB, outgrew the 8KB body
+  // limit the WAF in front of this API enforces — blocking the very last
+  // step of an otherwise-finished upload. `parts` is still accepted for
+  // older clients (the CLI tool sends it, and talks to this API directly,
+  // bypassing the WAF).
+  let completeParts: { PartNumber: number; ETag: string }[];
+  if (hasLegacyParts) {
+    completeParts = parts!.map((p) => ({ PartNumber: p.partNumber, ETag: p.etag }));
+  } else {
+    const listed = await listCompletedParts(s3Key, uploadId, totalParts as number);
+    if ("missing" in listed) {
+      return jsonResponse(409, {
+        error: `Upload incomplete — ${listed.missing} of ${totalParts} parts are missing from S3`,
+      });
+    }
+    completeParts = listed;
+  }
 
   try {
     await s3.send(
@@ -228,7 +291,7 @@ async function completeMultipartUpload(
         Bucket: MEDIA_BUCKET_NAME,
         Key: s3Key,
         UploadId: uploadId,
-        MultipartUpload: { Parts: parts.map((p) => ({ PartNumber: p.partNumber, ETag: p.etag })) },
+        MultipartUpload: { Parts: completeParts },
       })
     );
   } catch (err) {

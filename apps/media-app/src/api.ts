@@ -113,12 +113,11 @@ export const api = {
     ),
   getMultipartPartUrl: (body: { folderId: string; s3Key: string; uploadId: string; partNumber: number }) =>
     request<{ url: string }>("POST", "/media/upload-url/multipart/part-url", body),
-  completeMultipartUpload: (body: {
-    folderId: string;
-    s3Key: string;
-    uploadId: string;
-    parts: { partNumber: number; etag: string }[];
-  }) => request<{ completed: boolean }>("POST", "/media/upload-url/multipart/complete", body),
+  // Just totalParts, not the parts themselves — the server asks S3 which
+  // parts arrived. A per-part list grows with file size and, past ~6GB,
+  // tripped the WAF's 8KB request-body limit on this very call.
+  completeMultipartUpload: (body: { folderId: string; s3Key: string; uploadId: string; totalParts: number }) =>
+    request<{ completed: boolean }>("POST", "/media/upload-url/multipart/complete", body),
   abortMultipartUpload: (body: { folderId: string; s3Key: string; uploadId: string }) =>
     request<{ aborted: boolean }>("POST", "/media/upload-url/multipart/abort", body),
 

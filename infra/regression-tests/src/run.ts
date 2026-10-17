@@ -5,8 +5,9 @@ import * as folders from "./scenarios/folders.js";
 import * as media from "./scenarios/media.js";
 import * as playlists from "./scenarios/playlists.js";
 import * as settings from "./scenarios/settings.js";
+import * as multipart from "./scenarios/multipart.js";
 
-const SCENARIOS = { smoke, folders, media, playlists, settings } as const;
+const SCENARIOS = { smoke, folders, media, playlists, settings, multipart } as const;
 
 async function main(): Promise<void> {
   const only = process.argv.includes("--only")

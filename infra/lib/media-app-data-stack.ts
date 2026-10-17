@@ -316,11 +316,13 @@ export class MediaAppDataStack extends Stack {
     this.folderSharesTable.grantReadData(uploadUrlFn);
     // s3:PutObject (granted via grantPut above) already authorizes
     // CreateMultipartUpload/UploadPart/CompleteMultipartUpload — those
-    // aren't separate IAM actions. Only AbortMultipartUpload needs its own
-    // grant.
+    // aren't separate IAM actions. AbortMultipartUpload and
+    // ListMultipartUploadParts (what the "complete" route uses to ask S3
+    // which parts actually arrived, instead of trusting a client-sent
+    // list) each need their own grant.
     uploadUrlFn.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ["s3:AbortMultipartUpload"],
+        actions: ["s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"],
         resources: [`${this.mediaBucket.bucketArn}/*`],
       })
     );

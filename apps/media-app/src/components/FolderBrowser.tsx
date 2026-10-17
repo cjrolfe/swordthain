@@ -131,7 +131,7 @@ async function uploadMultipart(
     folderId,
     s3Key: state.s3Key,
     uploadId: state.uploadId,
-    parts: state.completedParts,
+    totalParts: state.totalParts,
   });
   localStorage.removeItem(storageKey);
 }
