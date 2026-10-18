@@ -376,7 +376,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "mediaitem",
       "source_file": "apps/media-app/src/api.ts",
@@ -389,7 +389,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "sharedfolder",
       "source_file": "apps/media-app/src/api.ts",
@@ -402,7 +402,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "figureoptions",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -415,7 +415,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "multipartuploadstate",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -428,7 +428,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "uploadstatus",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -445,7 +445,7 @@
       "file_type": "code",
       "norm_label": "activityentry",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L173"
+      "source_location": "L175"
     },
     {
       "id": "apps_media_app_src_api_appsettings",
@@ -458,7 +458,7 @@
       "file_type": "code",
       "norm_label": "appsettings",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L217"
+      "source_location": "L219"
     },
     {
       "id": "apps_media_app_src_api_folder",
@@ -562,7 +562,7 @@
       "file_type": "code",
       "norm_label": "api",
       "source_file": "infra/regression-tests/src/api.ts",
-      "source_location": "L97"
+      "source_location": "L102"
     },
     {
       "id": "infra_regression_tests_src_api_apierror",
@@ -636,7 +636,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "apierror",
       "source_file": "apps/media-app/src/api.ts",
@@ -649,11 +649,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "playlist",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L185"
+      "source_location": "L187"
     },
     {
       "id": "apps_media_app_src_api_playlistitem",
@@ -662,11 +662,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "playlistitem",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L198"
+      "source_location": "L200"
     },
     {
       "id": "infra_lambda_media_activity_activitylogitem",
@@ -705,7 +705,7 @@
       "file_type": "code",
       "norm_label": "storagestats",
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L221"
+      "source_location": "L223"
     },
     {
       "id": "apps_media_app_src_vite_env_d_importmeta",
@@ -1377,11 +1377,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "folderbrowser()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L230"
+      "source_location": "L236"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handleaddtoplaylist",
@@ -1389,11 +1389,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handleaddtoplaylist()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L339"
+      "source_location": "L347"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlebulkdeleteselected",
@@ -1401,11 +1401,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlebulkdeleteselected()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L518"
+      "source_location": "L558"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlecanceleditdescription",
@@ -1413,11 +1413,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlecanceleditdescription()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L504"
+      "source_location": "L544"
+    },
+    {
+      "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlecancelmovemedia",
+      "label": "handleCancelMoveMedia()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "FolderBrowser",
+      "file_type": "code",
+      "norm_label": "handlecancelmovemedia()",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L488"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlecreate",
@@ -1425,11 +1437,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlecreate()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L378"
+      "source_location": "L386"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handledelete",
@@ -1437,11 +1449,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handledelete()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L406"
+      "source_location": "L414"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handledeletemedia",
@@ -1449,11 +1461,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handledeletemedia()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L480"
+      "source_location": "L520"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handledownload",
@@ -1461,11 +1473,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handledownload()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L468"
+      "source_location": "L508"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovebreadcrumb",
@@ -1473,11 +1485,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlemovebreadcrumb()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L445"
+      "source_location": "L454"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovecancel",
@@ -1485,11 +1497,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlemovecancel()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L435"
+      "source_location": "L444"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovehere",
@@ -1497,11 +1509,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlemovehere()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L456"
+      "source_location": "L465"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovehome",
@@ -1509,11 +1521,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlemovehome()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L440"
+      "source_location": "L449"
+    },
+    {
+      "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovemediahere",
+      "label": "handleMoveMediaHere()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "FolderBrowser",
+      "file_type": "code",
+      "norm_label": "handlemovemediahere()",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L497"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovenavigate",
@@ -1521,11 +1545,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlemovenavigate()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L451"
+      "source_location": "L460"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handleopensharedfolder",
@@ -1533,11 +1557,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handleopensharedfolder()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L331"
+      "source_location": "L339"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlerename",
@@ -1545,11 +1569,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlerename()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L395"
+      "source_location": "L403"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlestarteditdescription",
@@ -1557,11 +1581,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlestarteditdescription()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L499"
+      "source_location": "L539"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlestartmove",
@@ -1569,11 +1593,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlestartmove()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L429"
+      "source_location": "L437"
+    },
+    {
+      "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlestartmovemedia",
+      "label": "handleStartMoveMedia()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "FolderBrowser",
+      "file_type": "code",
+      "norm_label": "handlestartmovemedia()",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L481"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handlesubmitdescription",
@@ -1581,11 +1617,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handlesubmitdescription()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L508"
+      "source_location": "L548"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_handletogglephotoselect",
@@ -1593,11 +1629,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "handletogglephotoselect()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L490"
+      "source_location": "L530"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_loadmorephotos",
@@ -1605,11 +1641,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "loadmorephotos()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L364"
+      "source_location": "L372"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_loadmorevideos",
@@ -1617,11 +1653,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "loadmorevideos()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L350"
+      "source_location": "L358"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_loadmoveoptions",
@@ -1629,11 +1665,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "loadmoveoptions()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L416"
+      "source_location": "L424"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_folderbrowser_refresh",
@@ -1641,11 +1677,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "FolderBrowser Event Handlers",
+      "community_name": "FolderBrowser",
       "file_type": "code",
       "norm_label": "refresh()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L299"
+      "source_location": "L307"
+    },
+    {
+      "id": "apps_media_app_src_components_folderbrowser_folderbrowser_rendermovepicker",
+      "label": "renderMovePicker()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "FolderBrowser",
+      "file_type": "code",
+      "norm_label": "rendermovepicker()",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L621"
+    },
+    {
+      "id": "apps_media_app_src_components_folderbrowser_renderfigure",
+      "label": "renderFigure()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "FolderBrowser",
+      "file_type": "code",
+      "norm_label": "renderfigure()",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L154"
     },
     {
       "id": "infra_lambda_media_stats_handler",
@@ -2716,36 +2776,12 @@
       "source_location": "L461"
     },
     {
-      "id": "apps_media_app_src_components_dialog_dialog",
-      "label": "Dialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Modal Dialog & Media Types",
-      "file_type": "code",
-      "norm_label": "dialog()",
-      "source_file": "apps/media-app/src/components/Dialog.tsx",
-      "source_location": "L13"
-    },
-    {
-      "id": "apps_media_app_src_components_dialog_dialog_onkeydown",
-      "label": "onKeyDown()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Modal Dialog & Media Types",
-      "file_type": "code",
-      "norm_label": "onkeydown()",
-      "source_file": "apps/media-app/src/components/Dialog.tsx",
-      "source_location": "L31"
-    },
-    {
       "id": "apps_media_app_src_components_folderbrowser_effectivecontenttype",
       "label": "effectiveContentType()",
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "effectivecontenttype()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -2757,11 +2793,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "handleupload()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L529"
+      "source_location": "L569"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_multipartstoragekey",
@@ -2769,23 +2805,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "multipartstoragekey()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
       "source_location": "L49"
-    },
-    {
-      "id": "apps_media_app_src_components_folderbrowser_renderfigure",
-      "label": "renderFigure()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Modal Dialog & Media Types",
-      "file_type": "code",
-      "norm_label": "renderfigure()",
-      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L153"
     },
     {
       "id": "apps_media_app_src_components_folderbrowser_uploadmultipart",
@@ -2793,7 +2817,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "uploadmultipart()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -2805,7 +2829,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "xhrput()",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -2817,7 +2841,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "lightbox()",
       "source_file": "apps/media-app/src/components/Lightbox.tsx",
@@ -3229,7 +3253,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L12"
+      "source_location": "L13"
     },
     {
       "id": "infra_regression_tests_src_scenarios_folders_assertapierror",
@@ -3290,6 +3314,42 @@
       "norm_label": "waitformediaitem()",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L17"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_move_media_expectapierror",
+      "label": "expectApiError()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "expectapierror()",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L17"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_move_media_run",
+      "label": "run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "run()",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L37"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_move_media_waitforphotoin",
+      "label": "waitForPhotoIn()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "waitforphotoin()",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L7"
     },
     {
       "id": "infra_regression_tests_src_scenarios_multipart_run",
@@ -3741,11 +3801,35 @@
       "_callable": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": ".constructor()",
       "source_file": "apps/media-app/src/api.ts",
       "source_location": "L6"
+    },
+    {
+      "id": "apps_media_app_src_components_dialog_dialog",
+      "label": "Dialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "Playlists.tsx",
+      "file_type": "code",
+      "norm_label": "dialog()",
+      "source_file": "apps/media-app/src/components/Dialog.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "apps_media_app_src_components_dialog_dialog_onkeydown",
+      "label": "onKeyDown()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "Playlists.tsx",
+      "file_type": "code",
+      "norm_label": "onkeydown()",
+      "source_file": "apps/media-app/src/components/Dialog.tsx",
+      "source_location": "L31"
     },
     {
       "id": "apps_media_app_src_components_playlistplayer_playlistplayer",
@@ -3753,7 +3837,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "playlistplayer()",
       "source_file": "apps/media-app/src/components/PlaylistPlayer.tsx",
@@ -3765,7 +3849,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "previous()",
       "source_file": "apps/media-app/src/components/PlaylistPlayer.tsx",
@@ -3777,7 +3861,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "skip()",
       "source_file": "apps/media-app/src/components/PlaylistPlayer.tsx",
@@ -6612,22 +6696,11 @@
       "source_location": "L26"
     },
     {
-      "id": "apps_media_app_src_components_dialog",
-      "label": "Dialog.tsx",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Modal Dialog & Media Types",
-      "file_type": "code",
-      "norm_label": "dialog.tsx",
-      "source_file": "apps/media-app/src/components/Dialog.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "apps_media_app_src_components_folderbrowser",
       "label": "FolderBrowser.tsx",
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "folderbrowser.tsx",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -6638,7 +6711,7 @@
       "label": "SUPPORTED_CONTENT_TYPES",
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "supported_content_types",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
@@ -6649,7 +6722,7 @@
       "label": "Lightbox.tsx",
       "_origin": "ast",
       "community": 21,
-      "community_name": "Modal Dialog & Media Types",
+      "community_name": "FolderBrowser.tsx",
       "file_type": "code",
       "norm_label": "lightbox.tsx",
       "source_file": "apps/media-app/src/components/Lightbox.tsx",
@@ -7775,7 +7848,7 @@
       "file_type": "code",
       "norm_label": "scenarios",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L10"
+      "source_location": "L11"
     },
     {
       "id": "infra_regression_tests_src_scenarios_folders",
@@ -7797,6 +7870,17 @@
       "file_type": "code",
       "norm_label": "media.ts",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "infra_regression_tests_src_scenarios_move_media",
+      "label": "move-media.ts",
+      "_origin": "ast",
+      "community": 3,
+      "community_name": "regression-tests/src/api.ts",
+      "file_type": "code",
+      "norm_label": "move-media.ts",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
       "source_location": "L1"
     },
     {
@@ -8178,11 +8262,22 @@
       "source_location": "L20"
     },
     {
+      "id": "apps_media_app_src_components_dialog",
+      "label": "Dialog.tsx",
+      "_origin": "ast",
+      "community": 36,
+      "community_name": "Playlists.tsx",
+      "file_type": "code",
+      "norm_label": "dialog.tsx",
+      "source_file": "apps/media-app/src/components/Dialog.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "apps_media_app_src_components_playlistplayer",
       "label": "PlaylistPlayer.tsx",
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "playlistplayer.tsx",
       "source_file": "apps/media-app/src/components/PlaylistPlayer.tsx",
@@ -8193,7 +8288,7 @@
       "label": "Playlists.tsx",
       "_origin": "ast",
       "community": 36,
-      "community_name": "Playlist Player Component",
+      "community_name": "Playlists.tsx",
       "file_type": "code",
       "norm_label": "playlists.tsx",
       "source_file": "apps/media-app/src/components/Playlists.tsx",
@@ -8615,6 +8710,17 @@
       "file_type": "code",
       "norm_label": "login.spec.ts",
       "source_file": "infra/a11y-tests/tests/login.spec.ts",
+      "source_location": "L1"
+    },
+    {
+      "id": "infra_a11y_tests_tests_media_move_spec",
+      "label": "media-move.spec.ts",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "fixtures.ts",
+      "file_type": "code",
+      "norm_label": "media-move.spec.ts",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
       "source_location": "L1"
     },
     {
@@ -13835,7 +13941,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L799",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -13847,7 +13953,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L448",
+      "source_location": "L457",
       "weight": 1.0
     },
     {
@@ -13859,7 +13965,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L442",
+      "source_location": "L451",
       "weight": 1.0
     },
     {
@@ -13871,7 +13977,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L453",
+      "source_location": "L462",
       "weight": 1.0
     },
     {
@@ -13883,7 +13989,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L432",
+      "source_location": "L441",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser_handlestartmovemedia",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_loadmoveoptions",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L485",
       "weight": 1.0
     },
     {
@@ -13895,7 +14013,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L541",
+      "source_location": "L581",
       "weight": 1.0
     },
     {
@@ -13907,7 +14025,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L552",
+      "source_location": "L592",
       "weight": 1.0
     },
     {
@@ -13919,7 +14037,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L554",
+      "source_location": "L594",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser_rendermovepicker",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovebreadcrumb",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L638",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser_rendermovepicker",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovenavigate",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L651",
       "weight": 1.0
     },
     {
@@ -16643,7 +16785,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -16655,7 +16797,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -16716,6 +16858,54 @@
       "context": "call",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media_run",
+      "target": "infra_regression_tests_src_scenarios_media_tinyjpegbytes",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L47",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media_run",
+      "target": "infra_regression_tests_src_assert_assert",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media_run",
+      "target": "infra_regression_tests_src_scenarios_move_media_waitforphotoin",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L49",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media_run",
+      "target": "infra_regression_tests_src_scenarios_move_media_expectapierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -16907,7 +17097,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L331",
+      "source_location": "L339",
       "weight": 1.0
     },
     {
@@ -16919,7 +17109,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L339",
+      "source_location": "L347",
       "weight": 1.0
     },
     {
@@ -16931,7 +17121,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L395",
+      "source_location": "L403",
       "weight": 1.0
     },
     {
@@ -16943,7 +17133,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L406",
+      "source_location": "L414",
       "weight": 1.0
     },
     {
@@ -16955,31 +17145,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L429",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
-      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovebreadcrumb",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L445",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
-      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovenavigate",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L451",
+      "source_location": "L437",
       "weight": 1.0
     },
     {
@@ -16991,7 +17157,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L490",
+      "source_location": "L530",
       "weight": 1.0
     },
     {
@@ -17003,7 +17169,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L499",
+      "source_location": "L539",
       "weight": 1.0
     },
     {
@@ -17015,7 +17181,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L508",
+      "source_location": "L548",
       "weight": 1.0
     },
     {
@@ -17027,7 +17193,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L529",
+      "source_location": "L569",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_rendermovepicker",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L621",
       "weight": 1.0
     },
     {
@@ -19323,6 +19501,54 @@
       "weight": 1.0
     },
     {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_tests_fixtures_test",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_src_axe_assertnowcagviolations",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_src_db_createsyntheticitem",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_src_db_deletesyntheticitem",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "infra_a11y_tests_tests_modal_spec",
       "target": "infra_a11y_tests_src_session_seed_seedsession",
       "relation": "imports",
@@ -20475,6 +20701,78 @@
       "weight": 1.0
     },
     {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_api_api",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_api_mediaitem",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_api_apierror",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_assert_assert",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_config_ci_test_folder_id",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_scenarios_media_tinyjpegbytes",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "infra_regression_tests_src_scenarios_multipart",
       "target": "infra_regression_tests_src_api_api",
       "relation": "imports",
@@ -21423,6 +21721,42 @@
       "weight": 1.0
     },
     {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_tests_fixtures",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_src_axe",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_a11y_tests_tests_media_move_spec",
+      "target": "infra_a11y_tests_src_db",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/a11y-tests/tests/media-move.spec.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "infra_a11y_tests_tests_modal_spec",
       "target": "infra_a11y_tests_tests_fixtures",
       "relation": "imports_from",
@@ -22095,6 +22429,18 @@
       "weight": 1.0
     },
     {
+      "source": "infra_regression_tests_src_run",
+      "target": "infra_regression_tests_src_scenarios_move_media",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/run.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
       "source": "infra_regression_tests_src_scenarios_folders",
       "target": "infra_regression_tests_src_api",
       "relation": "imports_from",
@@ -22164,6 +22510,54 @@
       "context": "import",
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_api",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_assert",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_config",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_scenarios_media",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L5",
       "weight": 1.0
     },
     {
@@ -23447,7 +23841,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L173",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -23458,7 +23852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L185",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -23469,7 +23863,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L198",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -23480,7 +23874,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -23491,7 +23885,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/api.ts",
-      "source_location": "L221",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -23887,7 +24281,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L153",
+      "source_location": "L154",
       "weight": 1.0
     },
     {
@@ -23909,7 +24303,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L230",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -23986,7 +24380,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L350",
+      "source_location": "L358",
       "weight": 1.0
     },
     {
@@ -23997,7 +24391,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L364",
+      "source_location": "L372",
       "weight": 1.0
     },
     {
@@ -24008,7 +24402,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L378",
+      "source_location": "L386",
       "weight": 1.0
     },
     {
@@ -24019,18 +24413,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L416",
-      "weight": 1.0
-    },
-    {
-      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
-      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovecancel",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L435",
+      "source_location": "L424",
       "weight": 1.0
     },
     {
@@ -24041,18 +24424,40 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L440",
+      "source_location": "L449",
       "weight": 1.0
     },
     {
       "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
-      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovehere",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovebreadcrumb",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L456",
+      "source_location": "L454",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovenavigate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L460",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlestartmovemedia",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
@@ -24063,7 +24468,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L480",
+      "source_location": "L520",
       "weight": 1.0
     },
     {
@@ -24074,7 +24479,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L518",
+      "source_location": "L558",
       "weight": 1.0
     },
     {
@@ -28138,6 +28543,17 @@
     },
     {
       "source": "infra_regression_tests_src_api",
+      "target": "infra_regression_tests_src_api_api",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/api.ts",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_api",
       "target": "infra_regression_tests_src_api_mediaitem",
       "relation": "contains",
       "_origin": "ast",
@@ -28189,17 +28605,6 @@
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/api.ts",
       "source_location": "L9",
-      "weight": 1.0
-    },
-    {
-      "source": "infra_regression_tests_src_api",
-      "target": "infra_regression_tests_src_api_api",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "infra/regression-tests/src/api.ts",
-      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -28375,7 +28780,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -28386,7 +28791,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/run.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -28442,6 +28847,39 @@
       "confidence_score": 1.0,
       "source_file": "infra/regression-tests/src/scenarios/media.ts",
       "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_scenarios_move_media_expectapierror",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_scenarios_move_media_run",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "infra_regression_tests_src_scenarios_move_media",
+      "target": "infra_regression_tests_src_scenarios_move_media_waitforphotoin",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "infra/regression-tests/src/scenarios/move-media.ts",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -29775,7 +30213,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L302",
+      "source_location": "L310",
       "weight": 1.0
     },
     {
@@ -29787,7 +30225,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L799",
+      "source_location": "L886",
       "weight": 1.0
     },
     {
@@ -29864,6 +30302,54 @@
     },
     {
       "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovehere",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L791",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovecancel",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L792",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlemovemediahere",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L855",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
+      "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlecancelmovemedia",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
+      "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
+      "source_location": "L856",
+      "weight": 1.0
+    },
+    {
+      "source": "apps_media_app_src_components_folderbrowser_folderbrowser",
       "target": "apps_media_app_src_components_folderbrowser_folderbrowser_handlecanceleditdescription",
       "relation": "indirect_call",
       "_origin": "ast",
@@ -29871,7 +30357,7 @@
       "confidence_score": 0.85,
       "context": "collection",
       "source_file": "apps/media-app/src/components/FolderBrowser.tsx",
-      "source_location": "L814",
+      "source_location": "L902",
       "weight": 1.0
     },
     {
@@ -32157,5 +32643,5 @@
       "source_file": "apps/playground/CLAUDE.md"
     }
   ],
-  "built_at_commit": "9b779295fcdd4146a8f2488ed948b1a180c0f67d"
+  "built_at_commit": "3471698b189440cfe5e50dc164c24598b3829ffd"
 }

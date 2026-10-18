@@ -1,16 +1,16 @@
-# Graph Report - swordthain  (2026-10-17)
+# Graph Report - swordthain  (2026-10-18)
 
 ## Corpus Check
-- 142 files · ~201,137 words
+- 144 files · ~203,738 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1083 nodes · 1639 edges · 117 communities (73 shown, 44 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 75 edges (avg confidence: 0.86)
+- 1092 nodes · 1671 edges · 117 communities (73 shown, 44 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 79 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9b779295`
+- Built from commit: `3471698b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -26,7 +26,7 @@
 - CDK App Entry (infra.ts)
 - A11y Tests Dependencies
 - Regression Tests Dependencies
-- FolderBrowser Event Handlers
+- FolderBrowser
 - TypeScript Config (Regression)
 - AIRequest
 - CLI Package Config
@@ -36,7 +36,7 @@
 - TypeScript Config (A11y)
 - jsonResponse
 - media/playlists.ts
-- Modal Dialog & Media Types
+- FolderBrowser.tsx
 - TypeScript Config (CLI)
 - TypeScript Config (Infra)
 - media-app/src/api.ts
@@ -51,7 +51,7 @@
 - Playground Hub Frontend JS
 - isOwner
 - Stats/Cost Dashboard Lambda
-- Playlist Player Component
+- Playlists.tsx
 - Activity Log Lambda
 - OTP Auth Challenge Lambda
 - thumbnail.ts
@@ -126,15 +126,15 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `jsonResponse()` - 51 edges
-2. `FolderBrowser()` - 26 edges
+2. `FolderBrowser()` - 30 edges
 3. `isOwner()` - 24 edges
 4. `compilerOptions` - 21 edges
 5. `AIProvider` - 18 edges
-6. `compilerOptions` - 16 edges
-7. `test` - 15 edges
-8. `AIRequest` - 14 edges
-9. `assert()` - 14 edges
-10. `assertNoWcagViolations()` - 14 edges
+6. `assert()` - 16 edges
+7. `compilerOptions` - 16 edges
+8. `test` - 16 edges
+9. `assertNoWcagViolations()` - 15 edges
+10. `AIRequest` - 14 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `isOwner() Cross-Authorizer-Shape Compatibility` --rationale_for--> `isOwner()`  [EXTRACTED]
@@ -174,8 +174,8 @@ Cohesion: 0.05
 Nodes (46): Deploy Playground workflow, Validate Infra workflow, Validate Media App workflow, Validate Playground workflow, Deferred: Adaptive HLS, Swordthain Media App Backlog, Deferred: Passkey/WebAuthn sign-in, WAF bot-control in front of MediaHttpApi (in progress) (+38 more)
 
 ### Community 3 - "regression-tests/src/api.ts"
-Cohesion: 0.11
-Nodes (35): Api, ApiError, Folder, makeApi(), MediaItem, request(), assert(), cognito (+27 more)
+Cohesion: 0.10
+Nodes (38): Api, ApiError, Folder, makeApi(), MediaItem, request(), assert(), cognito (+30 more)
 
 ### Community 4 - "fixtures.ts"
 Cohesion: 0.13
@@ -205,9 +205,9 @@ Nodes (27): @axe-core/playwright, dependencies, @aws-sdk/client-cognito-identity
 Cohesion: 0.08
 Nodes (23): dependencies, @aws-sdk/client-cognito-identity-provider, @aws-sdk/client-dynamodb, @aws-sdk/client-ssm, @aws-sdk/lib-dynamodb, devDependencies, tsx, @types/node (+15 more)
 
-### Community 11 - "FolderBrowser Event Handlers"
-Cohesion: 0.10
-Nodes (6): FolderBrowser(), handleMoveBreadcrumb(), handleMoveHome(), handleMoveNavigate(), handleStartMove(), loadMoveOptions()
+### Community 11 - "FolderBrowser"
+Cohesion: 0.09
+Nodes (9): FolderBrowser(), handleMoveBreadcrumb(), handleMoveHome(), handleMoveNavigate(), handleStartMove(), handleStartMoveMedia(), loadMoveOptions(), renderMovePicker() (+1 more)
 
 ### Community 12 - "TypeScript Config (Regression)"
 Cohesion: 0.09
@@ -245,9 +245,9 @@ Nodes (18): PERMISSION_RANK, resolveAccess(), ResolvedAccess, ROOT, createFolder
 Cohesion: 0.23
 Nodes (19): hasPermission(), deletePlaylistItemRow(), addPlaylistItem(), cognito, createPlaylist(), ddb, deletePlaylist(), denyResponse() (+11 more)
 
-### Community 21 - "Modal Dialog & Media Types"
-Cohesion: 0.16
-Nodes (14): MediaItem, SharedFolder, Dialog(), effectiveContentType(), FigureOptions, handleUpload(), multipartStorageKey(), MultipartUploadState (+6 more)
+### Community 21 - "FolderBrowser.tsx"
+Cohesion: 0.22
+Nodes (12): MediaItem, SharedFolder, effectiveContentType(), FigureOptions, handleUpload(), multipartStorageKey(), MultipartUploadState, SUPPORTED_CONTENT_TYPES (+4 more)
 
 ### Community 22 - "TypeScript Config (CLI)"
 Cohesion: 0.12
@@ -305,9 +305,9 @@ Nodes (13): isOwner(), cleanupPlaylistReferences(), ddb, deleteMedia(), handler(
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Trace jsonResponse() - why is it the #1 god node with 47 edges?, Source Nodes
 
-### Community 36 - "Playlist Player Component"
-Cohesion: 0.28
-Nodes (4): ApiError, Playlist, PlaylistItem, PlaylistPlayer()
+### Community 36 - "Playlists.tsx"
+Cohesion: 0.21
+Nodes (5): ApiError, Playlist, PlaylistItem, Dialog(), PlaylistPlayer()
 
 ### Community 37 - "Activity Log Lambda"
 Cohesion: 0.39
@@ -424,7 +424,7 @@ Nodes (5): ACTIVITY_EVENTS, useIdleTimeout(), handleActivity(), setWarning(), st
   apps/playground/favicon.svg · relation: rationale_for
 
 ## Knowledge Gaps
-- **349 isolated node(s):** `AppSettings`, `SUPPORTED_CONTENT_TYPES`, `UploadStatus`, `MultipartUploadState`, `s3` (+344 more)
+- **349 isolated node(s):** `AppSettings`, `SUPPORTED_CONTENT_TYPES`, `UploadStatus`, `MultipartUploadState`, `ddb` (+344 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **44 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -441,12 +441,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Sword Motif / Branding` and `Playground Favicon (Sword Icon)`?**
   _Edge tagged AMBIGUOUS (relation: rationale_for) - confidence is low._
 - **Why does `Cognito Owner-group Authorizer` connect `API Testing Playground Pages` to `s3_utils.py`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
-- **Why does `isOwner()` connect `isOwner` to `invites.ts`, `Activity Log Lambda`, `API Testing Playground Pages`, `jsonResponse`, `media/playlists.ts`, `stats.ts`, `Folder Share Notifications`, `upload-url.ts`?**
   _High betweenness centrality (0.031) - this node is a cross-community bridge._
+- **Why does `isOwner()` connect `isOwner` to `invites.ts`, `Activity Log Lambda`, `API Testing Playground Pages`, `jsonResponse`, `media/playlists.ts`, `stats.ts`, `Folder Share Notifications`, `upload-url.ts`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Why does `Playground README` connect `API Testing Playground Pages` to `CDK App Entry (infra.ts)`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Are the 3 inferred relationships involving `FolderBrowser()` (e.g. with `handleCancelEditDescription()` and `handleDownload()`) actually correct?**
-  _`FolderBrowser()` has 3 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Are the 7 inferred relationships involving `FolderBrowser()` (e.g. with `handleCancelEditDescription()` and `handleCancelMoveMedia()`) actually correct?**
+  _`FolderBrowser()` has 7 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `AppSettings`, `SUPPORTED_CONTENT_TYPES`, `UploadStatus` to the rest of the system?**
   _349 weakly-connected nodes found - possible documentation gaps or missing edges._
