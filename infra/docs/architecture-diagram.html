@@ -335,7 +335,7 @@ flowchart LR
   folders["FoldersFn"]:::compute
   shares["SharesFn"]:::compute
   invites["InvitesFn"]:::compute
-  access["MediaAccessFn<br/>view/download URLs<br/>delete · edit description"]:::compute
+  access["MediaAccessFn<br/>view/download URLs<br/>delete · edit description · move"]:::compute
   activity["ActivityFn"]:::compute
   playlists["PlaylistsFn"]:::compute
   settings["SettingsFn"]:::compute
@@ -365,7 +365,7 @@ flowchart LR
   upload -->|PutObject| mediaBucket
   mediaBucket -. "ObjectCreated<br/>originals/*" .-> thumb
   thumb -->|write item| mediaItems
-  thumb -->|read/write| mediaBucket
+  thumb -->|"read (videos via<br/>presigned URL) / write"| mediaBucket
 
   folders --> foldersT
   folders --> sharesT
@@ -432,7 +432,7 @@ sequenceDiagram
   <section class="diagram-block">
     <p class="section-num">04</p>
     <h2>CI/CD — deploy topology</h2>
-    <p class="diagram-caption">Five independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no long-lived AWS keys stored anywhere. A playground-only change cannot touch infra permissions, and vice versa. Three deploy on a path-filtered push to <code>main</code>; the other two (the regression-test and accessibility-test suites) are triggered by the deploy workflows succeeding, not by a path.</p>
+    <p class="diagram-caption">Five independently-scoped IAM roles, each assumed by GitHub Actions via OIDC — no long-lived AWS keys stored anywhere. A playground-only change cannot touch infra permissions, and vice versa. The <code>Deploy</code> workflow runs <code>deploy-infra</code> and <code>deploy-media-app</code> as parallel jobs in a single run (merged so a push touching both gets one downstream test run, not two racing ones); the playground has its own deploy workflow; and the regression-test and accessibility-test suites run once after <code>Deploy</code> succeeds, not by a path.</p>
     <div class="diagram-frame"><pre class="mermaid">
 flowchart LR
   classDef ci fill:#4c8f5822,stroke:#4c8f58,color:#4c8f58,stroke-width:1.5px
@@ -440,6 +440,7 @@ flowchart LR
 
   gh["push to main"]:::ci
   oidc["GitHub OIDC<br/>Provider"]:::ci
+  deployWf["Deploy workflow — one run<br/>changes → deploy-infra ‖ deploy-media-app"]:::ci
 
   infraRole["InfraCiRole<br/>assumes CDK bootstrap roles"]:::ci
   mediaRole["MediaAppCiRole<br/>S3 + CloudFront invalidate"]:::ci
@@ -453,14 +454,13 @@ flowchart LR
   regressionSuite["infra/regression-tests<br/>scenario suite"]:::compute
   a11ySuite["infra/a11y-tests<br/>Playwright + axe-core"]:::compute
 
-  gh -->|"infra/**"| infraRole --> cdkStacks
-  gh -->|"apps/media-app/**"| mediaRole --> mediaSite
-  gh -->|"apps/playground/**"| pgRole --> pgSite
-  infraRole -. "workflow_run: success" .-> regressionRole
-  mediaRole -. "workflow_run: success" .-> regressionRole
+  gh --> deployWf
+  deployWf -->|"infra/** → deploy-infra"| infraRole --> cdkStacks
+  deployWf -->|"apps/media-app/** → deploy-media-app"| mediaRole --> mediaSite
+  gh -->|"apps/playground/**<br/>(Deploy Playground)"| pgRole --> pgSite
+  deployWf -. "workflow_run: success (once)" .-> regressionRole
   regressionRole --> regressionSuite
-  infraRole -. "workflow_run: success" .-> a11yRole
-  mediaRole -. "workflow_run: success" .-> a11yRole
+  deployWf -. "workflow_run: success (once)" .-> a11yRole
   a11yRole --> a11ySuite
   oidc -. trust .-> infraRole
   oidc -. trust .-> mediaRole
@@ -481,9 +481,9 @@ flowchart LR
       <tbody>
         <tr><td class="mono">SwordthainAuthStack</td><td class="mono">us-east-1</td><td>Cognito user pool, 3 custom-auth Lambda triggers, OTP DynamoDB table, SES identity + DKIM, SPF/DMARC/CAA DNS records</td></tr>
         <tr><td class="mono">SwordthainMediaAppDataStack</td><td class="mono">eu-west-1</td><td>Media + site S3 buckets, 7 DynamoDB tables, 10 Lambda functions, Cognito-authorized HTTP API, Sharp/FFmpeg layers</td></tr>
-        <tr><td class="mono">SwordthainMediaAppHostingStack</td><td class="mono">us-east-1</td><td>CloudFront distribution, WAF web ACL, Response Headers Policy (enforced CSP)</td></tr>
+        <tr><td class="mono">SwordthainMediaAppHostingStack</td><td class="mono">us-east-1</td><td>Two CloudFront distributions (the site, and a WAF front door for the media API), two WAF web ACLs, Response Headers Policy (enforced CSP), WAF blocked-request alarms</td></tr>
         <tr><td class="mono">SwordthainPlaygroundStack</td><td class="mono">us-east-1</td><td>CloudFront distribution, WAF web ACL, stealth-gate Function, Response Headers Policy (enforced CSP), API Testing proxy Lambda + REST API retrofit</td></tr>
-        <tr><td class="mono">SwordthainCiStack</td><td class="mono">us-east-1</td><td>GitHub OIDC provider, 3 per-app IAM deploy roles</td></tr>
+        <tr><td class="mono">SwordthainCiStack</td><td class="mono">us-east-1</td><td>GitHub OIDC provider, 5 IAM roles (3 per-app deploy roles, 2 for the regression/accessibility test suites)</td></tr>
       </tbody>
     </table>
     </div>

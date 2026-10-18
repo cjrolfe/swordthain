@@ -81,7 +81,7 @@ flowchart LR
   folders["FoldersFn"]:::compute
   shares["SharesFn"]:::compute
   invites["InvitesFn"]:::compute
-  access["MediaAccessFn<br/>view/download URLs<br/>delete · edit description"]:::compute
+  access["MediaAccessFn<br/>view/download URLs<br/>delete · edit description · move"]:::compute
   activity["ActivityFn"]:::compute
   playlists["PlaylistsFn"]:::compute
   settings["SettingsFn"]:::compute
@@ -111,7 +111,7 @@ flowchart LR
   upload -->|PutObject| mediaBucket
   mediaBucket -. "ObjectCreated<br/>originals/*" .-> thumb
   thumb -->|write item| mediaItems
-  thumb -->|read/write| mediaBucket
+  thumb -->|"read (videos via<br/>presigned URL) / write"| mediaBucket
 
   folders --> foldersT
   folders --> sharesT
@@ -172,6 +172,7 @@ flowchart LR
 
   gh["push to main"]:::ci
   oidc["GitHub OIDC<br/>Provider"]:::ci
+  deployWf["Deploy workflow — one run<br/>changes → deploy-infra ‖ deploy-media-app"]:::ci
 
   infraRole["InfraCiRole<br/>assumes CDK bootstrap roles"]:::ci
   mediaRole["MediaAppCiRole<br/>S3 + CloudFront invalidate"]:::ci
@@ -185,14 +186,13 @@ flowchart LR
   regressionSuite["infra/regression-tests<br/>scenario suite"]:::compute
   a11ySuite["infra/a11y-tests<br/>Playwright + axe-core"]:::compute
 
-  gh -->|"infra/**"| infraRole --> cdkStacks
-  gh -->|"apps/media-app/**"| mediaRole --> mediaSite
-  gh -->|"apps/playground/**"| pgRole --> pgSite
-  infraRole -. "workflow_run: success" .-> regressionRole
-  mediaRole -. "workflow_run: success" .-> regressionRole
+  gh --> deployWf
+  deployWf -->|"infra/** → deploy-infra"| infraRole --> cdkStacks
+  deployWf -->|"apps/media-app/** → deploy-media-app"| mediaRole --> mediaSite
+  gh -->|"apps/playground/**<br/>(Deploy Playground)"| pgRole --> pgSite
+  deployWf -. "workflow_run: success (once)" .-> regressionRole
   regressionRole --> regressionSuite
-  infraRole -. "workflow_run: success" .-> a11yRole
-  mediaRole -. "workflow_run: success" .-> a11yRole
+  deployWf -. "workflow_run: success (once)" .-> a11yRole
   a11yRole --> a11ySuite
   oidc -. trust .-> infraRole
   oidc -. trust .-> mediaRole
@@ -278,10 +278,11 @@ export function Architecture() {
 
       <h4>CI/CD — deploy topology</h4>
       <p className="hint">
-        Five independently-scoped GitHub Actions pipelines, each assuming a purpose-built IAM role via OIDC — no
-        long-lived AWS keys stored anywhere. Three deploy on a path-filtered push to <code>main</code>; the other
-        two (the regression-test and accessibility-test suites) run afterward, triggered by the deploy workflows
-        succeeding rather than by a path.
+        Five independently-scoped IAM roles, each assumed by GitHub Actions via OIDC — no long-lived AWS keys stored
+        anywhere. The <code>Deploy</code> workflow runs <code>deploy-infra</code> and <code>deploy-media-app</code> as
+        parallel jobs in a single run (merged so a push touching both gets one downstream test run, not two racing
+        ones), the playground has its own deploy workflow, and the regression-test and accessibility-test suites run
+        once after <code>Deploy</code> succeeds rather than on a path.
       </p>
       <Diagram diagramKey="cicd" svg={svgs.cicd ?? null} />
     </div>
