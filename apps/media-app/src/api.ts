@@ -142,6 +142,8 @@ export const api = {
   deleteMedia: (mediaId: string) => request<{ deleted: boolean }>("DELETE", `/media/${mediaId}`),
   updateMediaDescription: (mediaId: string, description: string) =>
     request<MediaItem>("PATCH", `/media/${mediaId}`, { description }),
+  /** Owner-only. Re-points the item at another folder; the files themselves stay put in S3. */
+  moveMedia: (mediaId: string, folderId: string) => request<MediaItem>("PATCH", `/media/${mediaId}`, { folderId }),
 
   activity: (filter: { folderId?: string; userId?: string }) => {
     const params = new URLSearchParams();

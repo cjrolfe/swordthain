@@ -50,6 +50,11 @@ export function makeApi(idToken: string) {
     updateMediaDescription: (mediaId: string, description: string) =>
       request<MediaItem>("PATCH", `/media/${mediaId}`, idToken, { description }),
     deleteMedia: (mediaId: string) => request<{ deleted: boolean }>("DELETE", `/media/${mediaId}`, idToken),
+    moveMedia: (mediaId: string, folderId: string) =>
+      request<MediaItem>("PATCH", `/media/${mediaId}`, idToken, { folderId }),
+    // Raw body, for the 400 case — the typed wrappers above can't send an empty update.
+    patchMediaRaw: (mediaId: string, body: Record<string, unknown>) =>
+      request<MediaItem>("PATCH", `/media/${mediaId}`, idToken, body),
 
     listPlaylists: () => request<{ playlists: { playlistId: string; name: string }[] }>("GET", "/playlists", idToken),
     createPlaylist: (name: string) => request<{ playlistId: string; name: string }>("POST", "/playlists", idToken, { name }),

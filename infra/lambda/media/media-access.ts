@@ -185,33 +185,75 @@ async function updateMedia(
   const owner = isOwner(event.requestContext.authorizer.jwt.claims);
   if (!owner) return jsonResponse(403, { error: "Owner access required" });
 
-  let payload: { description?: string };
+  let payload: { description?: unknown; folderId?: unknown };
   try {
     payload = event.body ? JSON.parse(event.body) : {};
   } catch {
     return jsonResponse(400, { error: "Invalid JSON body" });
   }
 
-  if (typeof payload.description !== "string") {
-    return jsonResponse(400, { error: "description is required" });
+  // Two independent updates share this route: `description` (edit the
+  // caption) and `folderId` (move to another folder). Either or both.
+  if (payload.description === undefined && payload.folderId === undefined) {
+    return jsonResponse(400, { error: "description or folderId is required" });
   }
-  const description = payload.description.trim();
-  if (description.length > DESCRIPTION_MAX_LENGTH) {
-    return jsonResponse(400, { error: `description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer` });
+
+  const updates: string[] = [];
+  const values: Record<string, string> = {};
+
+  if (payload.description !== undefined) {
+    if (typeof payload.description !== "string") {
+      return jsonResponse(400, { error: "description must be a string" });
+    }
+    const description = payload.description.trim();
+    if (description.length > DESCRIPTION_MAX_LENGTH) {
+      return jsonResponse(400, { error: `description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer` });
+    }
+    updates.push("description = :d");
+    values[":d"] = description;
+  }
+
+  if (payload.folderId !== undefined && (typeof payload.folderId !== "string" || !payload.folderId)) {
+    return jsonResponse(400, { error: "folderId must be a non-empty string" });
   }
 
   const media = await ddb.send(new GetCommand({ TableName: MEDIA_TABLE_NAME, Key: { mediaId } }));
   if (!media.Item) return jsonResponse(404, { error: "Media not found" });
 
-  const result = await ddb.send(
-    new UpdateCommand({
-      TableName: MEDIA_TABLE_NAME,
-      Key: { mediaId },
-      UpdateExpression: "SET description = :d",
-      ExpressionAttributeValues: { ":d": description },
-      ReturnValues: "ALL_NEW",
-    })
-  );
+  if (typeof payload.folderId === "string") {
+    const destination = await ddb.send(
+      new GetCommand({ TableName: FOLDERS_TABLE_NAME, Key: { folderId: payload.folderId } })
+    );
+    if (!destination.Item) return jsonResponse(404, { error: "Destination folder not found" });
 
-  return jsonResponse(200, result.Attributes);
+    // A move only re-points the record: which folder an item belongs to
+    // (and so who can see it) lives in these two attributes, and every
+    // read/delete path uses the item's stored s3Key/thumbnailKey rather than
+    // rebuilding a key from the folder. So the S3 objects stay where they
+    // are — instant, and no copy to run into S3's 5GB single-copy limit or
+    // API Gateway's 30s timeout on a multi-GB video. The folder segment in
+    // the key (originals/{folderId}/...) just records where it was uploaded.
+    updates.push("folderId = :f", "folderIdType = :ft");
+    values[":f"] = payload.folderId;
+    values[":ft"] = `${payload.folderId}#${media.Item.type}`;
+  }
+
+  try {
+    const result = await ddb.send(
+      new UpdateCommand({
+        TableName: MEDIA_TABLE_NAME,
+        Key: { mediaId },
+        UpdateExpression: `SET ${updates.join(", ")}`,
+        // Without this, deleting the item between the read above and this
+        // write would have UpdateItem silently re-create a half-empty row.
+        ConditionExpression: "attribute_exists(mediaId)",
+        ExpressionAttributeValues: values,
+        ReturnValues: "ALL_NEW",
+      })
+    );
+    return jsonResponse(200, result.Attributes);
+  } catch (err) {
+    if (err instanceof ConditionalCheckFailedException) return jsonResponse(404, { error: "Media not found" });
+    throw err;
+  }
 }

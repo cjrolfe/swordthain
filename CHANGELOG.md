@@ -4,6 +4,11 @@ All notable changes to this project, by release date. Each entry corresponds to 
 
 This history was reconstructed retroactively (12 Aug 2026) from git log and `apps/media-app/BACKLOG.md`. The 10–12 Aug entries are detailed and cross-checked against BACKLOG.md's own dated entries; earlier entries are concise summaries derived from commit messages, not a full diff-by-diff account — honest about being reconstructed, not live-tracked from day one.
 
+## [2026.10.18]
+
+- **Move media between folders (Owner-only)** — a video uploaded while the parent folder was open landed in "2026" instead of its new "Seville" subfolder, so a friend shared only on "Seville" couldn't see it, and the only fix was re-uploading: the app could move folders but not individual photos/videos. `PATCH /media/{id}` now also accepts `{folderId}`, and every photo/video gets a **Move** button reusing the folder-move destination picker (`renderMovePicker` is now shared by both). A move only rewrites the record's `folderId`/`folderIdType` and leaves the S3 objects where they are — instant for any file size, and clear of S3's 5GB single-copy limit and API Gateway's 30s timeout. That's safe because every read/delete path already used the stored `s3Key`/`thumbnailKey`; the `originals/{folderId}/…` segment in a moved item's key now just records where it was uploaded.
+- New `move-media` regression scenario (real upload → move → in the new folder only, thumbnail still loads from S3, 404/400 cases, delete of a moved item) and an a11y spec for the picker (focus, disabled until a folder is opened, zero WCAG violations).
+
 ## [2026.10.17]
 
 - **Large web uploads no longer fail at the last step** — found live on a 12GB `.mov`: all 230 parts reached S3, then the final `POST /media/upload-url/multipart/complete` was blocked by the WAF added in August (`AWSManagedRulesCommonRuleSet`'s `SizeRestrictions_BODY`, 8KB limit — the request listed every part, ~66 bytes each, 15KB for this file). Any web upload over roughly 6GB would have hit it. `complete` now takes just `totalParts` and asks S3 which parts arrived (`ListParts`, new `s3:ListMultipartUploadParts` grant on `UploadUrlFn`), and refuses with a 409 if any are missing so it can never finalize a truncated file. The old `parts` list is still accepted for the CLI.

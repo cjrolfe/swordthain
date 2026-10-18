@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useRef, useState, useCallback } from "react";
 import { api, Folder, MediaItem, ApiError, Playlist, SharedFolder } from "../api";
 import { Lightbox } from "./Lightbox";
 
@@ -139,6 +139,7 @@ async function uploadMultipart(
 interface FigureOptions {
   addToPlaylist?: { label: string; onClick: () => void };
   onDelete?: (item: MediaItem) => void;
+  onMove?: (item: MediaItem) => void;
   selection?: { checked: boolean; onToggle: () => void };
   editDescription?: {
     editing: boolean;
@@ -157,7 +158,7 @@ function renderFigure(
   canDownload: boolean,
   options?: FigureOptions
 ) {
-  const { addToPlaylist, onDelete, selection, editDescription } = options ?? {};
+  const { addToPlaylist, onDelete, onMove, selection, editDescription } = options ?? {};
   const displayName = item.description || item.fileName;
   return (
     <figure key={item.mediaId}>
@@ -216,6 +217,11 @@ function renderFigure(
               Edit
             </button>
           )}
+          {onMove && (
+            <button className="link" onClick={() => onMove(item)} aria-label={`Move ${displayName}`}>
+              Move
+            </button>
+          )}
           {onDelete && (
             <button className="link danger" onClick={() => onDelete(item)}>
               Delete
@@ -242,6 +248,8 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   const [renameValue, setRenameValue] = useState("");
   const [renameGuestUpload, setRenameGuestUpload] = useState(false);
   const [movingFolder, setMovingFolder] = useState<Folder | null>(null);
+  const [movingMedia, setMovingMedia] = useState<MediaItem | null>(null);
+  const movePickerRef = useRef<HTMLDivElement>(null);
   const [movePath, setMovePath] = useState<Folder[]>([]);
   const [moveOptions, setMoveOptions] = useState<Folder[]>([]);
   const [moveLoading, setMoveLoading] = useState(false);
@@ -427,6 +435,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
   }
 
   function handleStartMove(folder: Folder) {
+    setMovingMedia(null); // one picker at a time — they share the destination-browsing state
     setMovingFolder(folder);
     setMovePath([]);
     loadMoveOptions(ROOT);
@@ -462,6 +471,37 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
       load();
     } catch (err) {
       setMoveError(err instanceof Error ? err.message : "Failed to move folder");
+    }
+  }
+
+  useEffect(() => {
+    if (movingMedia) movePickerRef.current?.focus();
+  }, [movingMedia]);
+
+  function handleStartMoveMedia(item: MediaItem) {
+    setMovingFolder(null);
+    setMovingMedia(item);
+    setMovePath([]);
+    loadMoveOptions(ROOT);
+  }
+
+  function handleCancelMoveMedia() {
+    setMovingMedia(null);
+    setMoveError(null);
+  }
+
+  // Media always lives in a real folder, so unlike moving a folder there's
+  // no "move to the top level" — a destination has to be chosen first.
+  const mediaMoveDestination = movePath[movePath.length - 1] ?? null;
+
+  async function handleMoveMediaHere() {
+    if (!movingMedia || !mediaMoveDestination) return;
+    try {
+      await api.moveMedia(movingMedia.mediaId, mediaMoveDestination.folderId);
+      setMovingMedia(null);
+      load();
+    } catch (err) {
+      setMoveError(err instanceof Error ? err.message : "Failed to move");
     }
   }
 
@@ -569,6 +609,60 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
     // Thumbnail generation happens async off an S3 event, so a fresh upload
     // often isn't in listFolderMedia yet on the first refresh above.
     setTimeout(load, 2000);
+  }
+
+  /**
+   * The destination browser shared by moving a folder and moving a media
+   * item: breadcrumb trail, sub-folder list, "Move here" / Cancel. Both
+   * callers wrap it in their own container; the navigation state
+   * (movePath/moveOptions) is shared, which is why only one picker is open
+   * at a time.
+   */
+  function renderMovePicker(opts: {
+    label: string;
+    excludeFolderId?: string;
+    canMoveHere: boolean;
+    onMoveHere: () => void;
+    onCancel: () => void;
+  }) {
+    return (
+      <>
+        <p>{opts.label}</p>
+        <nav className="breadcrumbs">
+          <button className="link" onClick={handleMoveHome}>
+            Home
+          </button>
+          {movePath.map((f, i) => (
+            <span key={f.folderId}>
+              {" / "}
+              <button className="link" onClick={() => handleMoveBreadcrumb(i)}>
+                {f.title}
+              </button>
+            </span>
+          ))}
+        </nav>
+        {moveError && <p className="error" role="status">{moveError}</p>}
+        {moveLoading && <p>Loading…</p>}
+        <ul className="folder-list">
+          {moveOptions
+            .filter((f) => f.folderId !== opts.excludeFolderId)
+            .map((f) => (
+              <li key={f.folderId}>
+                <button className="link folder-name" onClick={() => handleMoveNavigate(f)}>
+                  📁 {f.title}
+                </button>
+              </li>
+            ))}
+          {moveOptions.length === 0 && !moveLoading && <li className="empty">No sub-folders here.</li>}
+        </ul>
+        <button onClick={opts.onMoveHere} disabled={!opts.canMoveHere}>
+          Move here
+        </button>
+        <button className="link" onClick={opts.onCancel}>
+          Cancel
+        </button>
+      </>
+    );
   }
 
   return (
@@ -690,40 +784,13 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
             </li>
             {movingFolder?.folderId === folder.folderId && (
               <li className="notify-dialog move-picker">
-                <p>
-                  Move "{movingFolder.title}" to:
-                </p>
-                <nav className="breadcrumbs">
-                  <button className="link" onClick={handleMoveHome}>
-                    Home
-                  </button>
-                  {movePath.map((f, i) => (
-                    <span key={f.folderId}>
-                      {" / "}
-                      <button className="link" onClick={() => handleMoveBreadcrumb(i)}>
-                        {f.title}
-                      </button>
-                    </span>
-                  ))}
-                </nav>
-                {moveError && <p className="error" role="status">{moveError}</p>}
-                {moveLoading && <p>Loading…</p>}
-                <ul className="folder-list">
-                  {moveOptions
-                    .filter((f) => f.folderId !== movingFolder.folderId)
-                    .map((f) => (
-                      <li key={f.folderId}>
-                        <button className="link folder-name" onClick={() => handleMoveNavigate(f)}>
-                          📁 {f.title}
-                        </button>
-                      </li>
-                    ))}
-                  {moveOptions.length === 0 && !moveLoading && <li className="empty">No sub-folders here.</li>}
-                </ul>
-                <button onClick={handleMoveHere}>Move here</button>
-                <button className="link" onClick={handleMoveCancel}>
-                  Cancel
-                </button>
+                {renderMovePicker({
+                  label: `Move "${movingFolder.title}" to:`,
+                  excludeFolderId: movingFolder.folderId,
+                  canMoveHere: true,
+                  onMoveHere: handleMoveHere,
+                  onCancel: handleMoveCancel,
+                })}
               </li>
             )}
           </Fragment>
@@ -774,6 +841,26 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
             </ul>
           )}
 
+          {movingMedia && (
+            <div
+              className="notify-dialog move-picker"
+              ref={movePickerRef}
+              tabIndex={-1}
+              role="group"
+              aria-label={`Move ${movingMedia.description || movingMedia.fileName}`}
+            >
+              {renderMovePicker({
+                label: `Move "${movingMedia.description || movingMedia.fileName}" to:`,
+                canMoveHere: !!mediaMoveDestination && mediaMoveDestination.folderId !== currentFolder?.folderId,
+                onMoveHere: handleMoveMediaHere,
+                onCancel: handleCancelMoveMedia,
+              })}
+              {!mediaMoveDestination && (
+                <p className="hint">Open the folder you want to move it into, then choose "Move here".</p>
+              )}
+            </div>
+          )}
+
           {videos.length > 0 && (
             <>
               <h4>Videos</h4>
@@ -804,6 +891,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                         }
                       : undefined,
                     onDelete: isOwner ? handleDeleteMedia : undefined,
+                    onMove: isOwner ? handleStartMoveMedia : undefined,
                     editDescription: isOwner
                       ? {
                           editing: editingDescriptionId === item.mediaId,
@@ -843,6 +931,7 @@ export function FolderBrowser({ isOwner }: { isOwner: boolean }) {
                 {photos.map((item) =>
                   renderFigure(item, setLightboxItem, handleDownload, canDownload, {
                     onDelete: isOwner ? handleDeleteMedia : undefined,
+                    onMove: isOwner ? handleStartMoveMedia : undefined,
                     selection: isOwner
                       ? { checked: selectedPhotoIds.has(item.mediaId), onToggle: () => handleTogglePhotoSelect(item.mediaId) }
                       : undefined,
